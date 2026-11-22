@@ -2,11 +2,11 @@
 
 欢迎参与 Lum。无论是反馈问题、改进文档、开发插件，还是修复代码，都可以帮助创作者更顺畅地完成作品。
 
-参与讨论和协作前，请阅读 [社区行为准则](./CODE_OF_CONDUCT.md)。项目介绍和使用方法见 [README](./README.md)，完整开发说明见 [开发与扩展指南](./docs/development.md)，代码修改以 [开发规范](./AGENTS.md) 为准。
+参与讨论和协作前，请阅读 [社区行为准则](./CODE_OF_CONDUCT.md)。项目介绍和使用方法见 [README](./README.md)，完整开发说明见 [开发与扩展指南](./docs/development.md)。
 
 ## 从哪里开始
 
-- **报告问题**：在 [GitHub Issues](https://github.com/HBAI-Ltd/Toonflow-app/issues) 搜索已有记录，再补充信息或提交新问题。
+- **报告问题**：在 [GitHub Issues](https://github.com/ZxzZhao6668/Lum-OpenSource/issues) 搜索已有记录，再补充信息或提交新问题。
 - **提出建议**：说明创作场景、遇到的限制和期望结果；较大的功能或架构调整建议先讨论范围与影响。
 - **改进文档**：修正错误、补全步骤，或提供能够复现的操作说明。
 - **开发扩展**：参考 [节点脚手架](./packages/nodeScaffold/readme.md)、[工具脚手架](./packages/toolScaffold/readme.md) 和现有实现。
@@ -27,21 +27,21 @@
 
 请先删去 API Key、访问令牌、账号信息和个人路径。不要上传完整 `data/`、真实用户配置、私有工作区或未经授权的素材；需要示例时，使用最小的脱敏内容。
 
-涉及安全漏洞或不宜公开的敏感信息时，请通过 [联系邮箱](mailto:ltlctools@outlook.com) 说明情况，避免在公开 Issue 中披露可被利用的细节。
+涉及安全漏洞或不宜公开的敏感信息时，请通过 [Lum 联系说明](../../docs/contact.md) 中的私下联系方式 说明情况，避免在公开 Issue 中披露可被利用的细节。
 
 ## 准备开发环境
 
 本仓库使用 Bun Workspaces，Web、业务 Server 和桌面端在同一个仓库中开发，无需另行克隆前端仓库。
 
-- 安装 Git 和根目录 `package.json` 中指定的 **Bun 1.4.3**，使用 `bun --version` 确认版本。
+- 安装 Git 和画布工作区的 `package.json` 中指定的 **Bun 1.4.3**，使用 `bun --version` 确认版本。
 - 使用 Bun 安装依赖、运行脚本，不混用 npm、Yarn 或 pnpm 的安装流程。
-- 除特别说明外，下面的命令都在仓库根目录执行。桌面端另有平台要求，见下方说明。
+- 除特别说明外，下面的命令都在画布工作区 `vendor/lum/` 执行。桌面端另有平台要求，见下方说明。
 
 需要提交 PR 时，可以先 Fork 仓库，再克隆自己的 Fork；下面演示从项目仓库开始：
 
 ```sh
-git clone https://github.com/HBAI-Ltd/Toonflow-app.git
-cd Lum-app
+git clone https://github.com/ZxzZhao6668/Lum-OpenSource.git
+cd Lum-OpenSource/vendor/lum
 bun install
 ```
 
@@ -123,7 +123,7 @@ bun run dev:desktop
 
 ## 保持修改集中
 
-开始前先阅读 [AGENTS.md](./AGENTS.md)，再跟踪相关实现与调用方。修复共享逻辑中的根因，优先复用已有工具、Store 和依赖。
+开始前先跟踪相关实现与调用方。修复共享逻辑中的根因，优先复用已有工具、Store 和依赖。
 
 - 一次 PR 解决一个明确问题，避免夹带无关重构、格式化或依赖升级。
 - 默认使用 TypeScript；新增文件、目录、自有变量、函数及常量统一小驼峰命名，如 `userStore.ts`、`editorPanel/`，不使用短横线、蛇形、大驼峰或全大写。已有例外不是新增代码的依据，类型名保持 TypeScript 的类型命名习惯。
@@ -168,7 +168,7 @@ Intel Mac 则先安装兼容 SDK，并运行一次桌面开发或构建命令生
 
 ### 按改动选择命令
 
-以下命令均从仓库根目录执行：
+以下命令均从画布工作区 `vendor/lum/` 执行：
 
 | 命令 | 适用情况 |
 | --- | --- |

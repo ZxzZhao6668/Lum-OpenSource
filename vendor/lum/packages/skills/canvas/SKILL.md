@@ -5,7 +5,7 @@ metadata:
   version: "2.1.0"
   displayName: 画布操作手册
   author: Lum
-  github: https://github.com/HBAI-Ltd/Toonflow-app
+  github: https://github.com/ZxzZhao6668/Lum-OpenSource/blob/main/vendor/lum/packages/skills/canvas/SKILL.md
 ---
 
 # 画布操作手册

@@ -1,6 +1,6 @@
 # 旧版来源与当前迁移
 
-来源固定为 [Lum-app v1.1.8](https://github.com/HBAI-Ltd/Toonflow-app/tree/cd3e7c4e83963bea255be2e621eb78d2cd1c2188)，已核对标签解引用提交 `cd3e7c4e83963bea255be2e621eb78d2cd1c2188`。以下路径均相对此提交，不引用后续版本冒充旧版流程。执行任务不必每次联网读取这些来源，本技能已沉淀所需方法。
+这套流程取自上游 `HBAI-Ltd/Toonflow-app` 的 v1.1.8，标签对应提交 `cd3e7c4e83963bea255be2e621eb78d2cd1c2188`。下表列出该提交中的原始路径。当前画布的执行步骤与验收要求见 [Lum 迁移版工作流](https://github.com/ZxzZhao6668/Lum-OpenSource/blob/main/vendor/lum/packages/skills/v118workflow/SKILL.md)。
 
 ## 子流程来源
 

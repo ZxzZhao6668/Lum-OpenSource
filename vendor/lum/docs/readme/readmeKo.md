@@ -1,16 +1,8 @@
 <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=Lum&fontSize=90&fontColor=ffffff&animation=fadeIn&fontAlignY=50" alt="Lum" width="100%" />
 
 <p>
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app">
+  <a href="https://github.com/ZxzZhao6668/Lum-OpenSource">
     <img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub" />
-  </a>
-  &nbsp;|&nbsp;
-  <a href="https://gitee.com/HBAI-Ltd/Toonflow-app">
-    <img src="https://img.shields.io/badge/Gitee-C71D23?style=flat-square&logo=gitee&logoColor=white" alt="Gitee" />
-  </a>
-  &nbsp;|&nbsp;
-  <a href="https://atomgit.com/HBAI-Ltd/Toonflow-app">
-    <img src="../images/atomgitLogo.svg" alt="AtomGit" height="20" />
   </a>
 </p>
 
@@ -45,47 +37,41 @@
 <div align="center">
 
 <p align="center">
-  <img src="../images/logo.png" alt="Lum 로고" width="120" height="120" />
+  <img src="../../../../app/public/brand/lumLogo.png" alt="Lum 로고" width="120" height="120" />
 </p>
 
-<a href="https://git.io/typing-svg">
+<a href="https://github.com/ZxzZhao6668/Lum-OpenSource">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=FFFFFF&center=true&vCenter=true&width=600&lines=Toonflow;AI%20Short%20Drama%20Studio;Turn%20ideas%20into%20stories" />
-    <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=000000&center=true&vCenter=true&width=600&lines=Toonflow;AI%20Short%20Drama%20Studio;Turn%20ideas%20into%20stories" alt="Lum · AI 숏드라마 스튜디오 · 아이디어를 이야기로" width="600" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=FFFFFF&center=true&vCenter=true&width=600&lines=Lum;AI%20Short%20Drama%20Studio;Turn%20ideas%20into%20stories" />
+    <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=40&duration=3000&pause=1000&color=000000&center=true&vCenter=true&width=600&lines=Lum;AI%20Short%20Drama%20Studio;Turn%20ideas%20into%20stories" alt="Lum · AI 숏드라마 스튜디오 · 아이디어를 이야기로" width="600" />
   </picture>
 </a>
 
 <p align="center">
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app/stargazers">
-    <img src="https://img.shields.io/github/stars/HBAI-Ltd/Toonflow-app?style=for-the-badge&logo=github" alt="스타 배지" />
+  <a href="https://github.com/ZxzZhao6668/Lum-OpenSource/stargazers">
+    <img src="https://img.shields.io/github/stars/ZxzZhao6668/Lum-OpenSource?style=for-the-badge&logo=github" alt="스타 배지" />
   </a>
   <a href="../../LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="MIT License 배지" />
   </a>
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app/releases">
-    <img src="https://img.shields.io/github/v/release/HBAI-Ltd/Toonflow-app?style=for-the-badge" alt="릴리스" />
+  <a href="https://github.com/ZxzZhao6668/Lum-OpenSource/releases">
+    <img src="https://img.shields.io/github/v/release/ZxzZhao6668/Lum-OpenSource?style=for-the-badge" alt="릴리스" />
   </a>
 </p>
 <p align="center">
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app/network/members">
-    <img src="https://img.shields.io/github/forks/HBAI-Ltd/Toonflow-app?style=for-the-badge&logo=github&color=orange" alt="포크 배지" />
-  </a>
-  <a href="https://atomgit.com/HBAI-Ltd/Toonflow-app">
-    <img src="https://img.shields.io/badge/AtomGit-G--Star%20No.540-FF6B35?style=for-the-badge&logo=git&logoColor=white" alt="AtomGit G-Star No.540" />
-  </a>
-  <a href="https://discord.gg/HEjKmpNpAZ">
-    <img src="https://img.shields.io/badge/Discord-Community-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord" />
+  <a href="https://github.com/ZxzZhao6668/Lum-OpenSource/forks">
+    <img src="https://img.shields.io/github/forks/ZxzZhao6668/Lum-OpenSource?style=for-the-badge&logo=github&color=orange" alt="포크 배지" />
   </a>
 </p>
 <p align="center">
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app/issues">
-    <img src="https://img.shields.io/github/issues/HBAI-Ltd/Toonflow-app?style=for-the-badge&color=F48D73" alt="이슈" />
+  <a href="https://github.com/ZxzZhao6668/Lum-OpenSource/issues">
+    <img src="https://img.shields.io/github/issues/ZxzZhao6668/Lum-OpenSource?style=for-the-badge&color=F48D73" alt="이슈" />
   </a>
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app/graphs/contributors">
-    <img src="https://img.shields.io/github/contributors/HBAI-Ltd/Toonflow-app?style=for-the-badge&color=2088FF" alt="기여자" />
+  <a href="https://github.com/ZxzZhao6668/Lum-OpenSource/graphs/contributors">
+    <img src="https://img.shields.io/github/contributors/ZxzZhao6668/Lum-OpenSource?style=for-the-badge&color=2088FF" alt="기여자" />
   </a>
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app/commits">
-    <img src="https://img.shields.io/github/last-commit/HBAI-Ltd/Toonflow-app?style=for-the-badge&color=blueviolet" alt="최근 커밋" />
+  <a href="https://github.com/ZxzZhao6668/Lum-OpenSource/commits">
+    <img src="https://img.shields.io/github/last-commit/ZxzZhao6668/Lum-OpenSource?style=for-the-badge&color=blueviolet" alt="최근 커밋" />
   </a>
 </p>
 <p align="center">
@@ -95,33 +81,6 @@
   <img src="https://img.shields.io/badge/Desktop-Electrobun-8257E5?style=for-the-badge" alt="Electrobun" />
 </p>
 
-<p align="center">
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/daily?language=HTML" alt="HBAI-Ltd/Toonflow-app | Trendshift HTML Repository Of The Day" width="250" height="55" />
-  </a>
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/daily?language=Vue" alt="HBAI-Ltd/Toonflow-app | Trendshift Vue Repository Of The Day" width="250" height="55" />
-  </a>
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/daily?language=TypeScript" alt="HBAI-Ltd/Toonflow-app | Trendshift TypeScript Repository Of The Day" width="250" height="55" />
-  </a>
-</p>
-<p align="center">
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/weekly?language=Vue" alt="HBAI-Ltd/Toonflow-app | Trendshift Vue Repository Of The Week" width="250" height="55" />
-  </a>
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/weekly?language=HTML" alt="HBAI-Ltd/Toonflow-app | Trendshift HTML Repository Of The Week" width="250" height="55" />
-  </a>
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/weekly?language=TypeScript" alt="HBAI-Ltd/Toonflow-app | Trendshift TypeScript Repository Of The Week" width="250" height="55" />
-  </a>
-</p>
-<p align="center">
-  <a href="https://trendshift.io/repositories/24197?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-24197#achievements" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/24197/monthly?language=HTML" alt="HBAI-Ltd/Toonflow-app | Trendshift HTML Repository Of The Month" width="250" height="55" />
-  </a>
-</p>
 
 **숏드라마, 모션 코믹스, 영상 제작을 위한 오픈 소스 AI 플랫폼**
 
@@ -129,72 +88,23 @@
 
 </div>
 
-<div align="center">
-  <table>
-    <tr>
-      <td width="50%" align="center">
-        <a href="../images/gStar.png">
-          <img src="../images/gStar.png" alt="Lum AtomGit G-Star 인증서 No.540" width="100%" />
-        </a>
-      </td>
-      <td width="50%" align="center">
-        <a href="../images/gvp.jpg">
-          <img src="../images/gvp.jpg" alt="Lum Gitee GVP 인증서" width="100%" />
-        </a>
-      </td>
-    </tr>
-  </table>
-</div>
-
 <p align="center">
-  <a href="https://github.com/HBAI-Ltd/Toonflow-app/releases">다운로드</a> ·
-  <a href="https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf">사용 가이드</a> ·
-  <a href="https://api.toonflow.net/console/plugIn">플러그인 마켓</a> ·
-  <a href="https://qcn7xdsqgc4z.feishu.cn/docx/KNBNd9naqolsy6xjAOCcEAkqnRd">개발자 문서</a> ·
-  <a href="https://api.toonflow.net/">공식 모델 플랫폼</a>
+  <a href="https://github.com/ZxzZhao6668/Lum-OpenSource/releases">다운로드</a> ·
+  <a href="../../../../docs/user-guide.md">사용 가이드</a> ·
+  <a href="../../../../marketplace/README.md">플러그인 마켓</a> ·
+  <a href="../development.md">개발자 문서</a> ·
+  <a href="../../../../docs/user-guide.md#配置-ai">모델 설정</a>
 </p>
 
 ---
 
 ## 1. 💛 후원과 지원
 
-Lum 오픈 소스 프로젝트를 지원해 주시는 다음 파트너 여러분께 감사드립니다.
+Toonflow (HBAI-Ltd) 오픈 소스 프로젝트를 지원해 주시는 다음 파트너 여러분께 감사드립니다.
 
-<table>
-  <tr>
-    <td width="50%" valign="top">
-      <a href="https://metaso.cn/minimax-h3/?s=toon"><img src="../images/sponsors/metaso.svg" alt="Metaso" height="28" valign="middle" /> <strong>Metaso</strong></a>
-      <br />
-      <sub>합리적인 비용의 MiniMax H3 영상 생성: 768P는 초당 단 ¥0.09, 2K는 초당 ¥0.15(CNY)입니다. 네이티브 2K, 영상·음성 동기화, OpenAI 호환 API, ComfyUI, 무한 캔버스를 지원하며 GPU를 직접 구축할 필요가 없습니다. <a href="https://metaso.cn/minimax-h3/?s=toon">전용 링크로 가입</a>하면 보너스 크레딧과 특별 혜택을 받을 수 있습니다. 비즈니스 문의는 WeChat의 metasota12로 연락해 주세요.</sub>
-    </td>
-    <td width="50%" valign="top">
-      <a href="https://go.apimart.ai/gh-toonflow-app"><img src="../images/sponsors/apiMart.jpg" alt="APIMart" height="28" valign="middle" /> <strong>APIMart</strong></a>
-      <br />
-      <sub>프로젝트를 후원해 주신 APIMart에 감사드립니다! APIMart는 AI 이미지·영상 생성용 저렴한 API 플랫폼입니다. GPT-Image-2는 이미지당 $0.006부터 시작하여 $1로 160장 이상을 생성할 수 있습니다. 이미지와 영상에 하나의 비동기 API를 사용하며, 작업을 제출해 ID를 받은 뒤 콜백으로 결과를 받습니다. 이미지 10,000장을 일괄 처리해도 시간 초과가 없으며 코드 수정 없이 모델을 변경할 수 있습니다. 월정액 없이 사용한 만큼만 결제합니다. <a href="https://go.apimart.ai/gh-toonflow-app">여기에서 가입</a>하여 시작하세요.</sub>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow"><img src="../images/sponsors/compShare.png" alt="CompShare" height="28" valign="middle" /> <strong>CompShare</strong></a>
-      <br />
-      <sub>CompShare는 텍스트 기반 영상 생성, 첫 프레임·마지막 프레임 제어, 통합 참조 모드를 포함한 합리적인 H3 영상 생성 서비스를 제공합니다. 최대 30초 길이의 네이티브 2K 영상을 생성할 수 있으며 768P는 초당 단 CNY 0.08입니다. API 사용, 기업용 높은 동시 처리량, 셀프서비스 청구서 발급을 지원합니다.</sub>
-      <br /><br />
-      <sub>🎁 <a href="https://www.compshare.cn/video-studio?ytag=GPU_YY_YX_git_toonflow">전용 링크로 가입</a>하면 CNY 5 상당의 무료 체험 크레딧을 드립니다!</sub>
-    </td>
-    <td width="50%" valign="top"></td>
-  </tr>
-</table>
+Metaso · APIMart · CompShare
 
-<details>
-<summary><strong>👉 후원 참여하기 👈</strong></summary>
-
-<p align="center">
-  <img src="../images/businessQr.png" alt="비즈니스 문의용 WeChat QR 코드" width="200" />
-</p>
-
-<p align="center"><sub>이 연락처는 비즈니스 문의 전용이며 기술 지원은 제공하지 않습니다. 사용 관련 질문은 커뮤니티 그룹에서, 기능 요청과 버그 제보는 피드백 양식으로 보내 주세요. 양해해 주셔서 감사합니다.</sub></p>
-
-</details>
+[Lum · 후원 참여하기](../../../../docs/contact.md#business)
 
 ---
 
@@ -207,7 +117,7 @@ Lum는 숏드라마, 모션 코믹스, 짧은 영상 제작을 위한 오픈 소
 | 🏠 **로컬 배포** | 프로젝트와 자산을 자신의 기기나 서버에 저장하며 데스크톱, Android, Docker, 서버 배포를 지원합니다. |
 | 🖼️ **무한 캔버스** | 하나의 캔버스에서 대본, 캐릭터, 장면, 영상 클립을 정리합니다. |
 | 🔌 **MCP** | MCP를 통해 외부 도구와 서비스에 연결합니다. |
-| 🧩 **플러그인 마켓** | [플러그인 마켓](https://api.toonflow.net/console/plugIn)에서 노드, 도구, 창작 기능을 확장합니다. |
+| 🧩 **플러그인 마켓** | [플러그인 마켓](../../../../marketplace/README.md)에서 노드, 도구, 창작 기능을 확장합니다. |
 | 🤖 **개방형 Agent** | 프롬프트, 도구, A2A를 개방하여 Agent 동작을 맞춤 설정하고 외부 Agent와 협업할 수 있습니다. |
 | 🔧 **유연한 모델 연결** | 타사 API를 설정하거나 로컬 ComfyUI 및 LLM에 연결합니다. |
 | 🌐 **다국어 지원** | 21개 인터페이스 언어를 지원합니다. |
@@ -254,9 +164,9 @@ Lum는 숏드라마, 모션 코믹스, 짧은 영상 제작을 위한 오픈 소
 
 | 운영 체제 | GitHub |
 | --- | --- |
-| Windows | [릴리스](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
-| macOS | [릴리스](https://github.com/HBAI-Ltd/Toonflow-app/releases) |
-| Android ARM64 | [APK 다운로드](https://github.com/HBAI-Ltd/Toonflow-app/releases/latest) |
+| Windows | [릴리스](https://github.com/ZxzZhao6668/Lum-OpenSource/releases) |
+| macOS | [릴리스](https://github.com/ZxzZhao6668/Lum-OpenSource/releases) |
+| Android ARM64 | [APK 다운로드](https://github.com/ZxzZhao6668/Lum-OpenSource/releases) |
 
 Android 앱은 ARM64 기기만 지원합니다. 릴리스 페이지에서 `lum-VERSION-android-arm64.apk`를 다운로드하여 설치하세요. 로컬 Bun 백엔드가 포함되어 독립적으로 실행할 수 있습니다. 홈 화면의 ‘기기 연결’에서 QR 코드를 스캔하거나 연결 정보를 직접 입력하여 공유가 켜진 컴퓨터나 원격 백엔드에 LAN 또는 인터넷을 통해 연결할 수 있습니다.
 
@@ -293,9 +203,11 @@ sudo spctl --master-disable
 
 </details>
 
-자세한 내용은 [사용 가이드](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf)를 참고하세요.
+자세한 내용은 [사용 가이드](../../../../docs/user-guide.md)를 참고하세요.
 
 ---
+
+<a id="docker"></a>
 
 ### 4.2 Docker 설치
 
@@ -307,8 +219,8 @@ sudo spctl --master-disable
 소스를 복제한 뒤 저장소 루트에서 다음 명령을 실행하세요.
 
 ```sh
-git clone https://github.com/HBAI-Ltd/Toonflow-app.git
-cd Lum-app
+git clone https://github.com/ZxzZhao6668/Lum-OpenSource.git
+cd Lum-OpenSource/vendor/lum
 docker compose up -d --build
 ```
 
@@ -341,6 +253,8 @@ docker compose start
 
 ---
 
+<a id="server"></a>
+
 ### 4.3 서버 설치
 
 Linux 서버에서 Web과 Server를 직접 실행하는 방식입니다. 아래 예시는 Ubuntu / Debian과 프로젝트 지정 버전인 [Bun 1.4.3](https://bun.sh/docs/installation)를 사용합니다.
@@ -361,8 +275,8 @@ bun --version
 소스를 복제하고 서비스를 시작하세요.
 
 ```sh
-git clone https://github.com/HBAI-Ltd/Toonflow-app.git
-cd Lum-app
+git clone https://github.com/ZxzZhao6668/Lum-OpenSource.git
+cd Lum-OpenSource/vendor/lum
 bun install --frozen-lockfile
 
 # Build bundled nodes, tools, Web, and Server
@@ -388,13 +302,13 @@ bun run start:server
 
 ### 4.5 클라우드 배포
 
-파트너 [AI Galaxy(智星云)](https://www.ai-galaxy.com/)는 실행 환경이 준비된 공식 승인 Lum 상용 이미지를 제공합니다. 사용법은 [이미지 배포 그림 가이드](https://mp.weixin.qq.com/s/lq9X1ovQ1_TKeXMOLgicKg?scene=1)를 참고하세요.
+[Docker 설치](#docker) · [서버 설치](#server)
 
 ---
 
 ## 5. 🎬 제작 예시
 
-https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
+Toonflow (HBAI-Ltd)
 
 ### 제작 정보
 
@@ -406,27 +320,19 @@ https://github.com/user-attachments/assets/2d9fddac-dfdf-4640-b030-b09d7f7287e9
 | 언어 모델 | Claude Opus 4.6 |
 | 모델 API 비용 | 약 ¥130 CNY(중국 위안): 언어 모델 약 ¥10, 영상 약 ¥120, 이미지 ¥1 미만. |
 
-이 비용은 해당 예시의 기록이며 참고용입니다. 실제 비용은 모델 서비스, 생성 횟수, 매개변수에 따라 달라집니다. 데모 영상은 압축된 480p 버전입니다.
+이 비용은 해당 예시의 기록이며 참고용입니다. 실제 비용은 모델 서비스, 생성 횟수, 매개변수에 따라 달라집니다.
 
 ---
 
 ## 6. 👨‍👩‍👧‍👦 WeChat 커뮤니티
 
-QR 코드를 스캔하여 그룹 초대 도우미에게 연락하세요.
-
-<img src="../images/qr.png" alt="Lum 커뮤니티 QR 코드" height="400"/>
-
-아래 아이콘을 눌러 Discord에 참여할 수도 있습니다.
-
-[![Discord 참여하기](https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/67d00cf7266d2c75571aebde_Example.svg)](https://discord.gg/HEjKmpNpAZ)
-
-초대 링크로도 참여할 수 있습니다: [https://discord.gg/HEjKmpNpAZ](https://discord.gg/HEjKmpNpAZ)
+[WeChat 커뮤니티](../../../../docs/contact.md#community)
 
 ---
 
 ## 7. 💌 문의
 
-📧 이메일: [ltlctools@outlook.com](mailto:ltlctools@outlook.com?subject=Lum咨询)
+[GitHub Issues](https://github.com/ZxzZhao6668/Lum-OpenSource/issues) · [문의](../../../../docs/contact.md)
 
 ---
 
@@ -434,7 +340,7 @@ QR 코드를 스캔하여 그룹 초대 도우미에게 연락하세요.
 
 Lum는 [MIT License](../../LICENSE)로 배포됩니다. 타사 의존성과 자산에는 각각의 라이선스와 저작권 고지가 적용됩니다.
 
-[![Lum 스타 기록](https://api.star-history.com/svg?repos=HBAI-Ltd/Toonflow-app&type=Date)](https://www.star-history.com/#HBAI-Ltd/Toonflow-app&Date)
+[![Lum 스타 기록](https://api.star-history.com/svg?repos=ZxzZhao6668/Lum-OpenSource&type=Date)](https://github.com/ZxzZhao6668/Lum-OpenSource/stargazers)
 
 > **소급 적용 제외 조항**: v1.0.8 이전 버전을 AGPL-3.0으로 사용한 이용자에게는 계속 AGPL-3.0이 적용됩니다. v1.0.8부터 v1.1.8까지의 버전에는 Apache-2.0 및 추가 약정이 계속 적용됩니다. 이 이용자들에게 이번 라이선스 변경은 적용되지 않습니다.
 

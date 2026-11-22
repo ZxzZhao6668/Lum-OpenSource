@@ -1,6 +1,6 @@
 # Lum 文档目录
 
-[返回项目首页](../README.md)
+[返回项目首页](https://github.com/ZxzZhao6668/Lum-OpenSource)
 
 ## 项目介绍
 
@@ -32,10 +32,10 @@
 
 ## 使用与开发
 
-- [使用教程](https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf)：日常操作与创作流程。
+- [使用教程](../../../docs/user-guide.md)：日常操作与创作流程。
 - [开发与扩展指南](./development.md)：源码运行、插件扩展、桌面打包和更新发布。
 - [Android 说明](../apps/mobile/readme.md)：ARM64 APK、本地运行、设备互联与构建。
-- [贡献指南](../CONTRIBUTING.md)与[开发规范](../AGENTS.md)：参与项目的约定。
+- [贡献指南](../CONTRIBUTING.md)：参与项目的约定。
 - [多语言维护说明](../packages/i18n/readme.md)：字典抽取、动态文案、前后端接入和语言回退。
 - [多语言回归记录](../packages/i18n/regression.md)：已完成的检查与已知范围。
 - [MCP 接入说明](../packages/mcp/README.md)：外部客户端连接与工具能力。

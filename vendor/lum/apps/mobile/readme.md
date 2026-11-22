@@ -4,7 +4,7 @@
 
 ## 设备互联与手动连接
 
-桌面「设置 → 设备互联」中的「允许其他设备连接」默认关闭。开启后直接显示二维码，局域网地址优先选择 `192.168.*`。手机和电脑都可以在 Home 页「设置」右侧或首次配置 hello 页点击「设备互联」，使用摄像头或读取二维码图片。也可以选择「手动输入」，填写对方「手动连接信息」中的地址和 12 位数字配对码。二维码与数字码不设时间限制，共用一次配对机会；刷新、修改互联配置、关闭互联或重启服务端会使旧码失效。数字码每分钟最多尝试 10 次，二维码不受此限制。端口、共享工作目录、其他局域网地址和公网 HTTPS 配置均放在「高级选项」中，首次开启默认使用已有项目的工作目录。
+桌面「设置 → 设备互联」中的「允许其他设备连接」默认关闭。开启后直接显示二维码，局域网地址优先选择 `192.168.*`。手机和电脑都可以在画布首页侧栏点击「设备互联」，使用摄像头或读取二维码图片。也可以选择「手动输入」，填写对方「连接新设备」下的地址和 12 位数字配对码。二维码与数字码不设时间限制，共用一次配对机会；刷新、修改互联配置、关闭互联或重启服务端会使旧码失效。数字码每分钟最多尝试 10 次，二维码不受此限制。端口、共享工作目录、其他局域网地址和公网 HTTPS 配置均放在「高级选项」中，首次开启默认使用已有项目的工作目录。
 
 电脑也能连接另一台电脑。连接远程设备后，本机共享监听和 MCP 服务停止，当前设备只作为客户端；设置中显示连接状态和「断开并独立运行」。断开恢复独立运行后可重新开启共享，不会自动重新开放端口。桌面切换时更换本地网关端口并重新加载窗口，保留本机剪贴板和文件导出能力；工作目录来自对方服务器。
 
@@ -30,7 +30,7 @@
 
 ## 构建
 
-当前脚本用于 Windows，需要 Bun、JDK 17 或更新版本，以及已接受许可的 Android SDK 目录。`setup` 自动安装 Platform 37.1 和 Build Tools 36.0.0。在仓库根目录执行：
+当前脚本用于 Windows，需要 Bun、JDK 17 或更新版本，以及已接受许可的 Android SDK 目录。`setup` 自动安装 Platform 37.1 和 Build Tools 36.0.0。进入 `vendor/lum` 目录后执行以下命令。构建脚本需要 `apps/mobile/native/defaultSigning.keystore`。开源仓库不附签名文件，自行构建前请准备与本地 Gradle 签名配置对应的测试密钥。
 
 ```powershell
 # 本机已有的 SDK / JDK；其他机器按实际安装路径调整。
@@ -51,19 +51,13 @@ bun run --cwd apps/mobile build
 
 `build` 先调用根目录的 `build:server`，构建节点、工具、扩展、前端、后端及 MCP，再将移动端服务与 MCP stdio 入口一起构建，共享重复依赖。APK 的 payload 包含 `server.js`、`stdio.js`、共享代码块、`web`、`nodes`、`tools`、`ext`、`providers`、`skills` 和 Photon 的 JS/WASM 包；团队保持当前仓库未内置打包的状态。payload 内容生成 `revision.txt`，用于随构建更新内置插件。发行包启用 R8 代码优化与资源裁剪，保留 Gecko 官方消费者规则及完整 ARM64 内核。
 
-输出：`build/mobile/lumMobile.apk`。包名为 `com.toonflow.mobile`，最低 Android 8 / API 26，目标 API 34。本地和 CI 共用仓库内公开的默认签名 `native/defaultSigning.keystore`，别名为 `androiddebugkey`，密码均为 `android`。沿用此前本地默认签名，不再每次生成密钥，后续版本可直接覆盖安装并保留应用数据。
+输出：`build/mobile/lumMobile.apk`。包名为 `com.toonflow.mobile`，最低 Android 8 / API 26，目标 API 34。本地构建使用 `native/build.gradle.kts` 中的签名配置。请保留自己的签名文件，后续覆盖安装需使用同一签名。
 
-版本默认沿用 `electrobun.config.ts` 的 `app.version`，可通过 `appVersion` 指定 `X.Y.Z`。Android `versionCode` 按 `X × 1000000 + Y × 1000 + Z` 生成，Y、Z 不超过 999，结果须在 1–2100000000 内；更新时使用更高版本号。
+版本默认沿用 `appMetadata.ts` 的 `appMetadata.version`，可通过 `appVersion` 指定 `X.Y.Z`。Android `versionCode` 按 `X × 1000000 + Y × 1000 + Z` 生成，Y、Z 不超过 999，结果须在 1–2100000000 内；更新时使用更高版本号。
 
-## GitHub Actions
+## 获取客户端
 
-在 Actions 中选择 **Debug build → Run workflow**，将 `target` 设为 `androidArm64` 可单独构建 ARM64 APK，选择 `all` 会同时构建桌面与 Android。版本留空时使用所选标签或项目配置。Android 默认生成 debug 包，可在本次运行的 Artifacts 或 Summary 中下载。开启 `androidRelease` 会启用 R8 和资源裁剪、关闭 `debuggable` 并去掉文件名中的 `-debug` 后缀；发布和分发应使用此模式。两种模式使用相同默认签名，无需配置 Android Secrets。
-
-现有 **Release Lum** 工作流在推送 `vX.Y.Z` 标签或手动发布时，会并行构建桌面与 Android，全部成功后将 `toonflow-X.Y.Z-android-arm64.apk` 附加到同一个 GitHub Release。Android APK 暂不上传到桌面更新托管接口，应用内「前往 GitHub 更新」会打开最新发布页。
-
-CI 使用 Windows 2025 自带 JDK 17 和已接受许可的 Android SDK 目录；依赖安装后，mobile `setup` 负责准备所需 SDK、GeckoView 与构建依赖，再执行离线 `build`。默认签名文件直接来自源码，Android 构建不读取签名 Secrets。
-
-本地需要复现发布构建时，设置 `androidRelease=1`，然后执行同一个 mobile `build` 命令。
+请在 [Lum 发布页](https://github.com/ZxzZhao6668/Lum-OpenSource/releases) 查看各版本提供的附件。需要连接电脑时，可参考[设备互联说明](../../../../docs/device-link.md)。
 
 ## 安装到 ARM64 设备
 
@@ -100,4 +94,4 @@ $adb = Join-Path $env:ANDROID_HOME 'platform-tools\adb.exe'
 - FFmpeg 当前没有 Android 发行包，转码、抽帧等依赖 FFmpeg 的功能暂不可用；不能将 Linux 二进制直接用于 Android。
 - Activity 退出时停止 Bun；没有后台长任务或前台服务。
 - Bun Android 仍为实验性支持。MuMu 的验证不能代替 ARM64 真机验证；真实手机上的系统 WebView / GeckoView 切换、离线启动、相机、文件导入导出、内存、媒体编解码及后台行为仍需单独确认。
-- 支持 Windows 本地构建和 GitHub Actions APK 构建与签名，不包含应用商店上架流程。
+- 支持在 Windows 本地构建并签名 APK。

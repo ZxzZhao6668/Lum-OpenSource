@@ -5,7 +5,7 @@ metadata:
   version: "1.1.0"
   displayName: v1.1.8 分集制作流程
   author: Lum
-  github: https://github.com/HBAI-Ltd/Toonflow-app
+  github: https://github.com/ZxzZhao6668/Lum-OpenSource/blob/main/vendor/lum/packages/skills/v118workflow/SKILL.md
 ---
 
 # v1.1.8 分集制作流程
