@@ -1,0 +1,20 @@
+.productionWorkspaceBody > .manuscriptPanel { display:flex; flex-direction:column; width:min(384px,calc(100% - 24px)); }
+.manuscriptPanel > header { display:flex; align-items:center; justify-content:space-between; }
+.manuscriptSource { display:grid; gap:4px; color:var(--lum-muted); font-size:12px; }
+.manuscriptSource select { width:100%; min-height:32px; border:1px solid var(--lum-line); border-radius:7px; padding-inline:8px; background:var(--lum-input); color:var(--lum-text); }
+.manuscriptKinds { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:2px; border-bottom:1px solid var(--lum-line); }
+.manuscriptPanel .manuscriptKinds button { min-height:34px; padding:2px; color:var(--lum-muted); border:0; border-radius:0; border-block-end:2px solid transparent; background:transparent; font-size:12px; white-space:nowrap; }
+.manuscriptKinds button span { margin-inline-start:3px; font-size:10px; }
+.manuscriptPanel .manuscriptKinds button[aria-pressed=true] { color:var(--lum-text); border-block-end-color:var(--lum-accent,currentColor); font-weight:650; }
+.manuscriptList { flex:1; overflow:auto; }
+.manuscriptEntry { display:grid; grid-template-columns:16px minmax(0,1fr) 30px; align-items:start; gap:2px 6px; padding:8px 2px; border-bottom:1px solid var(--lum-line); }
+.manuscriptEntry input { width:14px; height:14px; margin-block-start:5px; }
+.manuscriptEntry details { grid-column:2; grid-row:1; min-width:0; }
+.manuscriptEntry summary { cursor:pointer; font-size:13px; font-weight:600; overflow-wrap:anywhere; line-height:1.7; }
+.manuscriptEntry pre { padding:8px; margin:7px 0 0; max-height:32vh; overflow:auto; background:var(--lum-panel); border-radius:6px; font:inherit; font-size:13px; line-height:1.7; white-space:pre-wrap; overflow-wrap:anywhere; user-select:text; }
+.manuscriptEntry small { grid-column:2; grid-row:2; color:var(--lum-muted); font-size:11px; }
+.productionMaterials .manuscriptEntry .materialAdd { grid-column:3; grid-row:1; line-height:1; }
+.manuscriptPanel .manuscriptInsert { width:100%; min-height:34px; }
+.manuscriptPanel footer p:not(:empty) { margin-top:6px; overflow:auto; }
+@media(max-width:460px) { .productionWorkspaceBody>.manuscriptPanel { inset:6px; width:auto; max-height:calc(100% - 12px); padding:12px; gap:7px; } }
+

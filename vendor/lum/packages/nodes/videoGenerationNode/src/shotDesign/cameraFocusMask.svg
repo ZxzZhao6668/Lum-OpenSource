@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="none">
+  <defs>
+    <filter id="feather" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="4" />
+    </filter>
+    <mask id="background">
+      <rect width="1600" height="900" fill="white" />
+      <path filter="url(#feather)" d="M565 924
+        C548 849 551 719 563 626 C566 559 578 510 598 478
+        C620 453 672 443 703 425 L735 399 L741 376
+        C718 365 701 340 692 314 C677 270 687 222 709 192
+        C727 165 758 151 799 155 C849 153 881 181 890 222
+        C900 264 891 312 868 351 L853 377 L850 399 L877 422
+        C908 442 969 458 986 486 C1009 540 1024 622 1018 698
+        C1020 780 1016 859 998 924 Z" />
+    </mask>
+  </defs>
+  <rect width="1600" height="900" fill="white" mask="url(#background)" />
+</svg>

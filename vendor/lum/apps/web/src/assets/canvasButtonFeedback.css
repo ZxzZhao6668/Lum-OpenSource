@@ -1,0 +1,25 @@
+/* Shared by the host canvas and its embedded workspace. Keep node positioning and drag handles independent. */
+html[data-lum-theme] :is(.dsh-lum-workspace:not(.is-settings), .dsh-canvas-board, .workspacePage, .floatingAgent, .shotDesignDialog, body:has(.workspacePage) :where(.el-dialog, .el-popper)) {
+  --lum-canvas-hover-shadow: inset 0 0 9px -2px color-mix(in srgb, var(--lum-link) 10%, transparent),
+    0 2px 12px -4px rgb(0 0 0 / 12%);
+
+  :is(button, [role="button"], [role="tab"], [role="menuitem"], .el-segmented__item):not(:where(:disabled, [aria-disabled="true"], [aria-busy="true"], .is-disabled, .is-loading, [draggable="true"], .dragging, .selectionHandle, .resizeCorner, .vue-flow__handle, .vue-flow__node, .react-flow__node, [inert] *, [aria-disabled="true"] *, .dragging *, .settings *, [role="slider"])) {
+    &:focus-visible {
+      outline: 2px solid var(--lum-link, currentColor);
+      outline-offset: 2px;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        box-shadow: var(--lum-canvas-hover-shadow);
+      }
+    }
+
+    @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+      &:not([data-lum-motion="off"] *) {
+        transition: scale 180ms ease-out, box-shadow 180ms ease-out, background-color 180ms ease-out, border-color 180ms ease-out;
+      }
+      &:not([data-lum-motion="off"] *):hover:not(:active) { scale: 1.015; }
+    }
+  }
+}

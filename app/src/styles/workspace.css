@@ -1,0 +1,106 @@
+@import "tailwindcss" source(none);
+@source "../";
+@theme inline {
+  --color-foreground: var(--lum-text);
+  --color-muted-foreground: var(--lum-muted);
+  --color-background: var(--lum-canvas);
+  --color-card: var(--lum-surface);
+  --color-panel: var(--lum-panel);
+  --color-border: var(--lum-line);
+  --color-sidebar-accent: var(--lum-hover);
+}
+body { background: var(--lum-canvas); color: var(--lum-text); }
+button:not(:disabled),summary { cursor: pointer; }
+button:focus-visible, summary:focus-visible { outline: 2px solid var(--lum-link); outline-offset: 2px; }
+.lumWritingWorkspace {
+  position:relative; display:grid; grid-template-columns:clamp(172px, 15vw, 184px) minmax(0, 1fr);
+  height: 100%; min-height: 0; overflow: hidden;
+  background: var(--lum-canvas); color: var(--lum-text); font: 14px/1.5 var(--lum-font-ui);
+}
+.lumWritingRail {
+  display: flex; flex-direction: column; align-items: stretch; gap: 5px; padding: 8px 4px;
+  overflow-y: auto; background: var(--lum-surface); border-inline-end: 1px solid var(--lum-line);
+}
+.lumWritingRail button {padding: 8px 2px; min-height: 36px; border-radius: 8px; font-size: 12px; text-align:center;}
+.lumWritingRail button:first-child {display: grid;justify-items:center;gap: 2px;margin-bottom: 6px;}
+.lumWritingRail img {width: 33px;height: 33px;object-fit:contain;}
+.lumWritingRail button[aria-current="page"], .lumWritingTabs [aria-current="page"] {background: var(--lum-selected-glass);font-weight: 650;color: var(--lum-text);}
+.lumWritingRail button:hover,.lumWritingTabs button:hover,.lumWritingHeader button:hover,.lumProjectHeading button:hover {background: var(--lum-hover);}
+.lumRailSettings { margin-top:auto; }
+.lumProjectSidebar {
+  display:flex; flex-direction:column; overflow:auto; min-width:0; min-height:0;
+  scrollbar-width:thin; scrollbar-color:var(--lum-line) transparent;
+  border-inline-end:1px solid var(--lum-line); padding:0 8px 10px; background:var(--lum-panel);
+}
+.lumProjectSidebar > * { flex:none; }
+.lumSidebarScrim { display:none; }
+.lumProjectHeading { position:sticky; top:0; z-index:2; display:flex; align-items:center; gap:2px; min-height:48px; margin:0 0 8px; padding:4px; border-bottom:1px solid var(--lum-line); background:var(--lum-panel); }
+.lumProjectHeading h3 { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:15px; font-weight:650; }
+.lumProjectHeading button { display:grid; place-items:center; inline-size:24px; block-size:30px; flex:none; border-radius:6px; }
+.lumSidebarToggle { display:inline-flex; align-items:center; justify-content:center; gap:6px; color:var(--lum-text); }
+.lumSidebarIcon { position:relative; display:inline-block; width:17px; height:14px; border:1.5px solid currentColor; border-radius:3px; }
+.lumSidebarIcon::before { content:""; position:absolute; inset:0 auto 0 4px; border-inline-start:1px solid currentColor; }
+.lumSidebarIcon::after { content:""; position:absolute; width:4px; height:4px; top:3.5px; right:2px; border-inline-start:1px solid; border-block-end:1px solid; transform:rotate(45deg); }
+[data-sidebar-toggle=show] .lumSidebarIcon::after { transform:rotate(225deg); }
+.lumSidebarGroup:has(> [data-page-index]:empty) { display:none; }
+.lumSidebarGroup { padding-block:1px; min-width:0; }
+.lumSidebarGroup > summary { display:flex; align-items:center; gap:8px; min-height:32px; padding:5px 8px; border-radius:6px; list-style:none; font-size:13px; font-weight:600; color:var(--lum-text); }
+.lumSidebarGroup > summary::-webkit-details-marker { display:none; }
+.lumSidebarGroup > summary::before { content:""; width:6px; height:6px; border-block-start:1px solid; border-inline-end:1px solid; transform:rotate(45deg); }
+.lumSidebarGroup[open] > summary::before { transform:rotate(135deg); }
+.lumSidebarGroup > summary:hover { color:var(--lum-text); background:var(--lum-hover); }
+.lumWritingTabs,.lumProjectSidebar .lumSidebarLinks { display:grid; grid-template-columns:minmax(0,1fr); gap:1px; margin:0 1px 5px 10px; padding:0 0 0 4px; border-inline-start:1px solid var(--lum-line); }
+.lumWritingTabs button,.lumProjectSidebar .lumSidebarLinks > button,.lumProjectSidebar > button { display:block; width:100%; min-height:28px; padding:4px 8px; border:0; border-radius:6px; background:transparent; color:var(--lum-text); text-align:start; font-size:13px; box-shadow:none; }
+.lumProjectSidebar .lumSidebarLinks > button:hover,.lumProjectSidebar > button:hover { background:var(--lum-hover); }
+.lumProjectSidebar :is(.lumWritingTabs,.lumSidebarLinks) button[aria-current=page] { background:var(--lum-selected-glass); font-weight:650; }
+.lumProjectSidebar > button:last-child { margin-block-start:auto; padding-inline-start:12px; color:var(--lum-muted); }
+.lumWritingTabs [data-episode-count] { margin-inline-start:5px; color:var(--lum-muted); font-size:11px; }
+.lumSelectionTools {display:grid;grid-template-columns:minmax(0,1fr);gap:3px;margin:0 0 7px;}
+.lumSelectionTools > div {display:grid;grid-template-columns:minmax(0,1fr) 28px;border:1px solid var(--lum-line);border-radius:6px;background:var(--lum-surface);}
+.lumSelectionTools button {padding:3px 5px;font-size:12px;}
+.lumSelectionTools button:first-child {text-align:start;padding-inline-start:18px;}
+.lumSelectionTools button:hover:enabled {background:var(--lum-hover);}
+.lumWritingReferences {display:grid;}
+.lumWritingReferences [data-inspiration-dock]>button {font-weight:600;font-size:13px;}
+.lumWorldLinks,.lumPageIndex {display:grid;gap:4px;}
+.lumWorldLinks:not(:empty),.lumPageIndex:not(:empty) {margin-block:8px;}
+.lumInspiration {display:grid;gap:6px;justify-items:stretch;}
+.lumInspiration>button {text-align:left;}
+.lumInspirationComposer {display:grid;gap:5px;}
+.lumInspiration textarea {width:100%;resize:vertical;background:var(--lum-input);border:1px solid var(--lum-line);border-radius:8px;padding:7px 9px;}
+.lumInspirationActions {display:flex;justify-content:flex-end;gap:8px;}
+.lumInspirationActions button {color:var(--lum-muted);font-size:12px;}
+.lumWorkMain {min-height:0;min-width:0;display:flex;flex-direction:column;background:var(--lum-canvas);}
+.lumWritingHeader {flex:none;display:flex;align-items:center;flex-wrap:wrap;gap:4px;min-height:48px;padding:7px 16px;border-bottom:1px solid var(--lum-line);background:var(--lum-surface);}
+.lumWritingHeader button {padding:4px 9px;min-height:29px;border:1px solid transparent;border-radius:6px;font-size:12px;}
+.lumWritingHeader .lumSidebarToggle { width:32px; height:32px; padding:0; }
+.lumWritingHeader .lumHeaderHome { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+.lumHeaderHome::before { content:""; width:6px; height:6px; border-block-end:1.5px solid; border-inline-start:1.5px solid; transform:rotate(45deg); }
+.lumWritingHeader button:disabled {opacity:.45;cursor:default;}
+.lumWritingHeader .lumHeaderSegments {display:flex;align-items:center;gap:3px;margin-inline-end:auto;}
+.lumPageName {font-size:15px;font-weight:600;}
+.lumWorkspaceContent {flex:1;min-height:0;min-width:0;overflow:auto;}
+.lumWritingWorkspace:has(.writingFocusToggle[aria-pressed=true]) { grid-template-columns:minmax(0,1fr); }
+.lumWritingWorkspace:has(.writingFocusToggle[aria-pressed=true]) [data-sidebar-toggle] { display:none; }
+.lumWritingRail[data-dsh-lifted] { position:fixed; z-index:80; height:100dvh; width:60px; background:var(--lum-surface); }
+@media (min-width:641px) {
+  .lumWritingWorkspace[data-sidebar-wide-hidden=true] { grid-template-columns:minmax(0,1fr); }
+  [data-sidebar-wide-hidden=true] > .lumProjectSidebar,
+  [data-sidebar-wide-hidden=false] [data-sidebar-toggle=show] { display:none; }
+}
+@media (max-width:640px) {
+  [data-sidebar-narrow-hidden=true] > .lumProjectSidebar,
+  [data-sidebar-narrow-hidden=false] [data-sidebar-toggle=show] { display:none; }
+  .lumWritingWorkspace { grid-template-columns:minmax(0,1fr); }
+  .lumProjectSidebar { position:absolute; inset:0 auto 0 0; z-index:12; width:min(200px,calc(100% - 44px)); }
+  .lumWritingWorkspace[data-sidebar-narrow-hidden=false]:not(:has(.writingFocusToggle[aria-pressed=true])) > .lumSidebarScrim {
+    position:absolute; inset:0; z-index:11; display:block; width:100%; height:100%;
+    border:0; background:rgb(18 21 20 / .22); cursor:default;
+  }
+  .lumWritingWorkspace[data-sidebar-narrow-hidden=false]:not(:has(.writingFocusToggle[aria-pressed=true])) > .lumWorkMain { interactivity:inert; }
+  @supports not (interactivity:inert) {
+    .lumWritingWorkspace[data-sidebar-narrow-hidden=false]:not(:has(.writingFocusToggle[aria-pressed=true])) > .lumWorkMain { visibility:hidden; }
+  }
+  .lumProjectSidebar :is(.lumWritingTabs,.lumSidebarLinks) button { min-height:36px; }
+  .lumWritingHeader { padding-inline:8px; }
+}

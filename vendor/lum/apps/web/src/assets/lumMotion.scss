@@ -1,0 +1,55 @@
+html[data-lum-theme] {
+  &:not([data-lum-motion="off"]) {
+    .el-button { transition: background-color 160ms, border-color 160ms, box-shadow 160ms, opacity 140ms; }
+    .el-button:hover:not(:disabled) { box-shadow: inset 0 1px #ffffff10, 0 3px 10px #00000014; }
+    &[data-lum-motion="full"] .el-button:not(:disabled):not(.is-loading):active > span { transform: scale(.94); }
+    .el-button:not(:disabled):not(.is-loading):active > span { transform: scale(.97); }
+    .el-button > span { transition: transform 140ms var(--lum-ease); }
+    .nodeSkeleton .contentCard { transition: background-color 200ms, border-color 180ms, box-shadow 200ms; }
+    .vue-flow__node.dragging .nodeSkeleton .contentCard { transition: none; }
+    .vue-flow__edge.animated .vue-flow__edge-path { animation-duration: 900ms; animation-iteration-count: 2; }
+    .el-popper.is-light { animation: lumSurfaceEnter var(--lum-motion-duration) var(--lum-ease); }
+    .lumAgentEnterActive, .lumAgentLeaveActive { transition: opacity var(--lum-motion-duration) var(--lum-ease); }
+    .lumAgentEnterFrom, .lumAgentLeaveTo { opacity: 0; }
+    .lumAgentLeaveActive { pointer-events: none; transition-duration: 140ms; }
+
+    // 以下位移和缩放都用 translate、scale 独立属性：组件库的定位和自带过渡占着 transform，两者叠加而不互相覆盖。
+    // 菜单、弹层：「全开」时淡入并从略小、略低处归位；「柔和」保持只淡入。
+    &[data-lum-motion="full"] .el-popper.is-light { animation-name: lumSurfaceRise; }
+    // 对话框：组件库默认从上方滑入 20px，改为原地浮现，关闭更快，不拖住下一步操作。
+    .dialog-fade-enter-active .el-overlay-dialog { animation: lumSurfaceEnter var(--lum-motion-duration) var(--lum-ease); }
+    &[data-lum-motion="full"] .dialog-fade-enter-active .el-overlay-dialog { animation-name: lumDialogEnter; }
+    .dialog-fade-leave-active { animation-duration: 160ms; }
+    .dialog-fade-leave-active .el-overlay-dialog { animation: lumDialogLeave 160ms ease-in forwards; }
+    // 节点选中后出现的上方工具条和下方面板。
+    .nodeSkeleton .floatingSlot { animation: lumSurfaceEnter var(--lum-motion-duration) var(--lum-ease) backwards; }
+    &[data-lum-motion="full"] .nodeSkeleton .floatingSlot.topSlot { animation-name: lumSlotFromBelow; }
+    &[data-lum-motion="full"] .nodeSkeleton .floatingSlot.bottomSlot { animation-name: lumSlotFromAbove; }
+    // 列表项的悬停、选中不再瞬间切换。
+    .el-dropdown-menu__item, .el-select-dropdown__item, .settings .settingsItem { transition: background-color 140ms, color 140ms, box-shadow 140ms; }
+    // 首页项目卡片：悬停时抬起。
+    .home .projectCard, .home .projectLaunchCard { transition: translate 220ms var(--lum-ease), box-shadow 220ms, border-color 180ms; }
+    &[data-lum-motion="full"] .home .projectCard:hover, &[data-lum-motion="full"] .home .projectLaunchCard:hover { translate: 0 -3px; box-shadow: var(--lum-float-shadow); }
+  }
+  &[data-lum-motion="gentle"] .vue-flow__edge.animated .vue-flow__edge-path { animation-duration: 1200ms; animation-iteration-count: 1; }
+  .vue-flow__viewport, .vue-flow__transformationpane, .vue-flow__node { transition: none !important; }
+  .imageContent[data-lum-activity], .videoContent[data-lum-activity] {
+    > .el-loading-mask { background: #14161873; backdrop-filter: blur(7px); border-radius: inherit; }
+    .el-loading-spinner { display: grid; justify-items: center; gap: 18px; top: 50%; transform: translateY(-50%); margin-top: 0; }
+    .el-loading-spinner .circular { display: none; }
+    .el-loading-spinner::before { content: '正在生成'; color: #fff; font-size: 13px; font-family: var(--lum-font-ui); }
+    .el-loading-spinner::after { content: ''; width: min(60%,190px); height: 3px; border-radius: 3px; background: linear-gradient(90deg,transparent 35%,#f4f4f2 35% 55%,transparent 55%) #ffffff30; background-size: 240% 100%; animation: lumGenerationProgress 1.6s ease-in-out infinite; }
+    &[data-lum-activity="uploading"] .el-loading-spinner::before { content: '正在上传'; }
+  }
+  .videoContent[data-lum-activity="generating"] .el-loading-spinner::before { content: '正在生成视频'; }
+  .imageContent[data-lum-activity="generating"] .el-loading-spinner::before { content: '正在生成图片'; }
+  &[data-lum-motion="off"] *, &[data-lum-motion="off"] *::before, &[data-lum-motion="off"] *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: 0ms !important; scroll-behavior: auto !important; }
+}
+@keyframes lumSurfaceEnter { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lumSurfaceRise { from { opacity: 0; scale: .97; translate: 0 4px; } }
+@keyframes lumDialogEnter { from { opacity: 0; scale: .975; translate: 0 10px; } }
+@keyframes lumDialogLeave { to { opacity: 0; scale: .985; } }
+@keyframes lumSlotFromBelow { from { opacity: 0; translate: 0 6px; } }
+@keyframes lumSlotFromAbove { from { opacity: 0; translate: 0 -6px; } }
+@keyframes lumGenerationProgress { from { background-position: 120% 0; } to { background-position: -100% 0; } }
+@media(prefers-reduced-motion:reduce) { html[data-lum-theme] *, html[data-lum-theme] *::before, html[data-lum-theme] *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: 0ms !important; scroll-behavior: auto !important; } }

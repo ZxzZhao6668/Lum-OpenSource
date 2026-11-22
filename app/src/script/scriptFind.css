@@ -1,0 +1,29 @@
+.scriptFindLaunch.localButton { flex: none; padding: 4px 8px; font-size: 12px; }
+.scriptFind {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 8px;
+  padding: 6px 12px;
+  color: var(--lum-text, #263c30);
+  border-top: 1px solid var(--lum-writing-line, #d5ded7);
+  font-size: 12px;
+}
+.scriptFind[hidden] { display: none; }
+.scriptFind input[type="text"] {
+  flex: 1 1 135px;
+  width: 135px;
+  min-width: 0;
+  border: 1px solid var(--lum-line, #b9c6bd);
+  border-radius: var(--lum-control-radius, 8px);
+  padding: 4px 8px;
+  background: var(--lum-input, white);
+  color: inherit;
+  font: inherit;
+}
+.scriptFind [role="status"] { color: var(--lum-muted, #57675c); font-variant-numeric: tabular-nums; }
+.scriptFind label { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.scriptFind .localButton { font-size: inherit; padding: 4px 8px; }
+.scriptFind .localButton:disabled { opacity: .45; }
+::highlight(lum-script-find-current) { background-color: #ffcf59; color: #241b08; }
+[data-script-find-current] { outline: 2px solid #bd8b21; outline-offset: 2px; }

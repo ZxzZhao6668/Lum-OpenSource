@@ -1,0 +1,21 @@
+.assetLibraryBadge{font-size:12px;color:var(--lum-text-muted,#75857b);padding:4px 9px;border:1px solid var(--lum-line,#dae4dd);border-radius:20px}
+.assetLibraryTabs,.assetLibraryGenders{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.assetLibraryGenders[hidden]{display:none}
+.assetLibraryTabs button[aria-pressed=true],.assetLibraryGenders button[aria-pressed=true]{background:var(--lum-accent-soft,#d9f1b7);border-color:var(--lum-accent,#7aa153);color:var(--lum-text,#263b2e)}
+.assetLibraryFilters{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:18px 0 12px}.assetLibraryFilters input{flex:1 1 240px;min-width:0;max-width:100%;padding:10px 12px;border:1px solid var(--lum-line,#d2ded6);border-radius:9px;background:var(--lum-input,#fff);color:inherit;font:inherit}.assetLibraryFilters span{margin-left:auto}
+.assetLibraryPreview{display:flex;align-items:center;justify-content:center;width:100%;height:200px;border:0;border-radius:10px;background:var(--lum-surface,#f3f6f4);padding:0;overflow:hidden;cursor:zoom-in}.assetLibraryPreview img{width:100%;height:100%;object-fit:contain;max-height:100%}.assetLibraryPreview:focus-visible{outline:2px solid var(--lum-accent,#7aa153);outline-offset:3px}
+.assetLibrarySelection{display:flex;align-items:flex-start;gap:9px;cursor:pointer;min-width:0}.assetLibrarySelection input{flex:none;margin-top:3px;width:16px;height:16px;accent-color:var(--lum-accent,#7aa153)}.assetLibrarySelection strong{overflow-wrap:anywhere}
+.assetLibraryCard .assetLibraryNotes{white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:44px;color:var(--lum-text-muted,#75857b)}.assetLibraryCard>.localButton{margin-top:auto}
+.assetImportResults{padding-left:22px;line-height:1.8;font-size:13px;overflow-wrap:anywhere}.assetLibraryGrid{align-items:stretch}
+/* Let a click leave the expanded rail for the newly opened page's first controls. */
+[data-dsh-rail][data-library-navigation-collapsed]:not(:has(button:focus-visible)){width:40px!important;overflow:hidden}
+[data-dsh-rail][data-library-navigation-collapsed]:not(:has(button:focus-visible)) button>span>span:nth-child(2){opacity:0!important}
+.assetLibraryPaging{display:flex;align-items:center;justify-content:center;gap:12px;margin:18px 0}
+.assetLibraryPaging[hidden]{display:none}
+.assetLibraryCardActions{margin-top:auto}
+.assetLibraryDetailContent,.assetLibraryViewInputs{display:grid;gap:12px}
+.assetLibraryDetailContent h3{margin:0;overflow-wrap:anywhere}
+.assetLibraryViewFields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.assetLibraryViewFields .localField{min-width:0;margin:0}
+.assetLibraryDetailContent .assetLibraryPreview{height:clamp(160px,34vh,300px)}
+.assetLibraryPreview.hasImage{font-size:0}
+@media(max-width:560px){.assetLibraryViewFields{grid-template-columns:minmax(0,1fr)}}

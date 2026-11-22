@@ -1,0 +1,65 @@
+/* Reserve only the native chrome area; Laper already owns a 40px titlebar inset. */
+html[data-lum-desktop=true] body { padding-top:40px; box-sizing:border-box; }
+html[data-lum-desktop=true] body:has(.lumLaunchHome) { padding-top:0; }
+html[data-lum-desktop=true] .lumLaunchScroll { padding-top:64px; }
+html[data-lum-desktop=true] .dsh-lum-workspace:is(.is-standalone,.is-settings) { top:40px; }
+.lumDesktopTitlebar {
+  position:fixed; inset:0 0 auto; height:40px; box-sizing:border-box; padding:4px 8px 4px 14px;
+  display:flex; align-items:center; justify-content:space-between; gap:20px;
+  z-index:2147483646; background:color-mix(in srgb,var(--lum-canvas) 30%,transparent);
+  border:0; outline:0; box-shadow:none;
+  color:var(--lum-text); backdrop-filter:blur(28px) saturate(1.25); -webkit-backdrop-filter:blur(28px) saturate(1.25);
+  -webkit-app-region:drag; app-region:drag; user-select:none;
+}
+.lumDesktopWindowBrand { display:flex; gap:8px; align-items:center; min-width:0; pointer-events:none; }
+.lumDesktopWindowBrand img { width:34px; height:24px; object-fit:contain; }
+.lumDesktopWindowBrand span { max-width:min(45vw,480px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; letter-spacing:.03em; color:var(--lum-muted); }
+.lumDesktopWindowActions { display:flex; align-items:center; gap:4px; flex:none; -webkit-app-region:no-drag; app-region:no-drag; }
+.lumDesktopWindowActions button {
+  display:grid; place-items:center; width:36px; height:30px; padding:0; border:0; border-radius:9px;
+  background:transparent; color:var(--lum-text); cursor:pointer; -webkit-app-region:no-drag; app-region:no-drag;
+  transition:background-color 140ms ease,color 140ms ease;
+}
+.lumDesktopWindowActions svg { width:18px; height:18px; pointer-events:none; }
+.lumDesktopWindowActions button:hover:not(:disabled) { background:var(--lum-selected-glass); backdrop-filter:blur(12px); }
+.lumDesktopWindowActions button:active:not(:disabled) { background:color-mix(in srgb,var(--lum-text) 20%,transparent); }
+.lumDesktopWindowActions button[data-window-action=close]:hover { background:rgb(198 69 70 / .18); color:#b43439; }
+html[data-lum-theme=black] .lumDesktopWindowActions button[data-window-action=close]:hover { color:#ffb3b6; }
+.lumDesktopWindowActions button:disabled { opacity:.35; cursor:default; }
+.lumDesktopWindowActions button:focus-visible { outline:2px solid var(--lum-link); outline-offset:-2px; }
+html[data-lum-theme=black] .lumDesktopWindowBrand img { filter:drop-shadow(0 1px 1px #ffffff60); }
+html[data-lum-glass=off] .lumDesktopTitlebar { background:var(--lum-canvas); backdrop-filter:none; }
+@media(prefers-reduced-motion:reduce) { .lumDesktopWindowActions button { transition:none; } }
+.lumDesktopQuit {
+  position:fixed; inset:0; margin:auto; box-sizing:border-box;
+  width:min(420px,calc(100vw - 40px)); height:fit-content; max-height:calc(100dvh - 40px);
+  overflow:auto; padding:28px; border:1px solid color-mix(in srgb,var(--lum-text) 12%,transparent);
+  border-radius:28px; background:color-mix(in srgb,var(--lum-surface) 68%,transparent); color:var(--lum-text);
+  backdrop-filter:blur(36px) saturate(1.25); -webkit-backdrop-filter:blur(36px) saturate(1.25);
+  box-shadow:0 24px 80px #0002,inset 0 1px 0 #ffffff1a;
+  font-family:inherit; text-align:left; animation:lumQuitEnter 180ms ease-out;
+}
+.lumDesktopQuit::backdrop { background:rgb(16 20 20 / .16); backdrop-filter:blur(8px); }
+.lumDesktopQuitBrand { display:flex; align-items:center; gap:12px; margin-bottom:24px; }
+.lumDesktopQuitBrand img { width:72px; height:48px; object-fit:contain; }
+.lumDesktopQuitBrand span { font-size:12px; letter-spacing:.08em; color:var(--lum-muted); }
+.lumDesktopQuit h2 { margin:0 0 12px; font-size:24px; line-height:1.4; font-weight:550; letter-spacing:-.02em; }
+.lumDesktopQuit p { margin:0; font-size:14px; line-height:1.8; color:var(--lum-text); overflow-wrap:anywhere; }
+.lumDesktopQuitActions { display:flex; gap:12px; margin-top:28px; }
+.lumDesktopQuitActions button {
+  flex:1; min-width:0; padding:12px 16px; min-height:46px; border:0; border-radius:15px;
+  background:color-mix(in srgb,var(--lum-surface) 35%,transparent); color:var(--lum-text);
+  font:inherit; font-size:14px; font-weight:500; cursor:pointer;
+  transition:background 160ms ease,transform 160ms ease; backdrop-filter:blur(12px);
+}
+.lumDesktopQuitActions button[data-action=confirm] { background:var(--lum-selected-glass); }
+.lumDesktopQuitActions button:hover { background:color-mix(in srgb,var(--lum-surface) 65%,transparent); transform:translateY(-1px); }
+.lumDesktopQuitActions button:active { transform:translateY(0); background:var(--lum-selected-glass); }
+.lumDesktopQuitActions button:focus-visible { outline:2px solid color-mix(in srgb,var(--lum-text) 55%,transparent); outline-offset:3px; }
+.lumDesktopQuitActions button[hidden] { display:none; }
+.lumDesktopQuitActions button span { margin-left:8px; opacity:.6; }
+html[data-lum-theme=black] .lumDesktopQuit { box-shadow:0 24px 80px #0006,inset 0 1px 0 #ffffff0a; }
+html[data-lum-theme=black] .lumDesktopQuitBrand img { filter:drop-shadow(0 1px 1px #ffffff60); }
+html[data-lum-glass=off] .lumDesktopQuit { background:var(--lum-surface); backdrop-filter:none; }
+@keyframes lumQuitEnter { from { opacity:0; transform:translateY(8px) scale(.98); } to { opacity:1; transform:none; } }
+@media(prefers-reduced-motion:reduce) { .lumDesktopQuit,.lumDesktopQuitActions button { animation:none; transition:none; } }

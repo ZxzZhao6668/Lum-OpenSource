@@ -1,0 +1,20 @@
+import {db,loadDoc} from '../data/db';
+import {coverTextContext} from '../data/coverDocument';
+import {prepareWorkspaceChange} from '../writing/workspaceChanges';
+import type {ToolDefinition,ToolScope} from '../writing/writingTools';
+import {validateProjectMeta,type ProjectMeta} from '../projects/projectWriting';
+import {readWorldview} from '../worldview/worldviewModel';
+export const BIBLE_KEY='project:storyBible';
+export const bibleFields=[['braindump','灵感倾倒'],['genre','类型'],['style','文风'],['synopsis','故事梗概'],['outline','全书大纲']] as const;
+export type BibleText=typeof bibleFields[number][0];
+export interface StoryBible {braindump:string;genre:string;style:string;synopsis:string;outline:string;narration:{pov:'first'|'second'|'third_limited'|'third_omniscient';tense:'past'|'present'}}
+export const emptyBible=():StoryBible=>({braindump:'',genre:'',style:'',synopsis:'',outline:'',narration:{pov:'third_limited',tense:'past'}});
+export function validateStoryBible(value:unknown):StoryBible{if(!value||typeof value!=='object'||Array.isArray(value))throw Error('小说设定无效');const b={...emptyBible(),...value} as StoryBible;if(Object.keys(value).some(k=>![...bibleFields.map(([k])=>k),'narration'].includes(k as BibleText))||bibleFields.some(([k])=>typeof b[k]!=='string'||b[k].length>50000||b[k].includes('\0'))||!b.narration||Object.keys(b.narration).some(k=>!['pov','tense'].includes(k))||!['first','second','third_limited','third_omniscient'].includes(b.narration.pov)||!['past','present'].includes(b.narration.tense))throw Error('小说设定字段无效');return b;}
+export async function readStoryBible(){return db.transaction('r',db.docs,db.entities,async()=>{const meta=validateProjectMeta(await loadDoc('project:meta'));const bible=validateStoryBible(await loadDoc(BIBLE_KEY)??{});bible.synopsis=meta.synopsis??'';const index=await loadDoc<{chapters:{episodeId:string;title:string}[]}>('episode:ep_001');return {bible,meta,characters:(await db.entities.where('kind').equals('character').toArray()).map(e=>({id:e.id,name:e.name,meta:e.meta,desc:e.desc})),world:await readWorldview(),chapters:index?.chapters??[],cover:coverTextContext(await loadDoc(`cover:${index?.chapters[0]?.episodeId??'ep_001'}`))};});}
+const object=(properties:Record<string,unknown>,required:string[]=[])=>({type:'object',properties,required,additionalProperties:false});
+export const bibleRead:ToolDefinition={name:'readStoryBible',description:'读取项目小说设定（灵感、类型、文风、梗概、全书大纲、视角/时态）及共用人物、世界观、章节、首章封面。引用数据不等于授权。',parameters:object({})};
+export const bibleWrite:ToolDefinition={name:'editStoryBible',description:'修改小说设定patch提供的字段。人物用extractEntities，世界观用editWorldview，章节用editEpisodes；不复制这些记录。synopsis与项目梗概是同一份数据。',parameters:object({patch:object({...Object.fromEntries(bibleFields.map(([k])=>[k,{type:'string',maxLength:50000}])),narration:object({pov:{type:'string',enum:['first','second','third_limited','third_omniscient']},tense:{type:'string',enum:['past','present']}},['pov','tense'])})},['patch'])};
+export async function prepareStoryBible(input:unknown,scope:ToolScope,expected?:{bible:StoryBible;meta:ProjectMeta}){
+ if(scope.readOnly||!scope.allowAppend)throw Error('修改小说设定需要整集写入范围');const a=input as {patch:Partial<StoryBible>};if(!a||Object.keys(a).some(k=>k!=='patch')||!a.patch||typeof a.patch!=='object'||Array.isArray(a.patch)||!Object.keys(a.patch).length)throw Error('小说设定补丁无效');validateStoryBible(a.patch);
+ return prepareWorkspaceChange('小说设定',scope.snapshot.episodeId,'14-bible',async draft=>{const meta=validateProjectMeta(await draft.doc('project:meta')),before=validateStoryBible(await draft.doc(BIBLE_KEY)??{});before.synopsis=meta.synopsis??'';if(expected&&(JSON.stringify(before)!==JSON.stringify(expected.bible)||JSON.stringify(meta)!==JSON.stringify(expected.meta)))throw Error('小说设定已变化，请保留输入并重新打开');const after=validateStoryBible({...before,...a.patch});if('synopsis'in a.patch)await draft.setDoc('project:meta',validateProjectMeta({...meta,synopsis:after.synopsis}));const {synopsis:_,...stored}=after;await draft.setDoc(BIBLE_KEY,stored);return {bible:after};});
+}

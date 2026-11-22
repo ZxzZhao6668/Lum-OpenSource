@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (() => {
+        let theme = 'lime';
+        try { const saved = JSON.parse(localStorage.getItem('lum:appearance:v1') || 'null'); if (['lime','white','black'].includes(saved?.theme)) theme = saved.theme; } catch {}
+        document.documentElement.dataset.lumTheme = theme;
+        document.documentElement.classList.toggle('dark', theme === 'black');
+        document.documentElement.style.colorScheme = theme === 'black' ? 'dark' : 'light';
+      })();
+    </script>
+    <style>html{background:#eceeec;color:#20231f}html[data-lum-theme="white"]{background:#f1f2f3;color:#252525}html[data-lum-theme="black"]{background:#181818;color:#e6e6e4}body{background:inherit;color:inherit}</style>
+    <title>Lum · 影纪</title>
+    <link rel="icon" type="image/png" href="/brand/lumLogo.png" />
+    <style>html,body{margin:0;height:100%;overflow:hidden}</style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

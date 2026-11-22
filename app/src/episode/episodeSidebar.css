@@ -1,0 +1,105 @@
+.episodeSidebar {
+  display: grid;
+  min-width: 0;
+  color: var(--lum-text);
+}
+
+.episodeSidebarGroup {
+  min-width: 0;
+  padding: 1px 0;
+}
+
+.episodeSidebarHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.episodeSidebar button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.episodeSidebar button:focus-visible {
+  outline: 2px solid var(--lum-link);
+  outline-offset: -2px;
+}
+
+.episodeSidebar .episodeSidebarToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 5px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lum-text);
+}
+
+.episodeSidebarToggle::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.episodeSidebarToggle[aria-expanded='false']::before {
+  transform: rotate(-45deg);
+}
+
+.episodeSidebar .episodeSidebarAdd {
+  width: 30px;
+  height: 28px;
+  border-radius: 6px;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.episodeSidebarList {
+  display: grid;
+  gap: 2px;
+  margin-top: 3px;
+}
+
+.episodeSidebarList[hidden] {
+  display: none;
+}
+
+.episodeSidebarList > button {
+  display: block;
+  min-width: 0;
+  width: 100%;
+  padding: 7px 10px 7px 23px;
+  border-radius: 6px;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.episodeSidebar button:hover {
+  background-color: var(--lum-hover);
+}
+
+.episodeSidebarList > button[aria-current='true'] {
+  color: var(--lum-link);
+  background: var(--lum-accent-soft);
+  font-weight: 600;
+}
+
+.episodeSidebarList :is([data-empty-episodes], .dsh-scene-empty) {
+  margin: 0;
+  padding: 4px 8px 4px 23px;
+  font-size: 12px;
+  color: var(--lum-muted);
+  line-height: 1.5;
+}

@@ -1,0 +1,41 @@
+Lum 封面与创作补充技能包
+核对日期：2026-11-06
+
+安装位置
+14 项规则已内置在 Lum 自己的技能库，由 app/src/skills/coverSkills.ts 与 skillStore.ts 加载。
+不是安装到 Codex，也没有运行上游安装器或脚本。此目录的 JSON 是备份/迁移副本，正常使用无需重复导入。
+coverSkills.json：6 项封面技能；creativeGaps.json：8 项补充技能；allSkills.json：合计 14 项。
+
+上游来源与改编边界
+1. JimLiu/baoyu-skills，baoyu-cover-image，读取版本 1.117.5。
+   https://github.com/JimLiu/baoyu-skills/blob/main/skills/baoyu-cover-image/SKILL.md
+   MIT：https://github.com/JimLiu/baoyu-skills/blob/main/LICENSE
+   将其封面视觉维度、标题准确性与预览选择方法改编为 Lum 可直接调用的中文提示词规则。
+   6 个主题配方为 Lum 的设计扩展，不是上游同名原始技能，也不声称上游认证。
+   移除了命令行工具、外部后端选择、文件目录、配置文件读取和自动重试流程；由 Lum 的模型面板、提示词草稿、持久化任务和人工采用承接。
+
+2. JimLiu/baoyu-skills，baoyu-comic，读取版本 1.117.4。
+   https://github.com/JimLiu/baoyu-skills/blob/main/skills/baoyu-comic/SKILL.md
+   同一 MIT 许可。只适配漫画文字分镜的阅读顺序、页面节奏与参考职责。
+   不包含漫画图像生成、PDF拼装、上传、图片修补或外部批量工具。
+
+3. egguy886/write-screenplay-skill，write-screenplay。
+   https://github.com/egguy886/write-screenplay-skill/blob/main/SKILL.md
+   MIT：https://github.com/egguy886/write-screenplay-skill/blob/main/LICENSE
+   适配小说转可拍剧本的方法；保留项目姓名与语言，服从用户时长和题材。
+   不引入上游的强制改名、固定集数、固定秒点、外部流水线、脚本或模型能力宣称。
+
+完整许可保存在同目录 LICENSES.txt。应用每张改编技能卡均展示上游链接，并标注“适配/Lum 本地规则”。
+其余 6 项补充（道具三视图、材质局部、状态对照、场景反向视角、对白声口、绘本单帧）为 Lum 新编规则，不标为第三方原版。
+
+盘点与避免重复
+新增前的内置库：109 项（项目用户另行导入的技能不计入此数）：
+  创作规则 58，白模预演 28，创作顾问 6，人物资产专用 3，Laper 文风 8，其他基础/提取 6。
+  已有影视写作、人物/场景、单镜图、文字分镜、Seedance 2.0/2.5、MiniMax H3、视频风格与一致性，以及预演动作/镜头。
+缺口：没有封面用途/封面工作流，道具只有基础单幅规则，缺少面向改编、漫画页面节奏、反向场景与绘本单帧的独立项。
+新增后内置数：123。没有复制既有的视频模型风格包和28项预演技能，没有删除用户导入技能或重置用户默认选择。
+筛选新项目：技能库中的“封面创作”“道具资产”“改编与叙事”“叙事插画”；反向视角位于“场景资产”。
+
+验收边界
+规则有来源和明确用途，不等于模型供应商新增能力。不会自动生成、自动采用或保证角色一致性/文字绝对正确。
+真实付费生图仍由用户在 Lum 中选择已配置模型、审阅提示词后点击按钮触发。

@@ -1,0 +1,10 @@
+.dsh-paragraph-gutter { position: fixed; z-index: 60; display: flex; align-items: center; gap: 4px; height: 25px; width: 43px; color: #a6ada9; user-select: none; font: 11px/1 sans-serif; }
+.dsh-paragraph-gutter[hidden], .dsh-paragraph-drop[hidden] { display: none; }
+.dsh-paragraph-number { width: 20px; text-align: right; pointer-events: none; }
+.dsh-paragraph-gutter .dsh-paragraph-grip { width: 19px; height: 25px; border: 0; padding: 0; border-radius: 4px; background: transparent; color: inherit; font-size: 19px; line-height: 1; cursor: grab; touch-action: none; }
+.dsh-paragraph-grip:hover, .dsh-paragraph-grip:focus-visible { color: #1a4a35; background: #1a4a3510; outline-color: #87a494; }
+.dsh-paragraph-grip:active, .dsh-dragging-paragraph, .dsh-dragging-paragraph * { cursor: grabbing !important; }
+.dsh-paragraph-drop { position: fixed; height: 2px; background: #527d65; pointer-events: none; z-index: 61; }
+.dsh-paragraph-announcer { position: fixed; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; pointer-events: none; }
+[data-script-editor], [data-outline-editor], .dsh-chapter-paper { caret-color: #1a4a35; cursor: text; }
+[data-script-editor] ::selection, [data-outline-editor] ::selection, .dsh-chapter-paper::selection, .dsh-chapter-paper ::selection { color: inherit; background-color: #1a4a353d; }

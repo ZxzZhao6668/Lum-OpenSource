@@ -1,0 +1,122 @@
+.lumScriptView {
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+  box-sizing: border-box;
+  padding: 12px clamp(10px, 3%, 44px) 48px;
+  background: var(--lum-canvas, #f3f5f2);
+  color: var(--lum-text, #222825);
+  container-type: inline-size;
+}
+.lumScriptView > .lumScriptToolbar {
+  position: sticky;
+  top: 8px;
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2px 6px;
+  width: fit-content;
+  max-width: min(100%, 880px);
+  margin: 0 auto 18px;
+  padding: 4px 6px;
+  background: var(--lum-surface, #fff);
+  border: 1px solid var(--lum-line, #cdd6cf);
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+.lumParagraphFormats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 100%;
+  gap: 2px;
+  padding: 0;
+}
+.lumParagraphFormats > button {
+  flex: none;
+  min-height: 30px;
+  padding: 3px 10px;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.lumParagraphFormats > button:first-child { margin-inline-end: 3px; }
+.lumScriptToolbar .assetLinkToolbar {
+  max-width:100%; min-width:0; justify-content:center; gap:4px; padding:0 0 0 7px;
+  border-inline-start:1px solid var(--lum-writing-line);
+}
+.lumScriptToolbar .scriptFind { order:1; flex:1 0 100%; justify-content:center; min-width:0; }
+.assetLinkDisclosure { max-width:100%; text-align:center; }
+.assetLinkDisclosure > summary {
+  display:inline-flex; align-items:center; gap:5px; min-height:28px; padding-inline:8px;
+  border-radius:6px; cursor:pointer; color:var(--lum-link, currentColor); list-style:none;
+}
+.assetLinkDisclosure > summary::-webkit-details-marker { display:none; }
+.assetLinkDisclosure > summary::before {
+  content:""; width:5px; height:5px; border:solid currentColor; border-width:0 1.5px 1.5px 0;
+  transform:rotate(-45deg);
+}
+.assetLinkDisclosure[open] { flex-basis:100%; }
+.assetLinkDisclosure[open] > summary::before { transform:translateY(-1px) rotate(45deg); }
+.assetLinkDisclosure > summary:is(:hover,:focus-visible) { background:var(--lum-accent-soft); }
+.lumScriptToolbar .assetLinkSelection { justify-content:center; max-height:5em; overflow:auto; padding:3px; }
+.lumParagraphFormats > button[aria-pressed=true] {
+  background: var(--lum-selected-glass, #edf4ee);
+  font-weight: 650;
+}
+.lumManuscript {
+  margin-inline: auto;
+  width: min(100%, 880px);
+  box-sizing: border-box;
+  padding: 20px clamp(48px, 8%, 88px) 60px;
+  min-height: max(400px, calc(100% - 92px));
+  background: var(--lum-surface, #fff);
+  border: 1px solid var(--lum-line, #cdd6cf);
+  border-radius: 12px;
+}
+.lumScriptSaveStatus {
+  text-align: end;
+  font-size: 12px;
+  color: var(--lum-muted, #59675e);
+  padding-bottom: 12px;
+}
+.lumScriptSaveStatus[data-error] { color: var(--lum-danger, #b42318); }
+.lumManuscript [data-script-editor] {
+  min-height: 14em;
+  cursor: text;
+  outline: 0;
+  font: 16px/1.95 var(--lum-font-reading, system-ui);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.lumManuscript [data-block-id] {
+  min-height: 1.95em;
+  margin: 0;
+  scroll-margin-block: 8rem 2rem;
+}
+.lumManuscript [data-block-type=scene] {
+  font-weight: 700;
+  margin-block: 1.2em .45em;
+  border-block-end: 1px solid var(--lum-line, #cdd6cf);
+}
+.lumManuscript [data-block-type=character] { font-weight: 650; margin-block-start: .75em; }
+.lumManuscript :is([data-block-type=dialogue], [data-block-type=parenthetical]) { margin-inline-start: clamp(1em, 5%, 2.5em); }
+.lumManuscript :is([data-block-type=parenthetical], [data-block-type=comment]) { font-style: italic; color: var(--lum-muted, #59675e); }
+.lumManuscript [data-block-type=transition] { text-align: end; }
+.lumManuscript [data-block-type=subtitle] { text-align: center; }
+@container (max-width: 760px) {
+  .lumScriptToolbar .assetLinkToolbar { border:0; padding:0; }
+}
+@container (max-width: 560px) {
+  .lumManuscript { padding: 14px 18px 32px 47px; }
+  .lumManuscript [data-script-editor] { font-size: 15px; }
+  .lumParagraphFormats { padding: 4px; }
+  .lumParagraphFormats > button { padding-inline: 7px; }
+}

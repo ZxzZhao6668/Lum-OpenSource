@@ -1,0 +1,203 @@
+.writing-panel-portal {
+  --wp-ink: #263a30;
+  --wp-muted: #68786e;
+  --wp-border: #dce5db;
+  --wp-green: #36744c;
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  pointer-events: none;
+  color: var(--wp-ink);
+  font: 13px/1.6 Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+  text-align: left;
+  color-scheme: light;
+}
+.writing-panel-portal .wp-panel{resize:both;overflow:hidden;min-width:340px;min-height:420px;max-width:calc(100vw - 40px);max-height:calc(100vh - 40px)}
+.writing-panel-portal .wp-panel.wp-docked{top:12px;bottom:12px;right:12px;height:calc(100vh - 24px);width:min(520px,calc(100vw - 24px));max-height:none;resize:none}
+.writing-panel-portal *, .writing-panel-portal *::before, .writing-panel-portal *::after { box-sizing: border-box; }
+.writing-panel-portal [hidden] { display: none !important; }
+.writing-panel-portal button, .writing-panel-portal input, .writing-panel-portal select, .writing-panel-portal textarea { font: inherit; }
+.writing-panel-portal h2, .writing-panel-portal h3, .writing-panel-portal p { margin: 0; }
+.writing-panel-portal button, .writing-panel-portal summary { -webkit-tap-highlight-color: transparent; }
+.writing-panel-portal :is(button, select, textarea, input, summary):focus-visible { outline: 2px solid #559a68; outline-offset: 3px; }
+.writing-panel-portal .wp-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 32px;
+  border: 1px solid var(--wp-border);
+  border-radius: 12px;
+  padding: 5px 12px;
+  color: var(--wp-ink);
+  background: #fffefa;
+  cursor: pointer;
+  transition: background-color 120ms, border-color 120ms;
+}
+.writing-panel-portal .wp-button:hover:not(:disabled) { background: #edf4e9; border-color: #a6bda5; }
+.writing-panel-portal .wp-button:disabled { opacity: .48; cursor: not-allowed; }
+.writing-panel-portal .wp-primary { background: #36744c; border-color: #36744c; color: white; }
+.writing-panel-portal .wp-primary:hover:not(:disabled) { background: #285e3c; border-color: #285e3c; }
+.writing-panel-portal .wp-launch {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  pointer-events: auto;
+  width: 130px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  gap: 8px;
+  overflow: hidden;
+  border-radius: 24px;
+  border: 0;
+  color: white;
+  background: linear-gradient(135deg, #1a4a35 0%, #123d2d 50%, #257b51 100%);
+  box-shadow: 0 4px 20px rgba(26,74,53,.4), inset 0 1px 0 rgba(255,255,255,.34);
+  font-size: 14px;
+  font-weight: 600;
+  transform-origin: 100% 100%;
+  transition: transform 180ms ease, opacity 160ms ease, box-shadow 180ms ease;
+}
+.writing-panel-portal .wp-launch::before { content: ''; position: absolute; inset: -80%; pointer-events: none; background: radial-gradient(ellipse, #70bc7f66, transparent 55%); filter: blur(6px); animation: wp-aurora 7s ease-in-out infinite alternate; }
+.writing-panel-portal .wp-launch > * { position: relative; z-index: 1; }
+.writing-panel-portal .wp-launch:hover:not(:disabled) { background: linear-gradient(135deg, #215d42, #174b35 50%, #2b8558); transform: translateY(-2px); box-shadow: 0 6px 24px #1a4a3566, inset 0 1px 0 #ffffff57; }
+.writing-panel-portal .wp-launch:active { transform: scale(.97); }
+.writing-panel-portal .wp-launch.wp-launch-dragging { cursor: grabbing; transform: none; transition: none; }
+.writing-panel-portal[data-open='true'] .wp-launch { opacity: 0; pointer-events: none; }
+.writing-panel-portal .wp-corner-arrow { flex-shrink: 0; }
+.writing-panel-portal .wp-corner-arrow-reverse { transform: rotate(180deg); }
+@keyframes wp-aurora { from { transform: translate(-10%, 12%) rotate(-15deg); } to { transform: translate(15%, -8%) rotate(30deg); } }
+.writing-panel-portal .wp-panel {
+  position: fixed;
+  top: auto;
+  right: 24px;
+  bottom: 24px;
+  width: min(521px, calc(100vw - 48px));
+  height: min(927px, calc(100dvh - 72px));
+  transform-origin: 100% 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  pointer-events: auto;
+  border: 1px solid #cfdcc9;
+  border-radius: 20px;
+  background: #fafbf6;
+  box-shadow: 0 12px 60px #20392226, 0 2px 8px #2039220d;
+}
+.writing-panel-portal .wp-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; flex-shrink: 0; border-bottom: 1px solid var(--wp-border); }
+.writing-panel-portal .wp-heading { min-width: 0; flex: 1; }
+.writing-panel-portal .wp-header-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.writing-panel-portal .wp-header-actions .wp-button { padding-inline: 8px; font-size: 11px; background: transparent; border-color: transparent; }
+.writing-panel-portal .wp-header-actions [aria-expanded='true'] { background: #edf4e9; border-color: var(--wp-border); }
+.writing-panel-portal h2 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 650; line-height: 1.5; }
+.writing-panel-portal h3 { font-size: 15px; font-weight: 600; }
+.writing-panel-portal .wp-close { width: 32px; height: 32px; padding: 0; font-size: 23px; background: transparent; border: 0; }
+.writing-panel-portal .wp-context { color: var(--wp-muted); font-size: 11px; }
+.writing-panel-portal .wp-sessions { display: flex; align-items: flex-end; gap: 8px; padding: 8px 18px; flex-shrink: 0; }
+.writing-panel-portal .wp-sessions .wp-field { flex: 1; min-width: 0; }
+.writing-panel-portal .wp-sessions .wp-button { flex-shrink: 0; }
+.writing-panel-portal .wp-status { display: inline-flex; align-items: center; gap: 7px; color: #54714f; font-size: 12px; }
+.writing-panel-portal .wp-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #7fa475; }
+.writing-panel-portal .wp-status[data-status="running"]::before { background: #36744c; box-shadow: 0 0 0 3px #36744c1a; }
+.writing-panel-portal .wp-status[data-status="error"] { color: #a34036; }
+.writing-panel-portal .wp-status[data-status="error"]::before { background: #a34036; }
+.writing-panel-portal .wp-error { margin: 8px 14px 0; border: 1px solid #e8c7bd; border-radius: 9px; padding: 8px 10px; color: #943d2e; background: #fff4ee; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 100px; overflow: auto; flex-shrink: 0; }
+.writing-panel-portal .wp-error{display:flex;align-items:flex-start;gap:8px;overflow:hidden}
+.writing-panel-portal .wp-error-text{flex:1;min-width:0;max-height:80px;overflow:auto;line-height:1.65}
+.writing-panel-portal .wp-error .wp-error-close{flex:none;min-width:26px;min-height:26px;padding:0;border:0;border-radius:7px;background:transparent;color:inherit;font-size:20px;line-height:1.2}
+.writing-panel-portal .wp-error .wp-error-close:hover{background:var(--lum-selected-glass,#943d2e12)}
+.writing-panel-portal .wp-conversation { position: relative; display: flex; flex-direction: column; flex: 1 1 240px; min-height: 100px; }
+.writing-panel-portal .wp-scroll { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 18px 18px 48px; scrollbar-width: thin; }
+.writing-panel-portal .wp-bottom { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); border-radius: 20px; box-shadow: 0 2px 12px #20392220; font-size: 11px; }
+.writing-panel-portal .wp-intro { padding: 4px 0 14px; }
+.writing-panel-portal .wp-intro p { margin: 0 0 10px; color: var(--wp-muted); font-size: 12px; }
+.writing-panel-portal .wp-starters { display: flex; flex-wrap: wrap; gap: 6px; }
+.writing-panel-portal .wp-starter { text-align: left; justify-content: flex-start; font-size: 12px; background: #ffffffd9; }
+.writing-panel-portal .wp-messages { display: grid; gap: 12px; }
+.writing-panel-portal .wp-message { min-width: 0; padding: 12px; border: 1px solid var(--wp-border); border-radius: 14px; background: #fffefa; }
+.writing-panel-portal .wp-message-user { background: #edf4e8; margin-left: 24px; }
+.writing-panel-portal .wp-message-assistant { padding-inline: 0; border-color: transparent; background: transparent; }
+.writing-panel-portal .wp-message-tool { background: #f1f2ed; font-size: 12px; padding: 9px 10px; }
+.writing-panel-portal .wp-tool-details > summary { font-size: 11px; color: var(--wp-muted); font-weight: 500; }
+.writing-panel-portal .wp-tool-details[open] > .wp-message-text { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--wp-border); }
+.writing-panel-portal .wp-message-role { color: #6e8069; font-size: 11px; margin-bottom: 6px; }
+.writing-panel-portal .wp-message-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.writing-panel-portal .wp-message .wp-button { margin-top: 10px; }
+.writing-panel-portal .wp-question { margin-top: 10px; border-left: 3px solid #8ba878; padding: 6px 10px; background: #f0f5e7; white-space: pre-wrap; overflow-wrap: anywhere; }
+.writing-panel-portal .wp-muted { color: var(--wp-muted); font-size: 11px; }
+.writing-panel-portal .wp-history { margin-top: 18px; border-top: 1px solid var(--wp-border); padding-top: 12px; }
+.writing-panel-portal summary { cursor: pointer; font-weight: 600; overflow-wrap: anywhere; }
+.writing-panel-portal .wp-history > p { margin: 8px 0; }
+.writing-panel-portal .wp-history-content { display: grid; gap: 10px; padding-top: 10px; }
+.writing-panel-portal .wp-proposal { border: 1px solid var(--wp-border); border-radius: 11px; padding: 10px; background: #fffefa; }
+.writing-panel-portal .wp-proposal > p { margin-top: 8px; overflow-wrap: anywhere; }
+.writing-panel-portal .wp-proposal summary { font-size: 12px; }
+.writing-panel-portal .wp-diff { margin-top: 10px; border: 1px solid #dfe5d9; border-radius: 8px; overflow: hidden; }
+.writing-panel-portal .wp-diff-kind { padding: 5px 8px; font-size: 11px; color: #67785e; background: #f4f5ee; }
+.writing-panel-portal .wp-diff-side { padding: 8px; }
+.writing-panel-portal .wp-diff-before { background: #fff2ec; border-top: 1px solid #efdcd3; }
+.writing-panel-portal .wp-diff-after { background: #edf6e8; border-top: 1px solid #d8e6d1; }
+.writing-panel-portal .wp-diff-label { font-size: 10px; color: #6f7468; margin-bottom: 5px; }
+.writing-panel-portal .wp-diff pre { margin: 0; font: inherit; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.writing-panel-portal .wp-proposal-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.writing-panel-portal .wp-composer { flex: 0 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; border-top: 1px solid var(--wp-border); padding: 12px 16px 14px; background: #fffefa; display: grid; gap: 8px; }
+.writing-panel-portal .wp-composer-meta { position: relative; min-width: 0; }
+.writing-panel-portal .wp-preferences > summary { padding-right: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; color: var(--wp-muted); font-weight: 500; }
+.writing-panel-portal .wp-preferences-body { display: grid; gap: 8px; padding: 10px 0 4px; }
+.writing-panel-portal .wp-mode { position: absolute; right: 0; top: -5px; padding: 3px 7px; font-size: 11px; color: var(--wp-green); cursor: pointer; }
+.writing-panel-portal .wp-mode[data-readonly='false'] { color: #8a5a24; }
+.writing-panel-portal .wp-model-row { display: flex; align-items: flex-end; gap: 8px; }
+.writing-panel-portal .wp-model-row .wp-field { flex: 1; min-width: 0; }
+.writing-panel-portal .wp-model-row .wp-button { flex-shrink: 0; }
+.writing-panel-portal .wp-field { display: grid; gap: 3px; min-width: 0; color: var(--wp-muted); font-size: 11px; }
+.writing-panel-portal select { width: 100%; min-width: 0; height: 33px; border: 1px solid var(--wp-border); border-radius: 9px; padding: 3px 7px; color: var(--wp-ink); background: #fafbf7; }
+.writing-panel-portal .wp-settings { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.writing-panel-portal .wp-readonly { display: flex; align-items: center; gap: 7px; font-size: 12px; cursor: pointer; }
+.writing-panel-portal .wp-readonly input { accent-color: #36744c; width: 15px; height: 15px; margin: 0; }
+.writing-panel-portal textarea { display: block; width: 100%; min-height: 70px; max-height: 180px; resize: vertical; border: 1px solid #c7d5c0; border-radius: 12px; padding: 10px 12px; background: white; color: var(--wp-ink); line-height: 1.5; }
+.writing-panel-portal textarea::placeholder { color: #8a9586; }
+.writing-panel-portal .wp-disclosure { color: #71735f; font-size: 10px; line-height: 1.55; }
+.writing-panel-portal .wp-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.writing-panel-portal .wp-actions > span { margin-right: auto; font-size: 10px; }
+@media (max-width: 540px) {
+  .writing-panel-portal .wp-panel { top: auto; right: 14px; bottom: max(14px, env(safe-area-inset-bottom)); width: calc(100vw - 28px); height: calc(100dvh - 28px); border-radius: 16px; }
+  .writing-panel-portal .wp-launch { right: 14px; bottom: max(14px, env(safe-area-inset-bottom)); }
+  .writing-panel-portal .wp-scroll { padding: 12px; }
+  .writing-panel-portal .wp-composer { padding: 10px 12px; }
+  .writing-panel-portal .wp-actions > span { display: none; }
+}
+@media (max-height: 650px) {
+  .writing-panel-portal .wp-panel { top: auto; height: calc(100dvh - 48px); }
+  .writing-panel-portal .wp-composer { max-height: 48%; }
+  .writing-panel-portal .wp-header { padding-block: 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .writing-panel-portal .wp-button { transition: none; } .writing-panel-portal .wp-launch::before { animation: none; } }
+.wp-question fieldset{border:1px solid var(--border,#dce3df);border-radius:8px;margin:8px 0;padding:10px}.wp-question-option{display:flex;gap:8px;align-items:center;margin:6px 0}.wp-question textarea{width:100%;box-sizing:border-box;font:inherit;margin-top:8px}.wp-question button{margin:4px}
+.writing-panel-portal .wp-workflows{border-top:1px solid #dce5df;margin-top:8px;padding-top:8px}.writing-panel-portal .wp-workflows .wp-field{display:flex;align-items:center;gap:8px;margin-bottom:6px}.writing-panel-portal .wp-workflow-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}.writing-panel-portal .wp-workflow-actions .wp-button{font-size:11px;min-width:0;padding:6px}.writing-panel-portal .wp-workflows p{margin:5px 0;font-size:11px;overflow-wrap:anywhere}.writing-panel-portal .wp-composer{overflow:auto;max-height:65%;min-height:0}
+
+.writing-panel-portal .wp-panel{min-width:min(340px,calc(100vw - 28px))}.writing-panel-portal .wp-button{max-width:100%;white-space:normal;overflow-wrap:anywhere;text-align:center}.writing-panel-portal .wp-settings{grid-template-columns:repeat(2,minmax(0,1fr))}.writing-panel-portal .wp-actions{flex-wrap:wrap}.writing-panel-portal .wp-header h2,.writing-panel-portal .wp-header p,.writing-panel-portal .wp-disclosure{min-width:0;overflow-wrap:anywhere}.writing-panel-portal .wp-workflows .wp-field{flex-wrap:wrap}.writing-panel-portal .wp-workflows .wp-field select{flex:1 1 170px}.wp-question fieldset{min-width:0}.wp-question-option{align-items:flex-start;min-width:0;overflow-wrap:anywhere}.wp-question-option input{flex-shrink:0}
+
+/* Content owns its height: never position option rows over one another. */
+.writing-panel-portal .wp-panel{container-type:inline-size}
+.writing-panel-portal :is(.wp-conversation,.wp-scroll,.wp-messages,.wp-history-content,.wp-composer,.wp-preferences,.wp-message,.wp-proposal,.wp-question){min-width:0;max-width:100%}
+.writing-panel-portal .wp-messages,.writing-panel-portal .wp-history-content{grid-template-columns:minmax(0,1fr);align-content:start;grid-auto-rows:max-content;gap:16px}
+.writing-panel-portal .wp-message-text{line-height:1.85;word-break:normal;overflow-wrap:anywhere;max-width:100%}
+.writing-panel-portal .wp-message-assistant{padding:12px 14px}.writing-panel-portal .wp-message-role{margin-bottom:8px}
+.writing-panel-portal .wp-message :is(pre,code){white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%}
+.writing-panel-portal .wp-header{flex-wrap:wrap}.writing-panel-portal .wp-header-actions{margin-left:auto;flex-wrap:wrap;max-width:100%}
+.writing-panel-portal .wp-composer-meta{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.writing-panel-portal .wp-preferences{grid-column:1;grid-row:1}.writing-panel-portal .wp-preferences[open]{grid-column:1/-1;grid-row:2}
+.writing-panel-portal .wp-preferences>summary{padding:5px 0;white-space:normal;overflow-wrap:anywhere;text-overflow:clip;line-height:1.6}
+.writing-panel-portal .wp-mode{position:static;grid-column:2;grid-row:1;max-width:180px;height:auto;line-height:1.5}
+.writing-panel-portal .wp-preferences-body{gap:12px}.writing-panel-portal .wp-model-row{flex-wrap:wrap}.writing-panel-portal .wp-model-row .wp-field{flex:1 1 180px}
+.writing-panel-portal .wp-question{white-space:normal;padding:12px;border-radius:12px}.writing-panel-portal .wp-question fieldset{display:grid;gap:8px;min-inline-size:0;max-width:100%;padding:12px;margin:10px 0}.writing-panel-portal .wp-question legend{max-width:100%;white-space:normal;overflow-wrap:anywhere;padding:0 4px;line-height:1.7}
+.writing-panel-portal .wp-question-option{display:flex;gap:10px;align-items:flex-start;min-width:0;max-width:100%;margin:0;padding:9px 10px;line-height:1.7;border-radius:10px;border:1px solid var(--wp-border);white-space:normal;overflow-wrap:anywhere;cursor:pointer}.writing-panel-portal .wp-question-option input{flex:0 0 15px;width:15px;height:15px;margin:4px 0 0}.writing-panel-portal .wp-question-option:has(input:checked){background:var(--lum-selected-glass);backdrop-filter:blur(12px)}.writing-panel-portal .wp-question-option>span{min-width:0;overflow-wrap:anywhere}
+.writing-panel-portal .wp-workflow-actions{grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr))}
+.writing-panel-portal .wp-actions{gap:8px;align-items:center}.writing-panel-portal .wp-actions>.wp-button{min-height:34px}.writing-panel-portal .wp-actions>span{flex:1 1 100px}
+@container(max-width:390px){.writing-panel-portal .wp-settings{grid-template-columns:minmax(0,1fr)}.writing-panel-portal .wp-header-actions .wp-button{padding-inline:6px}.writing-panel-portal .wp-composer{padding:10px 12px}.writing-panel-portal .wp-message-user{margin-left:12px}}
+

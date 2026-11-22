@@ -1,0 +1,74 @@
+{
+  "name": "lum-desktop",
+  "version": "1.0.11",
+  "private": true,
+  "description": "Lum · 影纪：让想象先成为画面",
+  "author": "Lum",
+  "main": "out/main.cjs",
+  "scripts": {
+    "prepare:app": "node scripts/prepare.mjs",
+    "start": "electron .",
+    "pack": "electron-builder --win dir",
+    "dist": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "@electron/fuses": "^2.0.0",
+    "electron": "^44.10.2",
+    "electron-builder": "26.18.1"
+  },
+  "build": {
+    "appId": "cn.lum.yingji",
+    "productName": "影纪Lum",
+    "executableName": "Lum",
+    "asar": true,
+    "directories": {
+      "output": "release",
+      "buildResources": "assets"
+    },
+    "files": [
+      "out/**/*",
+      "assets/lum.ico",
+      "assets/lumLogo.png",
+      "assets/splash.html",
+      "package.json"
+    ],
+    "afterPack": "scripts/harden.cjs",
+    "extraResources": [
+      {
+        "from": "payload",
+        "to": "payload"
+      },
+      {
+        "from": "payload/node_modules",
+        "to": "payload/node_modules"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/lum.ico",
+      "artifactName": "影纪Lum-${version}-安装包.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "影纪Lum",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true
+    },
+    "electronLanguages": [
+      "zh-CN",
+      "en-US"
+    ],
+    "publish": null
+  }
+}

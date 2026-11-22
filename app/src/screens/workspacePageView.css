@@ -1,0 +1,118 @@
+.lumOutlinePage, .lumScenesPage, .lumStoryboardPage {
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  color: var(--lum-text);
+  background: var(--lum-panel);
+}
+.lumPageButton {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--lum-text);
+  background: var(--lum-surface);
+  border: 1px solid var(--lum-line);
+  border-radius: 7px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.lumPageButton:hover { background: var(--lum-hover); }
+.lumPageButton:focus-visible { outline: 2px solid var(--lum-link); outline-offset: 2px; }
+.lumPageButton:disabled { opacity: .5; cursor: default; }
+.lumOutlineTools, .lumStoryboardHeader, .lumStoryboardTools, .lumScenesHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 15px;
+  padding: 10px clamp(12px, 2vw, 26px);
+  border-bottom: 1px solid var(--lum-line);
+  background: var(--lum-surface);
+}
+.lumFormatGroup, .lumOutlineActions, .lumStoryboardModes {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.lumOutlineActions { gap: 6px; margin-inline-start: auto; }
+.lumOutlineActions select { font: inherit; }
+.lumFormatGroup .lumPageButton, .lumStoryboardModes .lumPageButton {
+  border-color: transparent;
+  background: transparent;
+}
+.lumFormatGroup .lumPageButton:hover, .lumStoryboardModes .lumPageButton:hover {
+  background: var(--lum-hover);
+}
+.lumFormatGroup [data-format-id="bold"] { font-weight: 750; }
+.lumFormatGroup [data-format-id="italic"] { font-family: Georgia, serif; font-style: italic; }
+.lumOutlineScroll { flex: 1; overflow: auto; padding: clamp(14px, 3vw, 42px); }
+.lumOutlinePaper {
+  width: min(100%, 52rem);
+  box-sizing: border-box;
+  min-height: 100%;
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 64px);
+  background: var(--lum-surface);
+  border: 1px solid var(--lum-line);
+  box-shadow: var(--lum-shadow);
+}
+.lumOutlineHeading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 8px;
+  border-bottom: 1px solid var(--lum-line);
+  padding-bottom: 16px;
+}
+.lumOutlineHeading span, .lumOutlineHeading time, .lumOutlinePager, .lumScenesHeader, .lumStoryboardHeader output {
+  color: var(--lum-muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.lumOutlineHeading h2 { grid-column: 1 / -1; margin: 0; color: var(--lum-text); font-size: 24px; }
+.lumOutlinePaper .outline-prose {
+  padding: 18px 0 32px;
+  min-height: 16rem;
+  outline: none;
+  font-size: 16px;
+  line-height: 1.95;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.lumOutlinePaper .outline-prose :is(p,h1,h2,h3,blockquote) { margin: 0 0 .75em; }
+.lumOutlinePaper .outline-prose h1 { font-size: 1.65em; line-height: 1.4; }
+.lumOutlinePaper .outline-prose h2 { font-size: 1.35em; line-height: 1.5; }
+.lumOutlinePaper .outline-prose h3 { font-size: 1.12em; line-height: 1.55; }
+.lumOutlinePaper .outline-prose :is(h1,h2,h3) { font-weight: 650; }
+.lumOutlinePaper .outline-prose blockquote { padding-inline-start: 1rem; border-inline-start: 3px solid var(--lum-line); color: var(--lum-muted); }
+.lumOutlinePager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+  border-top: 1px solid var(--lum-line);
+  background: var(--lum-surface);
+}
+.lumOutlinePager input {
+  border: 1px solid var(--lum-line);
+  border-radius: 5px;
+  color: var(--lum-text);
+  background: var(--lum-input);
+  padding: 5px;
+  width: 3em;
+  text-align: center;
+  font: inherit;
+}
+.lumSceneList, .lumStoryboardPage > .sbViewport { flex: 1; min-height: 0; min-width: 0; overflow: auto; }
+.lumScenesHeader { gap: 4px; }
+.lumStoryboardModes [aria-pressed="true"] { background: var(--lum-selected-glass); border-color: var(--lum-line); }
+.lumStoryboardHeader output { margin-inline-start: auto; }
+.lumStoryboardPage > .sbViewport { position: relative; overflow: hidden; isolation: isolate; }
+.lumStoryboardPage .sbWorld { position: absolute; inset: 0; pointer-events: none; }
+.lumStoryboardPage .sbViewport[data-view-mode="table"] { overflow: auto; }
+.lumStoryboardPage .sbViewport[data-view-mode="board"] { overflow-x: auto; }

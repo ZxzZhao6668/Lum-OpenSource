@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "plugins": [
+    {
+      "type": "skill",
+      "name": "scriptDeliveryReview",
+      "displayName": "剧本交稿校对",
+      "description": "剧本定稿、交稿前校对或复核修订稿时使用。逐场核对人物、时间、道具与台词归属，给出带原文位置的修订清单。",
+      "author": "Lum",
+      "version": "1.0.0",
+      "file": "packages/scriptDeliveryReview.md",
+      "sha256": "b2c215a61c00969849c436370426d4d89ff58bc28b9989b4acee3e00f3d4a125"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+.localDialog.shotVideoDialog{width:min(1180px,calc(100vw - 32px));height:min(840px,calc(100dvh - 48px));max-height:calc(100dvh - 32px);color:var(--lum-text);background:var(--lum-surface)}
+.shotVideoDialog>.localDialogBody{padding:0;display:flex;flex-direction:column;overflow:hidden}
+.shotVideoIntro{margin:0;padding:12px 24px;border-bottom:1px solid var(--lum-line);font-size:13px;line-height:1.7;color:var(--lum-muted)}
+.shotVideoLayout{display:grid;grid-template-columns:300px minmax(0,1fr);flex:1;min-height:0}
+.shotVideoSidebar{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--lum-line);background:var(--lum-hover)}
+.shotVideoSidebarHead{padding:16px;border-bottom:1px solid var(--lum-line)}
+.shotVideoSidebarHead h3,.shotVideoEditor h3{font-size:14px;font-weight:600;margin:0}
+.shotVideoSelectionActions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.shotVideoSelectionActions button{flex:1}
+.shotVideoList{padding:8px;overflow:auto;min-height:0;flex:1}
+.shotVideoRow{display:flex;align-items:flex-start;gap:12px;padding:14px 12px;margin:4px 0;border:1px solid transparent;border-radius:8px;cursor:pointer;min-width:0}
+.shotVideoRow:has(input:checked){border-color:var(--lum-line-strong,var(--lum-line));background:var(--lum-surface)}
+.shotVideoRow input{width:18px;height:18px;flex:none;margin-top:3px;accent-color:var(--lum-accent)}
+.shotVideoRow>span{min-width:0;display:flex;flex-direction:column;gap:5px}
+.shotVideoRow strong{font-size:13px;line-height:1.5}
+.shotVideoRow small{font-size:12px;line-height:1.6;color:var(--lum-muted)}
+.shotVideoRow p{margin:0;font-size:13px;line-height:1.65;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.shotVideoEditor{padding:20px 24px;min-width:0;overflow:auto}
+.shotVideoSettings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:16px 0}
+.shotVideoSettings label{display:flex;flex-direction:column;gap:8px;font-size:12px;min-width:0}
+.shotVideoSettings label:last-child{grid-column:1/-1}
+.shotVideoDialog select,.shotVideoDialog textarea{width:100%;min-width:0;box-sizing:border-box;border:1px solid var(--lum-line-strong,var(--lum-line));border-radius:8px;padding:10px 12px;background:var(--lum-surface);color:var(--lum-text);font:inherit;font-size:13px;line-height:1.6}
+.shotVideoDialog select{height:42px;text-overflow:ellipsis}
+.shotVideoDialog textarea{min-height:88px;max-height:360px;resize:vertical}
+.shotVideoDialog .localField{margin-bottom:0;color:var(--lum-text)}
+.shotVideoActions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:16px 0;border-bottom:1px solid var(--lum-line)}
+.shotVideoPrompts{display:flex;flex-direction:column;gap:12px;margin-top:20px}
+.shotVideoPrompt{border:1px solid var(--lum-line);border-radius:8px;background:var(--lum-surface)}
+.shotVideoPrompt[hidden]{display:none}
+.shotVideoPrompt summary{padding:12px 16px;cursor:pointer;font-size:13px;line-height:1.6}
+.shotVideoPrompt summary small{display:block;margin-left:16px;color:var(--lum-muted);font-size:12px;overflow-wrap:anywhere}
+.shotVideoPrompt .localField{padding:0 16px 16px}
+.shotVideoPrompt .localField>span{font-size:12px;color:var(--lum-muted)}
+.shotVideoPrompt textarea{min-height:160px}
+.shotVideoFooter{display:flex;align-items:center;justify-content:space-between;gap:16px;flex:none;padding:16px 24px;border-top:1px solid var(--lum-line);background:var(--lum-surface)}
+.shotVideoFooter p{margin:0;font-size:12px;line-height:1.7;overflow-wrap:anywhere}
+.shotVideoFooter button{flex-shrink:0;background:var(--lum-accent-soft,var(--lum-hover));border-color:var(--lum-accent);font-weight:600;min-height:40px}
+.shotVideoHint{font-size:12px;line-height:1.7;color:var(--lum-muted);margin:12px 0 0}
+.shotVideoDialog :is(select,textarea,button,input,summary):focus-visible{outline:2px solid var(--lum-accent);outline-offset:3px}
+.shotVideoDialog :is(button,select,input,textarea):disabled{opacity:.55;cursor:default}
+.shotVideoPrompt[data-error=true] summary small{color:var(--lum-danger,#aa332d)}
+@media(max-width:800px){.shotVideoLayout{grid-template-columns:240px minmax(0,1fr)}.shotVideoEditor{padding:16px}.shotVideoSettings{grid-template-columns:1fr;gap:12px}.shotVideoFooter{padding:12px 16px}}
+@media(max-width:600px){.localDialog.shotVideoDialog{width:calc(100vw - 16px);max-width:calc(100vw - 16px);height:calc(100dvh - 24px);max-height:calc(100dvh - 24px)}.shotVideoDialog>.localDialogBody{overflow:auto;display:block}.shotVideoLayout{display:flex;flex-direction:column}.shotVideoSidebar{border-right:0;border-bottom:1px solid var(--lum-line)}.shotVideoList{max-height:200px;flex:auto}.shotVideoEditor{overflow:visible}.shotVideoIntro{padding:12px 16px}.shotVideoFooter{position:sticky;bottom:0;flex-direction:column;align-items:stretch;gap:8px}.shotVideoFooter button{width:100%}.shotVideoActions button{flex:1 1 140px}.shotVideoPrompt summary{padding:12px}.shotVideoPrompt .localField{padding:0 12px 12px}}

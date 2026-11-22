@@ -1,0 +1,32 @@
+[data-scene-cards] { position: relative; min-height: 0; min-width: 0; flex: 1; overflow: hidden; }
+.lumSceneCard {
+  display: grid;
+  gap: 10px;
+  box-sizing: border-box;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--lum-line, #cbd6cf);
+  color: var(--lum-text, #26342a);
+  background: var(--lum-surface, #fff);
+  box-shadow: var(--lum-shadow, 0 4px 15px #172e2010);
+  overflow-wrap: anywhere;
+}
+.lumSceneCard h3 { margin: 0; font-size: 18px; line-height: 1.4; }
+.lumSceneNumber { color: var(--lum-muted, #607165); font-size: 12px; }
+.lumSceneCard [data-scene-description] { margin: 0; white-space: pre-wrap; max-height: 12em; overflow-y: auto; }
+.lumSceneCard [data-scene-description]:empty { display: none; }
+.lumSceneActions, .lumExcerptModes { display: flex; flex-wrap: wrap; gap: 6px; }
+.lumSceneActions button { font-size: 12px; }
+.lumSceneEmpty { margin: 20px; color: var(--lum-muted, #607165); }
+[data-scene-cards] .dsh-canvas-tools { height: auto; padding: 5px 8px; }
+.lumScenePreview.localDialog { width: min(760px, 92vw); }
+.lumScenePreview .lumSceneExcerpt { padding: clamp(12px, 4vw, 42px); line-height: 1.85; font-family: var(--lum-font-reading, system-ui); }
+.lumSceneExcerpt h3 { margin: 0 0 1rem; }
+.lumSceneExcerpt p { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0 0 .45em; min-height: 1em; }
+.lumSceneExcerpt [data-block-type=character] { font-weight: 650; margin-top: .9em; }
+.lumSceneExcerpt [data-block-type=subtitle] { text-align: center; }
+.lumSceneExcerpt [data-block-type=transition] { text-align: end; }
+.lumSceneExcerpt :is([data-block-type=comment],[data-block-type=parenthetical]) { color: var(--lum-muted, #607165); font-style: italic; }
+.lumSceneExcerpt[data-mode=hollywood] :is([data-block-type=character],[data-block-type=parenthetical]) { margin-inline-start: 38%; }
+.lumSceneExcerpt[data-mode=hollywood] [data-block-type=dialogue] { margin-inline: 22%; }
+.lumExcerptModes button[aria-pressed=true] { background: var(--lum-selected-glass, #e8f3ea); color: var(--lum-text, #26342a); font-weight: 650; }

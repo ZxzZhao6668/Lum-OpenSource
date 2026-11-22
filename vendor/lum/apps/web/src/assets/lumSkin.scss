@@ -1,0 +1,154 @@
+html[data-lum-host-settings="true"],html[data-lum-host-settings="true"] body,html[data-lum-host-settings="true"] #app{background:transparent!important}
+html[data-lum-host-settings="true"] .previsEditor,html[data-lum-host-settings="true"] .floatingAgent{visibility:hidden}
+
+html[data-lum-theme][data-lum-glass] {
+  .el-dialog,.el-message-box,.el-popper.is-light,.canvasControlsCard,.canvasMenu,.toolMenu,.workspaceMenu > .el-card,.canvasViewportHint,.selectionToolbar,.floatingAgent:not(.docked) {
+    background:var(--lum-glass-sheen),var(--lum-glass);border-color:var(--lum-glass-line);box-shadow:var(--lum-glass-shadow),var(--lum-float-shadow);backdrop-filter:var(--lum-glass-filter);border-radius:max(12px,var(--lum-radius));
+  }
+  .el-dialog__header,.settings>.sidebar { border-color:var(--lum-glass-line); }
+  .el-input__wrapper,.el-select__wrapper,.el-textarea__inner { background:var(--lum-glass-input);border-radius:var(--lum-control-radius); }
+  .el-button,.settings .settingsItem { border-radius:var(--lum-control-radius); }
+  .workspaceMenu { background:transparent;border:0;box-shadow:none;backdrop-filter:none; }
+  .canvasMenu .workspaceNameInput .el-input__wrapper { background:transparent;box-shadow:none; }
+  button,[role="button"],summary,.el-input__wrapper,.el-select__wrapper,.el-textarea__inner,.el-dropdown-menu__item,.el-select-dropdown__item { border-radius:var(--lum-control-radius); }
+  input:not([type="checkbox"],[type="radio"],[type="range"],[type="color"]),select,textarea { border-radius:var(--lum-control-radius); }
+  .el-card,.el-dialog,.el-message-box,.el-popper,.el-dropdown-menu,.floatingAgent.docked { border-radius:max(12px,var(--lum-radius)); }
+  .el-dropdown-menu,.el-select-dropdown { background:transparent; }
+  .el-dropdown-menu__item,.el-select-dropdown__item { margin:2px 5px; }
+  .el-dropdown-menu__item:not(.is-disabled):hover,.el-select-dropdown__item.is-hovering { background:var(--lum-selected-glass);color:var(--lum-text);box-shadow:inset 0 0 0 1px var(--lum-glass-line); }
+  .settings .settingsItem:hover,.settings .settingsItem[aria-pressed="true"],.el-select-dropdown__item.is-selected { background:var(--lum-selected-glass);color:var(--lum-text);box-shadow:inset 0 0 0 1px var(--lum-glass-line),inset 0 1px var(--lum-glass-highlight); }
+  .nodeSkeleton .contentCard { background:var(--lum-glass-sheen),var(--lum-glass-panel);border-color:var(--lum-glass-line);box-shadow:var(--lum-glass-shadow); }
+  .virtualStagePage { background:radial-gradient(ellipse at 15% 0%,var(--lum-selected-glass),transparent 65%),var(--lum-canvas); }
+  .virtualStagePage .stageCreate,.virtualStagePage .stageCard,.virtualStagePage .stageEmpty { background:var(--lum-glass-sheen),var(--lum-glass-panel);border-color:var(--lum-glass-line);box-shadow:var(--lum-glass-shadow);backdrop-filter:var(--lum-glass-filter); }
+}
+
+html[data-lum-theme] {
+  --el-bg-color: var(--lum-surface);
+  --el-bg-color-page: var(--lum-canvas);
+  --el-bg-color-overlay: var(--lum-surface);
+  --el-text-color-primary: var(--lum-text);
+  --el-text-color-regular: var(--lum-text);
+  --el-text-color-secondary: var(--lum-muted);
+  --el-text-color-placeholder: var(--lum-faint);
+  --el-border-color: var(--lum-line);
+  --el-border-color-light: var(--lum-line);
+  --el-border-color-lighter: color-mix(in srgb, var(--lum-line) 65%, var(--lum-surface));
+  --el-border-color-extra-light: color-mix(in srgb, var(--lum-line) 40%, var(--lum-surface));
+  --el-border-color-dark: color-mix(in srgb, var(--lum-muted) 40%, var(--lum-line));
+  --el-border-color-darker: var(--lum-muted);
+  --el-fill-color: var(--lum-hover);
+  --el-fill-color-light: var(--lum-panel);
+  --el-fill-color-lighter: var(--lum-panel);
+  --el-fill-color-extra-light: var(--lum-input);
+  --el-fill-color-dark: var(--lum-hover);
+  --el-fill-color-darker: var(--lum-line);
+  --el-fill-color-blank: var(--lum-surface);
+  --el-mask-color: var(--lum-glass);
+  --el-mask-color-extra-light: color-mix(in srgb,var(--lum-surface) 65%,transparent);
+  --el-box-shadow-light: var(--lum-shadow);
+  --el-box-shadow: var(--lum-float-shadow);
+  --el-box-shadow-dark: var(--lum-float-shadow);
+  --td-bg-color-page: var(--lum-canvas);
+  --td-bg-color-container: var(--lum-surface);
+  --td-bg-color-container-hover: var(--lum-hover);
+  --td-bg-color-secondarycontainer: var(--lum-panel);
+  --td-text-color-primary: var(--lum-text);
+  --td-text-color-secondary: var(--lum-muted);
+  --td-text-color-placeholder: var(--lum-faint);
+  --td-component-border: var(--lum-line);
+  --el-font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  color: var(--lum-text);
+  background: var(--lum-canvas);
+
+  body, button, input, textarea, select { font-family: var(--el-font-family); }
+  .workspacePage, .canvas .vue-flow { background-color: var(--lum-canvas); }
+  .vue-flow__background { --vf-background-pattern-color: var(--lum-dot); }
+  .vue-flow__background circle { fill: var(--lum-dot); }
+  .vue-flow__edge-path { stroke: var(--lum-muted); }
+  .vue-flow__edge.edgeActive .vue-flow__edge-path { stroke: var(--canvasEdgeColor, var(--lum-link)); }
+
+  .nodeSkeleton {
+    .contentCard {
+      border-radius: calc(var(--ui-radius) * 1.5);
+      background: var(--lum-surface); border-color: var(--lum-glass-line); box-shadow: var(--lum-shadow);
+      &.selected { border-color: color-mix(in srgb,var(--lum-text) 24%,transparent); box-shadow: 0 0 0 1px var(--lum-selected-glass), var(--lum-shadow); background: color-mix(in srgb,var(--lum-surface) 80%,transparent); backdrop-filter: blur(18px); }
+    }
+    &:hover .contentCard:not(.selected) { border-color: var(--lum-muted); }
+    .titleBar { color: var(--lum-text); }
+    .mediaToolbar, .bottomSlot > .el-card { background: var(--lum-glass); border-color: var(--lum-glass-line); box-shadow: var(--lum-float-shadow); backdrop-filter: blur(18px) saturate(1.1); }
+  }
+  .vue-flow__node.dragging .nodeSkeleton .contentCard { box-shadow: 0 20px 42px #00000025; border-color: var(--lum-link); }
+  &[data-lum-theme="black"] .nodeSkeleton .contentCard { border-color: #ffffff14; }
+  &[data-lum-theme="black"] .nodeSkeleton .contentCard.selected { border-color: #ffffff45; box-shadow: 0 0 0 1px #ffffff12, var(--lum-shadow); }
+  .nodeHandle .handleIcon { color: var(--lum-muted); background-color: var(--lum-panel); border-color: var(--lum-line); }
+
+  .canvasControlsCard, .canvasMenu, .toolMenu, .workspaceMenu > .el-card, .canvasViewportHint, .selectionToolbar {
+    background: var(--lum-glass); border-color: var(--lum-glass-line); box-shadow: var(--lum-float-shadow);
+    backdrop-filter: blur(20px) saturate(1.12); border-radius: calc(var(--ui-radius) + 2px);
+  }
+  .floatingAgent {
+    color: var(--lum-text); background: var(--lum-surface); border-color: var(--lum-line);
+    &:not(.docked) { background: var(--lum-frost); backdrop-filter: blur(30px) saturate(1.3); border-color: var(--lum-glass-line); box-shadow: var(--lum-float-shadow); border-radius: calc(var(--ui-radius) + 8px); }
+    .agentMenu { border-color: var(--lum-line); background: transparent; }
+    .messageInput, .x-sender { background: var(--lum-input); border-color: var(--lum-line); color: var(--lum-text); }
+  }
+  .workspacePage .agentButton { background: var(--lum-frost); color: var(--lum-text); border-color: var(--lum-glass-line); box-shadow: var(--lum-float-shadow); backdrop-filter: blur(28px) saturate(1.3); }
+  .workspacePage .agentButton:hover { background: var(--lum-frost); box-shadow: 0 6px 20px #0003; }
+  .workspacePage .agentButton svg { color: inherit; }
+  .workspacePage .workspaceTools .panelSwitcher {
+    --el-segmented-item-selected-color: var(--lum-text);
+    --el-segmented-item-selected-bg-color: var(--lum-selected-glass);
+    --el-segmented-item-hover-bg-color: var(--lum-hover);
+    background: var(--lum-glass); border-color: var(--lum-glass-line); box-shadow: var(--lum-shadow); backdrop-filter: blur(18px);
+  }
+
+  .el-dialog, .el-popper.is-light { background: var(--lum-surface); color: var(--lum-text); border: 1px solid var(--lum-line); box-shadow: var(--lum-float-shadow); }
+  .el-overlay { background-color: #141a1f45; }
+  .el-overlay-dialog { backdrop-filter: blur(5px); }
+  .el-input__wrapper, .el-select__wrapper, .el-textarea__inner { background: var(--lum-input); color: var(--lum-text); }
+  .el-input__inner, .el-textarea__inner { color: var(--lum-text); caret-color: var(--lum-text); }
+  .el-button--primary {
+    --el-button-bg-color: var(--lum-accent); --el-button-border-color: var(--lum-accent); --el-button-text-color: var(--lum-on-accent);
+    --el-button-hover-bg-color: color-mix(in srgb,var(--lum-accent) 88%,var(--lum-surface)); --el-button-hover-border-color: var(--lum-accent); --el-button-hover-text-color: var(--lum-on-accent);
+    --el-button-active-bg-color: var(--lum-accent); --el-button-active-border-color: var(--lum-accent); --el-button-active-text-color: var(--lum-on-accent);
+    --el-button-disabled-bg-color: color-mix(in srgb,var(--lum-accent) 45%,var(--lum-surface)); --el-button-disabled-border-color: transparent; --el-button-disabled-text-color: var(--lum-muted);
+    &.is-plain { --el-button-bg-color: var(--lum-accent-soft); --el-button-text-color: var(--lum-link); }
+    &.is-text, &.is-link { --el-button-text-color: var(--lum-link); --el-button-hover-text-color: var(--lum-text); --el-button-bg-color: transparent; }
+  }
+  .el-tag--primary { --el-tag-bg-color: var(--lum-accent-soft); --el-tag-text-color: var(--lum-link); --el-tag-border-color: var(--lum-line); }
+  .el-radio-button { --el-radio-button-checked-bg-color: var(--lum-selected-glass); --el-radio-button-checked-text-color: var(--lum-text); --el-radio-button-checked-border-color: var(--lum-line); }
+  .el-segmented__item-selected, .el-radio-button.is-active .el-radio-button__inner { backdrop-filter: blur(14px); }
+  .el-switch { --el-switch-on-color: var(--lum-link); }
+  /* Skin only the controls around the 3D renderer. Camera, scene and timeline geometry stay owned by the plugin. */
+  .previsEditor {
+    background: var(--lum-surface); color: var(--lum-text); border-color: var(--lum-line); font-family: var(--lum-font-ui); box-shadow: var(--lum-float-shadow);
+    .topBar, .timelinePanel, .creationTools, .timeRuler { background: var(--lum-panel); border-color: var(--lum-line); }
+    button, input, select, textarea { background: var(--lum-input); color: var(--lum-text); border-color: var(--lum-line); }
+    button:hover { background: var(--lum-hover); }
+    button.selected { background: var(--lum-accent-soft); color: var(--lum-link); border-color: var(--lum-link); }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline-color: var(--lum-link); }
+    h3, summary, .statusText, .propertyPanel p, .aiPanel p, .timelineTools>span, .selectionHint, .presetLibrary p, .presetLibrary small, .loadingPreview, .skillHint { color: var(--lum-muted); }
+    .assetGroup, .propertyPanel, .cameraControls, details+details, .presetLibrary, .presetCategory, .timelineScroll, .timeRuler>span { border-color: var(--lum-line); }
+    .aiPanel { background: var(--lum-glass); border-color: var(--lum-glass-line); backdrop-filter: blur(18px); box-shadow: var(--lum-float-shadow); }
+    .skillRules pre { background: var(--lum-panel); color: var(--lum-text); }
+    .routeNotice, .previewNotice { background: var(--lum-accent-soft); color: var(--lum-text); }
+    .presetGrid span { color: var(--lum-link); }
+    .shotChip, .shotBlock { background: color-mix(in srgb,#7d9fca 22%,var(--lum-surface)); border-color: #7d9fca; color: var(--lum-text); }
+    .shotBlock small { color: var(--lum-text); }
+    .shotBlock.active { background: color-mix(in srgb,#7d9fca 36%,var(--lum-surface)); border-color: var(--lum-strong); }
+    .actionChip, .actionBlock { background: color-mix(in srgb,#5ca484 24%,var(--lum-surface)); border-color: #5ca484; color: var(--lum-text); }
+    .pathBlock { background: color-mix(in srgb,#9c92c7 25%,var(--lum-surface)); border-color: #9c92c7; color: var(--lum-text); }
+    .rowLabel { color: var(--lum-muted); }
+    .canvasLabel { color: #fff; }
+  }
+  .settings .settingsItem {
+    &:hover { background: var(--lum-hover); }
+    &[aria-pressed="true"] { background: var(--lum-selected-glass); color: var(--lum-text); backdrop-filter: blur(14px); }
+  }
+  &[data-lum-glass="off"] {
+    .floatingAgent:not(.docked), .workspacePage .agentButton { background: var(--lum-surface); backdrop-filter: none; }
+    .nodeSkeleton .contentCard.selected, .el-segmented__item-selected, .el-radio-button.is-active .el-radio-button__inner { backdrop-filter: none; }
+    .previsEditor .aiPanel { backdrop-filter: none; }
+    .canvasControlsCard, .canvasMenu, .toolMenu, .workspaceMenu, .canvasViewportHint, .selectionToolbar, .floatingAgent:not(.docked), .nodeSkeleton .mediaToolbar, .nodeSkeleton .bottomSlot > .el-card, .el-overlay-dialog, .workspacePage .workspaceTools .panelSwitcher { backdrop-filter: none; }
+  }
+}

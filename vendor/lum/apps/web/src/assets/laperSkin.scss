@@ -1,0 +1,90 @@
+/* Laper 视觉层：只覆盖浅色外观，不改变工作区布局、交互或节点数据。 */
+html:not(.dark) {
+  --el-bg-color: #ffffff;
+  --el-bg-color-page: #f7f8f7;
+  --el-bg-color-overlay: #ffffff;
+  --el-text-color-primary: #171a19;
+  --el-text-color-regular: #414744;
+  --el-text-color-secondary: #7d8581;
+  --el-text-color-placeholder: #9aa29d;
+  --el-border-color: #dfe5e1;
+  --el-border-color-light: #e4e8e6;
+  --el-border-color-lighter: #edf0ee;
+  --el-border-color-extra-light: #f1f4f2;
+  --el-fill-color: #edf2ef;
+  --el-fill-color-light: #f3f6f4;
+  --el-fill-color-lighter: #f7f9f8;
+  --el-fill-color-extra-light: #fafbfa;
+  --el-fill-color-blank: #ffffff;
+  --el-box-shadow-light: 0 4px 16px #10161a0d, 0 2px 6px #10161a08;
+  --el-box-shadow: 0 8px 24px #10161a12, 0 2px 8px #10161a08;
+  --td-bg-color-page: #f7f8f7;
+  --td-bg-color-container: #ffffff;
+  --td-text-color-primary: #171a19;
+  --td-text-color-secondary: #7d8581;
+  --td-component-border: #e4e8e6;
+  --el-font-family: "Montserrat", "Noto Sans SC", "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif;
+
+  body, button, input, textarea, select {
+    font-family: var(--el-font-family);
+  }
+
+  .workspacePage, .canvas .vue-flow {
+    background-color: #f7f8f7;
+  }
+  .vue-flow__background {
+    --vf-background-pattern-color: #d1d5db;
+  }
+  .vue-flow__background circle { fill: #d1d5db; }
+
+  .nodeSkeleton {
+    .contentCard {
+      background: #fff;
+      border-color: var(--el-border-color-light);
+      box-shadow: 0 3px 12px #10161a0a, 0 1px 3px #10161a06;
+      &.selected {
+        border-color: var(--el-color-primary);
+        box-shadow: 0 0 0 1px var(--el-color-primary), 0 5px 18px #10161a0d;
+      }
+    }
+    .titleBar { color: var(--el-text-color-regular); }
+    .mediaToolbar, .bottomSlot > .el-card {
+      background: #fff;
+      border-color: var(--el-border-color-light);
+      box-shadow: var(--el-box-shadow-light);
+    }
+  }
+
+  .canvasControlsCard, .canvasMenu, .toolMenu,
+  .workspaceMenu, .floatingAgent:not(.docked), .canvasViewportHint {
+    background: #ffffffed;
+    border-color: var(--el-border-color-light);
+    box-shadow: var(--el-box-shadow-light);
+  }
+  .floatingAgent {
+    background: #fff;
+    .agentMenu { border-bottom-color: var(--el-border-color-lighter); }
+    .messageInput { background: #fff; border-color: var(--el-border-color); }
+  }
+  .workspacePage .agentButton {
+    background: var(--el-color-primary-light-9);
+    border-color: var(--el-border-color);
+    box-shadow: 0 2px 8px #10161a08;
+  }
+
+  .el-dialog, .el-popper.is-light {
+    border: 1px solid var(--el-border-color-light);
+    box-shadow: var(--el-box-shadow);
+  }
+  .el-overlay { background-color: #10161a38; }
+  .settings .settingsItem {
+    &:hover { background: var(--el-fill-color-light); }
+    &[aria-pressed="true"] {
+      background: var(--el-color-primary-light-9);
+      color: var(--el-color-primary);
+    }
+  }
+  .el-input__wrapper, .el-select__wrapper, .el-textarea__inner {
+    background-color: #fff;
+  }
+}

@@ -1,0 +1,3 @@
+.writingFocusToggle { flex-shrink: 0; white-space: nowrap; }
+.lumWritingHost:has(.writingFocusToggle[aria-pressed="true"]) :is([data-dsh-side-panel],[data-dsh-rail],.ssHeaderEntry,.assetLinkToolbar),
+body:has(.writingFocusToggle[aria-pressed="true"]) .writing-panel-portal { display: none !important; }

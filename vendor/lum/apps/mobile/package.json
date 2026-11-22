@@ -1,0 +1,20 @@
+{
+  "name": "@lum/mobile",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun src/server.ts",
+    "setup": "bun scripts/prepare.ts",
+    "build": "bun scripts/build.ts",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@lum/file": "workspace:*",
+    "@lum/server": "workspace:*",
+    "@lum/web": "workspace:*",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6"
+  }
+}

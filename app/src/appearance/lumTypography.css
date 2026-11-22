@@ -1,0 +1,12 @@
+/* Use the installed Noto variable font without a network font request. */
+@font-face{font-family:"Lum Sans";src:local("Noto Sans SC");font-style:normal;font-weight:100 900;font-display:swap}
+html[data-lum-theme]{--lum-font-ui:"Segoe UI","Lum Sans","Microsoft YaHei UI","PingFang SC",system-ui,sans-serif;--lum-font-reading:"Lum Sans","Microsoft YaHei","PingFang SC",sans-serif;--font-sans:var(--lum-font-ui);--el-font-family:var(--lum-font-ui)}
+html[data-lum-theme] body,html[data-lum-theme] :is(button,input,select,textarea,.localPage,.localDialog,.projectHome,.writing-panel-portal,.dsh-dialog,.dsh-entity-dialog){font-family:var(--lum-font-ui);text-rendering:optimizeLegibility}
+html[data-lum-theme] :is(button,input,select,textarea){letter-spacing:.005em}
+/* The painted mention layer and native textarea must have identical metrics. */
+html[data-lum-theme] .sbMentionEditor :is(textarea.sbDescription,.sbMentionPaint){font-family:var(--lum-font-ui);font-size:12px;line-height:1.7;letter-spacing:.005em}
+html[data-lum-theme] :is(h1,h2,h3,.localCard h3,.projectBook h2,.nodeSkeleton .titleBar,.settings h3){font-weight:600;letter-spacing:.012em}
+html[data-lum-theme] :is(.localMuted,.localStatus,.projectBook time,.settingValue,.nodeSkeleton .titleBar,.sbZoom,.productionReelStrip,.el-statistic){font-variant-numeric:tabular-nums}
+html[data-lum-theme] :is(.slate-editor,.outline-prose,.dsh-chapter-paper,.beatPaper){font-family:var(--lum-font-reading);line-height:1.95;letter-spacing:.015em;word-break:normal;overflow-wrap:break-word}
+html[data-lum-theme] :is(.localCard p,.entityDescription,.worldviewCard p,.skillRules){line-height:1.85}
+html[data-lum-theme] :is(.localButton,.sbButton,.imagePromptEditor button,.dsh-lum-header button){font-weight:500}

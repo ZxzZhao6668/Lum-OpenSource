@@ -1,0 +1,30 @@
+html[data-lum-theme]:not([data-lum-motion="off"]) :is(.localButton,.sbButton,.dsh-btn,.dsh-lum-header button,.projectHome button,.writing-panel-portal .wp-button){transition:background-color 160ms,border-color 160ms,box-shadow 160ms,opacity 140ms,transform 140ms var(--lum-ease)}
+html[data-lum-theme]:not([data-lum-motion="off"]) :is(.localButton,.sbButton,.dsh-btn,.projectPrimary,.dsh-lum-header button):active:not(:disabled){transform:scale(.97)}
+html[data-lum-theme]:not([data-lum-motion="off"]) :is(.localCard,.sbCard,.productionCard,.projectBook,.skillGroup){transition:background-color 200ms,border-color 180ms,box-shadow 220ms}
+html[data-lum-theme]:not([data-lum-motion="off"]) .localCard:hover{box-shadow:var(--lum-float-shadow)}
+html[data-lum-theme]:not([data-lum-motion="off"]) .sbCard.dragging{box-shadow:0 18px 42px #0002;border-color:var(--lum-link)}
+html[data-lum-theme]:not([data-lum-motion="off"]) :is(.sbGeneratePrimary[aria-busy="true"],.imagePromptControls button[aria-busy="true"]){background-image:linear-gradient(110deg,transparent 25%,#ffffff2b 45%,transparent 65%);background-size:230% 100%;animation:lumButtonProgress 1.8s linear infinite}
+html[data-lum-theme] :is(.sbWorld,.dsh-canvas-world,.react-flow__viewport,.react-flow__node){transition:none!important}
+html[data-lum-theme] .writing-panel-portal .wp-launch.wp-launch-dragging{transform:none!important;transition:none!important}
+@supports(interpolate-size:allow-keywords){
+  html[data-lum-theme]:not([data-lum-motion="off"]) :is(.skillGroup,.worldviewWorkspace details){interpolate-size:allow-keywords}
+  html[data-lum-theme]:not([data-lum-motion="off"]) :is(.skillGroup,.worldviewWorkspace details)::details-content{height:0;overflow:clip;transition:height var(--lum-motion-duration) var(--lum-ease),content-visibility var(--lum-motion-duration) allow-discrete}
+  html[data-lum-theme]:not([data-lum-motion="off"]) :is(.skillGroup,.worldviewWorkspace details)[open]::details-content{height:auto}
+}
+@keyframes lumButtonProgress{from{background-position:150% 0}to{background-position:-100% 0}}
+html[data-lum-theme] :is(.localButton,.sbButton,.dsh-canvas-tool,.productionMaterials button,.dsh-lum-header button):hover:not(:disabled){border-color:color-mix(in srgb,var(--lum-text) 32%,var(--lum-line));box-shadow:inset 0 1px #ffffff10,0 3px 10px #00000014}
+html[data-lum-theme] [data-dsh-rail] button{transition:background-color 160ms,border-color 160ms,box-shadow 160ms,translate 160ms var(--lum-ease)}
+html[data-lum-theme] [data-dsh-rail] button:hover:not(:disabled){background-color:var(--lum-rail-highlight);color:inherit;border-color:var(--lum-rail-border);box-shadow:inset 0 1px #ffffff40,0 4px 12px #0002;backdrop-filter:blur(14px)}
+html[data-lum-theme]:not([data-lum-motion="off"]) [data-dsh-rail] button:hover:not(:disabled){translate:0 -2px}
+html[data-lum-theme] [data-dsh-rail] button:focus-visible{outline:2px solid var(--lum-link);outline-offset:-2px;box-shadow:inset 0 1px #ffffff40,0 0 12px #ffffff16}
+html[data-lum-motion="full"] :is(.localButton,.sbButton,.dsh-canvas-tool,.materialAdd):active:not(:disabled){transform:scale(.94)}
+html[data-lum-motion="full"] :is(.localButton,.sbButton,.dsh-canvas-tool,.materialAdd):hover:not(:disabled){filter:brightness(1.07)}
+html[data-lum-theme] :is([data-sidebar-page],.localButton,.sbButton,.productionMaterials button,.dsh-lum-header button):hover:not(:disabled):not(.sbPrimary):not(.sbGeneratePrimary):not([aria-current=page]):not([aria-selected=true]):not([aria-pressed=true]){background:var(--lum-writing-hover);color:var(--lum-text);border-radius:12px;backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);box-shadow:var(--lum-canvas-hover-shadow,inset 0 0 0 1px var(--lum-writing-line),0 3px 10px #00000014)}
+html[data-lum-glass="off"] :is([data-dsh-rail] button,[data-sidebar-page],.localButton,.sbButton,.productionMaterials button,.dsh-lum-header button):hover{backdrop-filter:none;-webkit-backdrop-filter:none}
+.lumGenerationOverlay{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#15171973;color:#fff;backdrop-filter:blur(7px);border-radius:inherit;padding:16px;box-sizing:border-box;pointer-events:auto}.lumGenerationOverlay[hidden]{display:none}.lumGenerationOverlay strong{font-size:13px;font-weight:500}.lumGenerationOverlay small{font-size:11px;color:#ffffffb3}.lumGenerationTrack{height:3px;width:min(62%,200px);border-radius:3px;overflow:hidden;background:#ffffff30;position:relative}.lumGenerationTrack:after{content:'';position:absolute;inset:0 auto 0 0;width:32%;background:#f4f4f2;border-radius:3px;animation:lumIndeterminate 1.5s ease-in-out infinite}
+@keyframes lumIndeterminate{from{transform:translateX(-110%)}to{transform:translateX(420%)}}
+html[data-lum-theme]:not([data-lum-motion="off"]) .lumGeneratedImage{animation:lumResultEnter 280ms ease-out}
+@keyframes lumResultEnter{from{opacity:.3}to{opacity:1}}
+html[data-lum-motion="off"] *,html[data-lum-motion="off"] *::before,html[data-lum-motion="off"] *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:0ms!important;scroll-behavior:auto!important}
+@media(prefers-reduced-motion:reduce){html[data-lum-theme] *,html[data-lum-theme] *::before,html[data-lum-theme] *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:0ms!important;scroll-behavior:auto!important}}
+@media(prefers-reduced-motion:reduce){html[data-lum-theme] [data-dsh-rail] button:hover{translate:none}}

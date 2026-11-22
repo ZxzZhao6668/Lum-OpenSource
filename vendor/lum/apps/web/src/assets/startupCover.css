@@ -1,0 +1,28 @@
+.lumStartup{position:fixed;inset:0;z-index:200000;display:grid;place-items:center;overflow:hidden;isolation:isolate;background:var(--lum-canvas,#eceeec);color:var(--lum-text,#20231f);animation:lumStartupFade 200ms ease-out both}
+.lumStartupAura{position:absolute;left:50%;top:47%;width:min(830px,90vw);height:min(560px,70vh);transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(ellipse,#fffffff0 0%,#ffffffb8 35%,#ffffff00 70%);filter:blur(28px);pointer-events:none;animation:lumStartupAuraIn 1300ms ease-out both}
+.lumStartupArt{position:relative;width:clamp(260px,43vw,590px);max-width:82vw;display:grid;justify-items:center;gap:27px;pointer-events:none}
+.lumStartupArt img{display:block;width:100%;height:auto;object-fit:contain;filter:drop-shadow(0 12px 22px #75508c12);animation:lumStartupLogo 1200ms cubic-bezier(.2,.8,.2,1) both}
+.lumStartupCopy{display:grid;gap:10px;text-align:center;width:min(86vw,680px);justify-self:center}
+.lumStartupArt p{font:400 12px/1.8 "Segoe UI","Microsoft YaHei",sans-serif;color:var(--lum-muted,#737b6a);margin:0;overflow-wrap:anywhere}
+.lumStartupArt .lumStartupChinese{font-size:clamp(13px,1.2vw,16px);font-weight:500;letter-spacing:.09em;color:var(--lum-text,#20231f);animation:lumStartupCaption 650ms ease-out 650ms both}
+.lumStartupArt .lumStartupEnglish{font-size:clamp(10px,.9vw,12px);letter-spacing:.06em;animation:lumStartupCaption 650ms ease-out 950ms both}
+.lumStartupOrbit{position:absolute;left:50%;top:45%;width:min(1000px,120vw);height:auto;transform:translate(-50%,-50%);overflow:visible;pointer-events:none}
+.lumStartupRibbon{stroke-width:3;stroke-linecap:round;stroke-dasharray:1500;stroke-dashoffset:1500;filter:drop-shadow(0 0 8px #e960a244);animation:lumStartupRibbonIn 1550ms cubic-bezier(.25,.7,.2,1) 60ms both}
+.lumStartupThread{stroke-width:1;stroke-linecap:round;stroke-dasharray:1500;stroke-dashoffset:1500;animation:lumStartupRibbonIn 1650ms cubic-bezier(.25,.7,.2,1) 130ms both}
+.lumStartupSparks{transform-origin:500px 300px;animation:lumStartupSparksIn 1500ms ease-out both}
+html[data-lum-theme="black"] .lumStartupAura{background:radial-gradient(ellipse,#7c527030 0%,#37656b24 40%,transparent 70%)}
+html[data-lum-theme="black"] .lumStartupArt img{animation-name:lumStartupLogoDark}
+.lumStartupSkip{position:absolute;top:25px;right:28px;display:inline-flex;align-items:center;gap:9px;padding:8px 13px;border:1px solid var(--lum-line,#dce1d5);border-radius:22px;background:var(--lum-glass,#ffffffc9);color:var(--lum-muted,#737b6a);font-family:var(--lum-font-ui,system-ui);font-size:12px;line-height:1.5;cursor:pointer;backdrop-filter:blur(12px)}
+.lumStartupSkip:hover{background:var(--lum-surface,#fff);color:var(--lum-text,#20231f)}.lumStartupSkip:focus-visible{outline:2px solid var(--lum-link,#506d30);outline-offset:4px}
+.lumStartup.lumStartupLeaving{animation:lumStartupExit 240ms ease-in both;pointer-events:none}
+@keyframes lumStartupFade{from{opacity:0}to{opacity:1}}
+@keyframes lumStartupLogo{from{opacity:0;transform:translateY(14px) scale(.965);filter:blur(7px)}45%{opacity:1}to{opacity:1;transform:none;filter:drop-shadow(0 12px 22px #75508c12)}}
+@keyframes lumStartupLogoDark{from{opacity:0;transform:translateY(14px) scale(.965);filter:blur(7px)}45%{opacity:1}to{opacity:1;transform:none;filter:drop-shadow(0 0 1px #ffffffb0) drop-shadow(0 0 1px #ffffff90) drop-shadow(0 10px 24px #a186a32b)}}
+@keyframes lumStartupAuraIn{from{opacity:0}to{opacity:1}}
+@keyframes lumStartupRibbonIn{0%{opacity:0;stroke-dashoffset:1500}20%{opacity:.8}80%{opacity:.5}100%{opacity:0;stroke-dashoffset:0}}
+@keyframes lumStartupSparksIn{0%{opacity:0;transform:scale(.8)}40%{opacity:.7}100%{opacity:0;transform:scale(1.1)}}
+@keyframes lumStartupCaption{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes lumStartupExit{to{opacity:0}}
+html[data-lum-motion="off"] .lumStartup,html[data-lum-motion="off"] .lumStartup *{animation:none!important}.lumStartup[hidden]{display:none}
+html[data-lum-motion="off"] .lumStartupOrbit{display:none}
+@media(prefers-reduced-motion:reduce){.lumStartup,.lumStartup *{animation:none!important}.lumStartupOrbit{display:none}}

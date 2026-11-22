@@ -1,0 +1,53 @@
+.localPage{height:100%;display:flex;flex-direction:column;color:#263b2e;min-height:0}.localPage>header,.localDialog>header{display:flex;gap:12px;align-items:center;justify-content:flex-start;padding:16px 22px;border-bottom:1px solid #dce5df;flex-wrap:wrap}.localPage h2,.localDialog h2{font-size:17px;margin:0;min-width:0;overflow-wrap:anywhere}.localPage>header>h2,.localDialog>header>h2{margin-right:auto}.localPageBody{padding:24px;overflow:auto;flex:1;min-height:0}.localButton{padding:7px 11px;border:1px solid #d2ded6;border-radius:8px;background:#fff;color:#264b36;font-size:13px;cursor:pointer}.localButton:hover{background:#edf4ef}.localButton:disabled{opacity:.5;cursor:wait}.localDialog{padding:0;border:1px solid #d7e2da;border-radius:16px;background:#fff;color:#263b2e;width:min(860px,92vw);max-height:88vh;box-shadow:0 20px 80px #17352233}.localDialog::backdrop{background:#14261d66;backdrop-filter:blur(3px)}.localDialogBody{padding:20px;overflow:auto;min-height:0;flex:1}.localField{display:flex;flex-direction:column;gap:7px;margin-bottom:16px;font-size:13px}.localField input,.localField textarea,.localSearch{width:100%;box-sizing:border-box;border:1px solid #cfddd4;border-radius:9px;padding:10px;background:white;color:#253d2f;font-family:inherit;font-size:14px;line-height:1.7}.localField textarea{min-height:180px;resize:vertical}.localField input:focus,.localField textarea:focus{outline:2px solid #89b399}.localRow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}.localCard{border:1px solid #dae4dd;background:#fff;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;white-space:pre-wrap;overflow-wrap:anywhere}.localCard h3{margin:0;font-size:16px}.localCard p{margin:0;line-height:1.7;font-size:13px}.localGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:16px}.localMuted{color:#75857b;font-size:12px;line-height:1.7}.localStatus{font-size:12px;color:#687c6f}.localProjectTools{display:flex;gap:5px;padding:6px 8px;flex-wrap:wrap}.localProjectTools .localButton{font-size:11px;padding:4px 7px}.localPageBody>.localField textarea{min-height:50vh}.localCard img{max-width:100%;height:170px;object-fit:contain;border-radius:8px;background:#f3f6f4}.localToolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.localDialog{margin:auto}
+.skillLibrary{min-width:0}.skillLibrary .localGrid{grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr))}.skillLibrary .localCard,.skillLibrary details{min-width:0;max-width:100%}.skillLibrary .skillRules{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;max-width:100%;max-height:320px;overflow:auto;box-sizing:border-box;margin:8px 0 0;padding:10px;background:#f5f8f6;border-radius:8px;font-family:inherit;font-size:13px;line-height:1.7}.skillLibrary .localRow label{display:flex;align-items:center;gap:6px;font-size:12px}
+.episodeOutlineOverview>header{height:48px;min-height:48px;padding:0 28px;display:flex;align-items:center;border-bottom:1px solid var(--border,#e0e5e2)}
+.episodeOutlineOverview>header h2{font-size:15px;font-weight:400;margin:0}
+.episodeOutlineOverview .localPageBody{padding:28px;overflow:auto}
+.episodeOutlineGrid{display:grid;grid-template-columns:repeat(auto-fill,160px);gap:28px;align-content:start}
+.episodeOutlineCard{position:relative;display:flex;flex-direction:column;width:160px;height:228px;text-align:left;padding:18px 16px 14px 24px;border:1px solid #e0e5e2;border-radius:3px;background:var(--card,#fff);color:inherit;box-shadow:3px 3px 0 -1px #f9fbfa,3px 3px 0 0 #e6ebe8;cursor:pointer;min-width:0}
+.episodeOutlineCard::before{content:'';position:absolute;left:12px;top:0;bottom:0;border-left:1px solid #e9edea}
+.episodeOutlineCard strong{font-size:14px;font-weight:600;line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.episodeOutlineCard p{font-size:12px;line-height:1.6;color:#7a8580;white-space:pre-line;overflow:hidden;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;margin:12px 0}
+.episodeOutlineCard footer{margin-top:auto;color:#9aa29e;font-size:11px;white-space:nowrap}
+.episodeOutlineCard:hover{border-color:#9db2a6;box-shadow:3px 3px 0 0 #e0e8e3}
+.episodeOutlineCard:focus-visible{outline:2px solid #377353;outline-offset:4px}
+.episodeOutlineAdd{border:1px dashed #9ca9a1;background:transparent;align-items:center;justify-content:center;font-size:28px;font-weight:300;padding:0}
+.episodeOutlineAdd::before{display:none}
+.outlineDocumentPicker{display:flex;align-items:center;gap:8px;margin:8px 0;color:#65716b;font-size:12px}
+.outlineDocumentPicker select{max-width:240px;padding:4px 8px;border:1px solid #dce3df;border-radius:5px;background:var(--card,#fff);color:inherit}
+.outlineDocumentPicker[hidden]{display:none}
+.episodeRename{width:min(420px,92vw);border-radius:14px}.episodeRename .localRow{justify-content:flex-end;margin:0}.episodeRename .localField>span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.episodeContextMenu{position:fixed;z-index:10000;min-width:150px;padding:5px;background:#fff;border:1px solid #dce3df;box-shadow:0 4px 15px #172a2226;border-radius:8px}.episodeContextMenu button{display:block;width:100%;padding:8px 12px;text-align:left;border:0;border-radius:5px;background:transparent;font-size:13px;color:#263b2e;cursor:pointer}.episodeContextMenu button:hover,.episodeContextMenu button:focus-visible{background:#eef3f0;outline:none}
+.episodeOutlineExport{padding:4px 8px;border:0;background:transparent;cursor:pointer;font-size:20px}.episodeOutlineCard:hover{transform:translateY(-2px) rotate(-.4deg);box-shadow:-4px 3px 0 -1px #fff,-4px 3px 0 0 #e6ebe8,3px -3px 0 -1px #fff,3px -3px 0 0 #e6ebe8}.episodeOutlineCard{transition:transform .16s,box-shadow .16s}.episodeOutlineAdd:hover{transform:none;box-shadow:none;border-color:#e49a20}
+@media(prefers-reduced-motion:reduce){.episodeOutlineCard{transition:none}}
+.skillFilters{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:14px 0}.skillFilters input,.skillFilters select{min-width:0;max-width:100%;border:1px solid #d7dfdb;border-radius:7px;padding:8px 10px;background:white;font:inherit;color:inherit}.skillFilters input{flex:1 1 260px}.skillFilters select{flex:0 1 190px}.skillFilters span{white-space:nowrap}
+
+.localPage,.localPageBody,.localDialog,.localDialogBody,.localCard,.localRow,.localToolbar,.localField{min-width:0;box-sizing:border-box}
+.localDialog{max-width:calc(100vw - 32px);max-height:88dvh}.localDialog[open]{display:flex;flex-direction:column}.localDialog>header{flex:none}
+.localPage>header,.localDialog>header{gap:10px 12px}.localPage>header>.localButton,.localDialog>header>.localButton{flex-shrink:0}
+.localButton{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:32px;max-width:100%;box-sizing:border-box;font-family:inherit;line-height:1.5;white-space:normal;overflow-wrap:anywhere;text-align:center}
+.localDialogBody>:first-child{margin-top:0}.localDialogBody>.localButton:first-child{margin-bottom:16px}
+.localDialogBody :is(p,h3,small,summary,pre),.localStatus,.localMuted,.localRow>span{overflow-wrap:anywhere;min-width:0;max-width:100%}
+.localDialogBody pre{white-space:pre-wrap;max-height:320px;overflow:auto;box-sizing:border-box}
+.localField input,.localField textarea,.localSearch{min-width:0;max-width:100%}.localField input{min-height:40px}.localField textarea{overflow-wrap:anywhere}
+.localCard>*,.localDialogBody input[type=file]{min-width:0;max-width:100%}.localCard img{flex-shrink:0}.localDialogBody img{max-width:100%;object-fit:contain}
+.localRow>label{display:inline-flex;gap:6px;align-items:flex-start;min-width:0;max-width:100%;overflow-wrap:anywhere}.localRow input[type=checkbox]{flex-shrink:0;margin-top:3px}
+.skillChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px}.skillChoices label{display:flex;align-items:flex-start;gap:6px;min-width:0;line-height:1.6;font-size:12px}.skillChoices input{flex-shrink:0;margin-top:3px}.skillChoices span{min-width:0;overflow-wrap:anywhere}
+
+.skillLibrary .localCard{align-content:start}.skillLibrary .localCard>details{margin-top:0}.skillCardActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-content:start}.skillCardActions>.localButton{width:100%}.skillCardActions>.localButton:last-child:nth-child(odd){grid-column:1/-1}.skillSources{display:grid;gap:6px;align-content:start;min-width:0}.skillSources a{overflow-wrap:anywhere}
+@supports(grid-template-rows:subgrid){.skillLibrary .localGrid>.localCard{display:grid;grid-template-rows:subgrid;grid-row:span 6;gap:10px}}
+
+.skillGroupActions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:16px 0 12px;min-width:0}.skillGroupActions>.localMuted{flex:1 1 220px}
+.skillGroups{display:grid;gap:12px;min-width:0}.skillGroup{border:1px solid #dae4dd;border-radius:12px;background:#fff;min-width:0}
+.skillGroupHeading{display:flex;align-items:center;gap:12px;padding:14px 16px;min-height:52px;box-sizing:border-box;cursor:pointer;list-style:none;border-radius:11px;user-select:none}
+.skillGroupHeading::-webkit-details-marker{display:none}.skillGroupHeading:hover{background:#f3f7f4}.skillGroupHeading:focus-visible{outline:2px solid #377353;outline-offset:3px}
+.skillGroupHeading h3{flex:1;min-width:0;margin:0;font-size:14px;line-height:1.6;overflow-wrap:anywhere}.skillGroupCount{flex-shrink:0;font-size:12px;color:#64776a;white-space:nowrap;font-variant-numeric:tabular-nums}.skillGroupIndicator{flex-shrink:0;font-size:12px;color:#64776a}
+.skillGroupChevron{flex:none;display:inline-flex;width:16px;align-items:center;justify-content:center;font-size:22px;line-height:1;transition:transform .15s}.skillGroup[open]>.skillGroupHeading .skillGroupChevron{transform:rotate(90deg)}
+.skillGroup[open]>.skillGroupHeading{border-bottom:1px solid #e4ebe6;border-radius:11px 11px 0 0;background:#f6f9f7}.skillGroupGrid{padding:16px;min-width:0}.skillGroup:not([open])>.skillGroupGrid{display:none}
+@media(max-width:600px){.skillGroupHeading{gap:8px;padding:12px}.skillGroupIndicator{display:none}.skillGroupGrid{padding:12px;gap:12px}}
+@media(prefers-reduced-motion:reduce){.skillGroupChevron{transition:none}}
+
+.outlineDocumentPicker{flex-wrap:wrap;min-width:0}.outlineDocumentPicker select{min-width:0;max-width:100%}
+@media(max-width:600px){.localPage>header,.localDialog>header{padding:12px 16px}.localPageBody,.localDialogBody{padding:16px}.localPage>header>h2{flex-basis:100%}.localDialog>header>h2{flex:1}.localDialog>header>.localButton{flex:none}}
+

@@ -1,0 +1,49 @@
+@import "../../../vendor/lum/apps/web/src/assets/canvasButtonFeedback.css";
+
+.dsh-lum-workspace {
+  position: fixed;
+  inset: 40px 0 0 48px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #e4e8e6;
+  border-right: 0;
+  border-bottom: 0;
+  border-radius: 16px 0 0 0;
+  background: #fff;
+}
+.dsh-lum-workspace[hidden] { display: none; }
+.dsh-lum-workspace.is-standalone { inset: 0; border: 0; border-radius: 0; }
+.dsh-lum-workspace.is-settings { inset: 0; z-index: 2147483001; border-radius: 0; }
+.dsh-lum-workspace.is-stage-fullscreen { inset:0;z-index:100;border:0;border-radius:0; }
+.dsh-lum-workspace.is-stage-fullscreen>.dsh-lum-header { display:none; }
+body:has(.dsh-lum-workspace.is-stage-fullscreen:not([hidden])) :is(.laper-host,[data-dsh-lifted="1"],.laper-tooltip-motion){visibility:hidden}
+html[data-lum-theme] .dsh-lum-workspace.is-settings,html[data-lum-theme] .dsh-lum-workspace.is-settings iframe{background:transparent;border:0}
+.dsh-lum-workspace.is-settings[data-settings-ready="true"]>.dsh-lum-header{display:none}
+.dsh-lum-workspace.is-settings[data-settings-ready="false"] iframe{visibility:hidden}
+.dsh-lum-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 0 0 38px;
+  padding: 0 12px;
+  border-bottom: 1px solid #e4e8e6;
+  color: #171a19;
+  font-size: 12px;
+}
+.dsh-lum-header button {
+  border: 1px solid #e4e8e6;
+  border-radius: 8px;
+  padding: 4px 10px;
+  background: white;
+  cursor: pointer;
+}
+.dsh-lum-header button:hover { background: #f3f6f4; }
+.canvasConnectionNotice{position:absolute;top:68px;right:20px;z-index:10;max-width:min(460px,calc(100% - 40px));box-sizing:border-box;padding:14px 16px;border:1px solid var(--lum-line);border-radius:14px;background:var(--lum-glass);color:var(--lum-text);font-size:13px;line-height:1.7;overflow-wrap:anywhere;box-shadow:var(--lum-float-shadow);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.canvasConnectionActions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-top:10px}.canvasConnectionActions button{padding:6px 10px;border:1px solid var(--lum-line);border-radius:var(--lum-control-radius,8px);background:var(--lum-input);color:var(--lum-text);font:inherit;cursor:pointer}.canvasConnectionActions button:hover{background:var(--lum-hover)}.canvasConnectionActions button:focus-visible{outline:2px solid var(--lum-link);outline-offset:2px}
+html[data-lum-glass=off] .canvasConnectionNotice{background:var(--lum-surface);backdrop-filter:none;-webkit-backdrop-filter:none}
+.dsh-lum-workspace iframe { width: 100%; flex: 1; min-height: 0; border: 0; background: #fff; }
+.productionWorkspaceBody{display:flex;flex:1;min-height:0;min-width:0}.productionWorkspaceBody iframe{min-width:0}.productionMaterials{width:320px;flex:none;display:flex;flex-direction:column;border-right:1px solid #dce4df;padding:14px;background:#f6f8f6;font-size:12px;gap:10px;overflow:hidden}.productionMaterials header{display:flex;justify-content:space-between;align-items:center}.productionMaterials header strong{font-size:16px}.productionMaterials button,.productionMaterials select,.productionMaterials input:not([type=checkbox]){padding:7px;border:1px solid #cdd9d1;background:white;border-radius:7px;max-width:100%;min-width:0}.productionMaterials button:disabled{opacity:.5}.productionFilters{display:flex;flex-direction:column;gap:7px}.productionActions{display:flex;gap:5px}.productionList{flex:1;min-height:0;overflow:auto}.productionCard{display:flex;gap:10px;padding:12px;margin:6px 0;border:1px solid #dfe6e1;background:white;border-radius:9px;cursor:pointer}.productionCard input{align-self:flex-start;margin-top:4px}.productionCard span{min-width:0;overflow-wrap:anywhere}.productionCard strong,.productionCard small{display:block}.productionCard p{color:#65756b;margin:7px 0;line-height:1.6}.productionMaterials footer{display:flex;flex-direction:column;gap:8px}.productionMaterials footer button{background:#295b43;color:white}.productionMaterials footer p{max-height:130px;overflow:auto;white-space:pre-wrap}.productionMaterials footer small{color:#65756b;line-height:1.5}
+
+.dsh-lum-header{flex:0 0 auto;min-height:38px;flex-wrap:wrap;padding-block:6px;box-sizing:border-box}.dsh-lum-header button{max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.5}.productionActions{flex-wrap:wrap}.productionMaterials header{gap:8px}.productionMaterials header strong{min-width:0;overflow-wrap:anywhere}.productionMaterials footer p{overflow-wrap:anywhere}.productionMaterials button{white-space:normal;overflow-wrap:anywhere;min-height:32px}

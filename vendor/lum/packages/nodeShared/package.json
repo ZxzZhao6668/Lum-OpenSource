@@ -1,0 +1,66 @@
+{
+  "name": "@lum/node-shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./virtualStageOutput": "./src/virtualStageOutput.ts",
+    "./virtualStageAssets": "./src/virtualStageAssets.ts",
+    "./mediaPreview": "./src/mediaPreview.ts",
+    "./mediaTypes": "./src/mediaTypes.ts",
+    "./pcmPreview": "./src/pcmPreview.ts",
+    "./promptInput": "./src/components/promptInput.vue",
+    "./promptText": "./src/promptText.ts",
+    "./projectSetupBridge": "./src/projectSetupBridge.ts",
+    "./storyGridSources": "./src/storyGridSources.ts",
+    "./writingSetup": "./src/writingSetup.ts",
+    "./videoContinuity": "./src/videoContinuity.ts",
+    "./videoEnhancement": "./src/videoEnhancement.ts",
+    "./useVideoEnhancement": "./src/useVideoEnhancement.ts",
+    "./useEnhancementPreview": "./src/useEnhancementPreview.ts",
+    "./videoEnhancementEntry": "./src/components/videoEnhancementEntry.vue",
+    "./referenceItem": "./src/components/referenceItem.vue",
+    "./mediaHistory": "./src/components/mediaHistory.vue",
+    "./mediaPrice": "./src/components/mediaPrice.vue",
+    "./modelForm": "./src/components/modelForm.vue",
+    "./modelLabel": "./src/components/modelLabel.vue",
+    "./showNodeError": "./src/showNodeError.ts",
+    "./useNodeReferences": "./src/useNodeReferences.ts",
+    "./useNodeGeneration": "./src/useNodeGeneration.ts",
+    "./useModelForm": "./src/useModelForm.ts",
+    "./useDefaultModel": "./src/useDefaultModel.ts",
+    "./mediaPromptEditor": "./src/components/mediaPromptEditor.vue",
+    "./mediaPromptEditing": "./src/mediaPromptEditing.ts",
+    "./useAudioTranscription": "./src/useAudioTranscription.ts",
+    "./groupNodeModels": "./src/groupNodeModels.ts",
+    "./stageBake": "./src/stageBake.ts",
+    "./stageMesh": "./src/stageMesh.ts",
+    "./stageLibrary": "./src/stageLibrary.ts",
+    "./scriptDocument": "./src/scriptDocument.ts",
+    "./useNodeJsonFile": "./src/useNodeJsonFile.ts",
+    "./useTextModel": "./src/useTextModel.ts",
+    "./useMediaModels": "./src/useMediaModels.ts",
+    "./canvasBatch": "./src/canvasBatch.ts"
+  },
+  "scripts": {
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.42",
+    "@vue-flow/core": "^1.48.2",
+    "element-plus": "^2.14.5"
+  },
+  "dependencies": {
+    "@form-create/element-ui": "^3",
+    "@tabler/icons-vue": "^3.46.0",
+    "@lum/model-icons": "workspace:*",
+    "vue-draggable-plus": "^0.6.1",
+    "x-sender": "1.4.6"
+  },
+  "devDependencies": {
+    "@lum/nodes-scaffold": "workspace:*",
+    "typescript": "~6.0.3",
+    "vite": "^8.2.2",
+    "vue-tsc": "^3.3.11"
+  }
+}

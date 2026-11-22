@@ -1,0 +1,28 @@
+.entityPage .localSearch{display:block;margin-bottom:16px}
+.entityBatchToolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px;margin-bottom:16px;border:1px solid var(--lum-line);border-radius:14px;background:var(--lum-surface);backdrop-filter:blur(16px)}
+.entityBatchToolbar>span{margin-left:auto;font-size:13px}
+.entityCardSelection{display:flex;align-items:center;gap:10px;cursor:pointer;min-width:0}
+.entityCardSelection>span{overflow-wrap:anywhere}
+.entityCardSelection input{width:18px;height:18px;flex-shrink:0;accent-color:var(--lum-accent);border-radius:5px}
+.entityGrid .entityCard.isSelected{outline:2px solid var(--lum-accent);outline-offset:-2px;background:var(--lum-hover)}
+.entityBatchToolbar button:disabled{opacity:.45;cursor:default}
+.entityGrid .entityCard{min-width:0;align-content:start}
+.entityCard .entityCardMedia{height:170px;min-width:0;display:flex;align-items:center;justify-content:center}
+.entityCard .entityCardMedia img{width:100%;height:100%;object-fit:contain}
+.entityCardMedia[role=button]{cursor:zoom-in}
+.entityCardMedia:focus-visible,.entityBatchThumbnail:focus-visible{outline:2px solid var(--lum-accent);outline-offset:3px}
+.entityCard .entityDescription{flex:1}
+.entityCard>.localButton{margin-top:auto;align-self:stretch}
+@supports(grid-template-rows:subgrid){
+  .entityGrid .entityCard{display:grid;grid-template-rows:subgrid;grid-row:span 4;gap:10px}
+  .entityGrid[data-has-images=true] .entityCard{grid-row:span 5}
+  .entityCard>.localButton{align-self:end}
+}
+.entityDetails .entityMedia{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:16px 0}
+.entityDetails .entityMedia img{display:block;max-width:100%;max-height:180px;object-fit:contain}
+.entityDetails .entityMedia img[hidden]{display:none}
+.entityDetails .entityMedia input{min-width:0;max-width:100%;flex:1 1 220px}
+.entityDetails .entityActions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;padding:16px 0;border-top:1px solid #e2e9e4}
+.entityReferences{display:grid;gap:8px;margin-top:20px;min-width:0}
+.entityReferences h3{margin:0 0 4px;font-size:14px}
+.entityReferences>.localButton{justify-content:flex-start;text-align:left;line-height:1.7;width:100%}

@@ -1,0 +1,12 @@
+.writingExport {width:620px;max-height:90vh;color:#2e4436;}
+.writingExport .localDialogBody {display:flex;flex-direction:column;gap:15px;}
+.writingExport fieldset {border:0;padding:0;margin:0;display:flex;gap:9px;flex-wrap:wrap;}
+.writingExport legend {font-size:12px;color:#718178;margin-bottom:9px;}
+.writingExport label {display:flex;gap:7px;align-items:center;font-size:13px;}
+.writingExport fieldset label {padding:7px 10px;border:1px solid #dfe6e1;border-radius:8px;cursor:pointer;}
+.writingExport fieldset label:has(:checked) {background:#eef5ef;border-color:#a5bbae;}
+.writingExport input[type=checkbox] {accent-color:#28573c;}
+.writingExport select,.writingExport input[type=text],.writingExport input:not([type]) {padding:7px 10px;border:1px solid #d8e2db;border-radius:7px;background:white;}
+.writingExport .exportStatus {margin:0;font-size:12px;color:#587961;white-space:pre-line;}
+
+.writingExport{max-width:calc(100vw - 32px)}.writingExport fieldset{min-width:0}.writingExport label{min-width:0;max-width:100%;overflow-wrap:anywhere}.writingExport select,.writingExport input[type=text],.writingExport input:not([type]){min-width:0;max-width:100%;box-sizing:border-box}.writingExport .exportStatus{overflow-wrap:anywhere}

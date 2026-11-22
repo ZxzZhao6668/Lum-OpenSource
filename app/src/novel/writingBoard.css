@@ -1,0 +1,45 @@
+.writingBoard{display:flex;flex-direction:column;background:var(--lum-canvas);color:var(--lum-text)}
+.writingBoardFlow{position:relative;flex:1;min-height:420px}
+.writingBoardToolbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding:10px;border-bottom:1px solid var(--lum-line);background:var(--lum-frost);backdrop-filter:blur(24px) saturate(1.2)}
+.writingBoardToolbar button{border:1px solid var(--lum-line);padding:6px 10px;border-radius:10px;background:transparent;color:var(--lum-text);font:inherit;cursor:pointer;max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.writingBoardToolbar button:hover:not(:disabled){background:var(--lum-selected-glass)}
+.writingBoardToolbar button:disabled{opacity:.45;cursor:default}
+.writingBoardToolbar span{font-size:12px;color:var(--lum-muted)}
+.writingCard{box-sizing:border-box;width:230px;border:1px solid var(--lum-line);border-radius:16px;box-shadow:var(--lum-shadow);padding:14px;cursor:grab;background:color-mix(in srgb,var(--writing-card-color,#fff) 12%,var(--lum-glass));color:var(--lum-text);backdrop-filter:blur(20px) saturate(1.15)}
+.writingCard.selected{border-color:color-mix(in srgb,var(--lum-text) 45%,var(--lum-line));box-shadow:0 0 0 2px var(--lum-selected-glass),var(--lum-shadow)}
+.writingCard small{display:block;color:var(--lum-muted);font-size:10px;margin-bottom:8px}
+.writingCard strong{display:block;font-size:15px}
+.writingCard strong,.writingCard small,.writingBoardToolbar span{overflow-wrap:anywhere;min-width:0}
+.writingCard p{font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;max-height:230px;overflow:auto;margin-top:8px}
+.writingCardNote{border-top:1px solid var(--lum-line);padding-top:8px}
+.writingBoardHint{font-size:12px;color:var(--lum-muted);padding:6px 12px;margin:0}
+.writingBoard .react-flow{
+  --xy-background-color:transparent;
+  --xy-background-pattern-dots-color:var(--lum-dot);
+  --xy-edge-stroke:var(--lum-muted);
+  --xy-edge-stroke-selected:var(--lum-text);
+  --xy-edge-label-background-color:var(--lum-panel);
+  --xy-edge-label-color:var(--lum-text);
+  --xy-handle-background-color:var(--lum-muted);
+  --xy-handle-border-color:var(--lum-panel);
+  --xy-controls-button-background-color:transparent;
+  --xy-controls-button-background-color-hover:var(--lum-selected-glass);
+  --xy-controls-button-color:var(--lum-text);
+  --xy-controls-button-color-hover:var(--lum-text);
+  --xy-controls-button-border-color:var(--lum-line);
+  --xy-controls-box-shadow:var(--lum-shadow);
+  --xy-minimap-background-color:var(--lum-frost);
+  --xy-minimap-mask-background-color:color-mix(in srgb,var(--lum-text) 5%,transparent);
+  --xy-minimap-mask-stroke-color:var(--lum-line);
+  --xy-minimap-node-background-color:var(--lum-muted);
+  --xy-minimap-node-stroke-color:var(--lum-line);
+}
+.writingBoard :is(.react-flow__controls,.react-flow__minimap){background:var(--lum-frost);border:1px solid var(--lum-line);border-radius:14px;overflow:hidden;backdrop-filter:blur(24px) saturate(1.2);-webkit-backdrop-filter:blur(24px) saturate(1.2);box-shadow:var(--lum-shadow)}
+.writingBoard .react-flow__controls-button{width:30px;height:30px}
+.writingBoard .react-flow__controls-button:last-child{border-bottom:0}
+.writingBoard .react-flow__controls-button:focus-visible{outline:2px solid var(--lum-link);outline-offset:-3px}
+.writingBoard .react-flow__minimap svg{display:block}
+html[data-lum-glass="off"] .writingBoard :is(.writingBoardToolbar,.writingCard,.react-flow__controls,.react-flow__minimap){background:var(--lum-surface);backdrop-filter:none;-webkit-backdrop-filter:none}
+.storyBible .localPageBody{display:flex;flex-direction:column;gap:14px}
+.storyBible textarea{line-height:1.8}
+.storyBible header{flex-wrap:wrap}
