@@ -4,6 +4,10 @@ Lum 把剧本写作、分镜和三维白模预演放在同一套创作工具中�
 
 [使用教程](docs/user-guide.md) · [反馈与联系](docs/contact.md) · [设备互联](docs/device-link.md) · [插件投稿](marketplace/README.md) · [画布作品库](canvas-gallery/README.md) · [仓库统计](docs/repository-stats.md)
 
+## Windows 安装包
+
+[下载 Lum 1.0.11 Windows x64 安装包（EXE）](https://github.com/ZxzZhao6668/Lum-OpenSource/releases/download/v1.0.11/Lum-Setup-1.0.11-x64.exe) · [查看版本说明和其他版本](https://github.com/ZxzZhao6668/Lum-OpenSource/releases)
+
 ## 从源码运行
 
 Windows 开发环境需要 Node.js、pnpm 和 Bun。画布工作区使用 Bun 1.4.3。克隆本仓库后，在根目录的 PowerShell 中执行以下命令。首次构建需要下载依赖。
