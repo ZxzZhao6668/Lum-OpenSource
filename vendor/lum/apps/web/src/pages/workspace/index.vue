@@ -93,6 +93,11 @@
                 </el-popover>
               </span>
             </el-tooltip>
+            <el-tooltip content="画布分享" placement="top" :showArrow="false" :hideAfter="0" :enterable="false" :triggerKeys="[]">
+              <el-button class="toolButton" text aria-label="画布分享" aria-haspopup="dialog" @click="galleryVisible = true">
+                <icon-share :size="18" aria-hidden="true" />
+              </el-button>
+            </el-tooltip>
           </div>
         </el-card>
         <el-tooltip v-if="!agentVisible" content="Lum Agent" placement="top" :showArrow="false" :hideAfter="0">
@@ -116,6 +121,9 @@
     </div>
     <floatingAgent v-model="agentVisible" :inert="workspaceStore.projectLoadingVisible" @resize="agentWidth = $event" />
     <settings v-model="settingsVisible" />
+    <canvasGallery v-if="galleryVisible && canvasPanelRef" :key="workspaceStore.project?.directory" v-model="galleryVisible"
+      :canvasReady="canvasPanelRef.canvasReady" :canvasId="canvasPanelRef.canvasId" :canImport="!!workspaceStore.project?.directory"
+      :prepareWork="canvasPanelRef.captureGallery" :importWork="canvasPanelRef.importGallery" />
     <el-dialog v-model="contactVisible" :title="contactInfo.title" width="min(360px, calc(100vw - 32px))" alignCenter appendToBody>
       <div class="contactContent">
         <img v-if="wechatContactUrl" class="contactQr" :src="wechatContactUrl" :alt="`${contactInfo.title}微信二维码`" width="224" height="224" />
@@ -133,7 +141,7 @@ import { onBeforeRouteLeave } from "vue-router";
 import axios from "axios";
 import http from "@/lib/http";
 import { embeddedProjectId } from "@/lib/embeddedProject";
-import { IconScript, IconVector, IconFileText, IconMovie, IconPointer, IconHandStop, IconPlus, IconSearch, IconHelp, IconBook, IconBug, IconBrandWechat, IconBriefcase } from "@tabler/icons-vue";
+import { IconScript, IconVector, IconFileText, IconMovie, IconPointer, IconHandStop, IconPlus, IconSearch, IconHelp, IconShare, IconBook, IconBug, IconBrandWechat, IconBriefcase } from "@tabler/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 
 import settings from "@/components/settings/index.vue";
@@ -146,6 +154,8 @@ import workspaceMenu from "./components/workspaceMenu.vue";
 import floatingAgent from "./components/floatingAgent.vue";
 import virtualStage from "./panels/virtualStage.vue";
 
+const canvasGallery = defineAsyncComponent(() => import("./panels/canvas/canvasGallery.vue"));
+const galleryVisible = ref(false);
 const documentPanel = defineAsyncComponent(() => import("./panels/document/index.vue"));
 
 const activePanel = ref<"canvas" | "document" | "virtualStage">("canvas");

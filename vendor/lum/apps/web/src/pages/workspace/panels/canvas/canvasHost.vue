@@ -29,6 +29,8 @@ import useWorkspaceFiles from "@/lib/workspaceFiles";
 import { useWorkspaceStore } from "@/stores/workspace";
 import { createCanvasMention, mentionNodeOutputs, queryMentionNodes, type MentionCanvasSource } from "@lum/server/agent/mentionSources";
 import type { NodeDocumentState } from "@lum/nodes-scaffold/nodeDocument";
+import { galleryMediaBlob, galleryMediaPath } from "./galleryMedia";
+import { galleryCanvasCopy, galleryFileStem, type GalleryCanvas } from "./galleryCanvas";
 import { copyCanvasFiles, findRemainingCanvas, readCanvasFiles, type DocumentNode, type DocumentNodeOptions } from "./canvasFiles";
 import { createVirtualStage, listVirtualStages, virtualStagePath } from "./virtualStages";
 import { virtualStageOutputKey, validateVirtualStageOutput, type PublishVirtualStageOutput } from "@lum/node-shared/virtualStageOutput";
@@ -451,6 +453,59 @@ async function saveDocumentNode(...args: Parameters<CanvasInstance["saveDocument
   return instance.saveDocumentNode(...args);
 }
 
+async function importGallery(work: GalleryCanvas) {
+  const directory = workspaceStore.project?.directory;
+  if (!directory || fileActionBusy) throw new Error("请打开项目并等待当前文件操作完成");
+  const copy = galleryCanvasCopy(work);
+  const name = "分享-" + galleryFileStem(work.title) + "-" + crypto.randomUUID().slice(0, 8);
+  const files = useWorkspaceFiles(directory);
+  const created: { path: string; directory: string; written: boolean }[] = [];
+  let publishing = false;
+  fileActionBusy = true;
+  try {
+    if (work.nodes.some(node => node.media)) {
+      await files.mkdir("assets").catch(error => { if (error.response?.data?.data?.code !== "EEXIST") throw error; });
+    }
+    for (const [i, node] of work.nodes.entries()) {
+      if (!node.media) continue;
+      checkDirectory(directory);
+      const id = copy.nodes[i]!.id;
+      const folder = "assets/" + id, path = galleryMediaPath(id, node.media);
+      await files.mkdir(folder);
+      const item = { directory: folder, path, written: false };
+      created.push(item);
+      await files.write(path, galleryMediaBlob(node.media), true);
+      item.written = true;
+    }
+    checkDirectory(directory);
+    publishing = true;
+    await files.writeJson(name + ".json", copy, true);
+  } catch (error) {
+    // 写入响应丢失时先确认画布是否已发布，防止回滚导致已创建的画布丢失素材。
+    if (publishing) {
+      try {
+        const saved = await files.readJson(name + ".json");
+        if (JSON.stringify(saved) === JSON.stringify(copy)) {
+          if (!lifetime.signal.aborted && workspaceStore.project?.directory === directory && !canvases.value.some(c => c.id === name + ".json")) canvases.value = [...canvases.value, { id: name + ".json", name }];
+          return name + ".json";
+        }
+      } catch (lookup) {
+        if (!axios.isAxiosError(lookup) || lookup.response?.data?.data?.code !== "ENOENT") throw new Error("无法确认副本保存结果，请检查原项目中的 " + name + ".json");
+      }
+    }
+    for (const item of created) {
+      for (const path of item.written ? [item.path, item.directory] : [item.directory]) {
+        await files.remove(path).catch(cleanup => {
+          if (cleanup.response?.data?.data?.code !== "ENOENT") throw new Error("导入失败，部分素材未能清理：" + item.directory);
+        });
+      }
+    }
+    throw error;
+  } finally { fileActionBusy = false; }
+  if (!lifetime.signal.aborted && workspaceStore.project?.directory === directory) canvases.value = [...canvases.value, { id: name + ".json", name }];
+  return name + ".json";
+}
+
 function cancelSave() {
   for (const panel of instances.values()) panel.cancelSave();
 }
@@ -501,6 +556,11 @@ const mentionSource: MentionCanvasSource = {
 };
 
 defineExpose({
+  importGallery,
+  captureGallery: (...args: Parameters<CanvasInstance["captureGallery"]>) => {
+    if (!activeInstance.value) throw new Error("请先打开要分享的画布");
+    return activeInstance.value.captureGallery(...args);
+  },
   adoptionContext: () => { if (!activeInstance.value) throw new Error('请打开来源画布'); return activeInstance.value.adoptionContext(); },
   verifyAdoption: async (...args: Parameters<CanvasInstance['verifyAdoption']>) => {
     const instance = activeInstance.value; if (!instance) throw new Error('请打开来源画布');

@@ -206,6 +206,8 @@ import { useWorkspaceStore } from "@/stores/workspace";
 import { generalSettings } from "@/stores/settings";
 import { getShortcutBindings, shortcutLabel, shortcutMatches, shortcutPressed } from "@/lib/canvasShortcuts";
 import useWorkspaceFiles from "@/lib/workspaceFiles";
+import { galleryAttachments } from "./galleryMedia";
+import { prepareGalleryCanvas, type GalleryMetadata } from "./galleryCanvas";
 import { createClipboardMediaFile, dropCanvasFiles, getCanvasFileType, getClipboardMediaFiles, importCanvasFiles, isCanvasFileDrag } from "./canvasDrop";
 import "@vue-flow/core/dist/style.css";
 import "@vue-flow/core/dist/theme-default.css";
@@ -800,7 +802,18 @@ async function verifyAdoption(request: ImageWorkbenchAdoption, readMedia = true)
   verifyWorkbenchAdoption({ lumCanvas: true, nodes: flow.getNodes.value, edges: flow.getEdges.value }, request);
   return { ...context, media };
 }
-defineExpose({ openScriptSetup, adoptionContext, verifyAdoption, canvasId, canvasReady, getCanvasContext, importWritingMaterials, importStorySources, openVirtualStageEditor, closePrevisEditors, addStageOutput, addNodeAtPointer, readDocumentNode, saveDocumentNode, mountDocumentNode, observeDocumentNode, prepareCanvasDelete, flushSave: flushCanvasSave, cancelSave: cancelCanvasSave,
+function captureGallery(metadata: GalleryMetadata, includeText: boolean) {
+  if (!canvasReady.value || savePaused) throw new Error("请先打开画布，等节点加载完成后再分享");
+  const directory = project.value?.directory;
+  if (!directory) throw new Error("请打开项目后再分享");
+  const id = canvasId.value;
+  const nodes = flow.getNodes.value;
+  return { ...prepareGalleryCanvas(nodes, flow.getEdges.value, metadata, includeText),
+    attachments: galleryAttachments(nodes, useWorkspaceFiles(directory), nodeId =>
+      canvasId.value === id && project.value?.directory === directory && props.active && !canvasController.signal.aborted ? flow.findNode(nodeId) : undefined) };
+}
+
+defineExpose({ captureGallery, openScriptSetup, adoptionContext, verifyAdoption, canvasId, canvasReady, getCanvasContext, importWritingMaterials, importStorySources, openVirtualStageEditor, closePrevisEditors, addStageOutput, addNodeAtPointer, readDocumentNode, saveDocumentNode, mountDocumentNode, observeDocumentNode, prepareCanvasDelete, flushSave: flushCanvasSave, cancelSave: cancelCanvasSave,
   openNodeSearch: () => nodeSearchRef.value?.open(),
   getCanvases: (signal?: AbortSignal) => {
     if (!canvasMenuRef.value) throw new Error("画布菜单尚未就绪");

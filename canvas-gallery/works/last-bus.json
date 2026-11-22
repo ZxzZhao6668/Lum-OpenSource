@@ -1,0 +1,55 @@
+{
+  "format": "lum-canvas-gallery",
+  "version": 1,
+  "title": "末班车 · 开场分镜",
+  "author": "Lum",
+  "description": "一个夜班司机、一张过期车票和车站熄灯前的最后一分钟。沿连线查看三个镜头，用空白图片节点规划站台的建立镜头。",
+  "nodes": [
+    {
+      "id": "n1",
+      "type": "remote-textNode",
+      "label": "1 · 站台全景",
+      "x": 0,
+      "y": 0,
+      "text": "外景 · 城郊汽车站 · 夜\n雨停了。站牌还在滴水。末班车的灯照亮长椅下露出的一只鞋。"
+    },
+    {
+      "id": "n2",
+      "type": "remote-textNode",
+      "label": "2 · 车票特写",
+      "x": 470,
+      "y": 0,
+      "text": "司机弯腰拾起车票。灯光透过纸面：二十年前的今天。身后传来硬币落进投币箱的响声。"
+    },
+    {
+      "id": "n3",
+      "type": "remote-textNode",
+      "label": "3 · 司机近景",
+      "x": 940,
+      "y": 0,
+      "text": "司机回头，车里空无一人。\n车门外，一个孩子问：“这班车，还回家吗？”"
+    },
+    {
+      "id": "n4",
+      "type": "remote-imageGenerationNode",
+      "label": "站台灯光参考",
+      "x": 0,
+      "y": 360,
+      "prompt": "雨后深蓝夜色，空旷的城郊站台。暖黄车灯切过湿路，长椅隐在阴影中。固定机位，宽幅全景。"
+    }
+  ],
+  "edges": [
+    {
+      "source": "n1",
+      "target": "n2"
+    },
+    {
+      "source": "n2",
+      "target": "n3"
+    },
+    {
+      "source": "n1",
+      "target": "n4"
+    }
+  ]
+}

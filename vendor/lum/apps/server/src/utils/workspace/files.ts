@@ -131,13 +131,38 @@ export async function resolveWorkspacePath(root: string, path: string, allowMiss
 
 // ACT: 桌面和独立 Server 均为单进程；锁防止并发文件操作互相覆盖。
 const busyFiles = new Set<string>();
+function lockKey(path: string) {
+  return process.platform === "win32" ? resolve(path).toLowerCase() : resolve(path);
+}
 export function lockWorkspaceFiles(paths: string[]) {
-  const keys = paths.map(path => process.platform === "win32" ? resolve(path).toLowerCase() : resolve(path));
+  const keys = paths.map(lockKey);
   if (keys.some(path => [...busyFiles].some(busy => isWithin(path, busy) || isWithin(busy, path)))) {
     throw Object.assign(new Error("文件正在使用，请等待操作完成"), { status: 409, code: "EBUSY" });
   }
   keys.forEach(path => busyFiles.add(path));
   return () => keys.forEach(path => busyFiles.delete(path));
+}
+
+const creatingDirectories = new Map<string, Promise<void>>();
+export async function createWorkspaceDirectory(path: string) {
+  const key = lockKey(path);
+  const exists = () => Object.assign(new Error("已存在同名文件或目录"), { code: "EEXIST" });
+  const pending = creatingDirectories.get(key);
+  if (pending) {
+    await pending;
+    throw exists();
+  }
+  const creation = (async () => {
+    const info = await lstat(path).catch((err: NodeJS.ErrnoException) => { if (err.code !== "ENOENT") throw err; });
+    // 已有目录只需报告 EEXIST；目录自身或祖先正在移动/删除时仍由原有锁拒绝。
+    if (info?.isDirectory() && ![...busyFiles].some(busy => isWithin(busy, key))) throw exists();
+    const release = lockWorkspaceFiles([path]);
+    try { await mkdir(path); }
+    finally { release(); }
+  })();
+  creatingDirectories.set(key, creation);
+  try { await creation; }
+  finally { creatingDirectories.delete(key); }
 }
 
 export function protectWorkspaceRoot(directory: string, path: string) {
