@@ -101,7 +101,7 @@
                 <a
                   v-if="plugin.github"
                   class="repoLink"
-                  :href="plugin.github"
+                  :href="pluginRepositoryLink(plugin)"
                   target="_blank"
                   rel="noopener noreferrer"
                   :aria-label="`${plugin.displayName} 的 GitHub`"
@@ -294,7 +294,7 @@ import parse from "semver/functions/parse";
 import { computed, defineAsyncComponent, markRaw, onMounted, onBeforeUnmount, ref, watch } from "vue";
 import { IconBox, IconBook, IconTool, IconFileText, IconExternalLink, IconSparkles2, IconUpload, IconCloudUpload, IconShare, IconStar, IconStarFilled, IconLink, IconSettings, IconCopy } from "@tabler/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { bundledPlugins, downloadMarketFile, fetchMarketPlugins, marketLinks } from "@/lib/lumMarketplace";
+import { bundledPlugins, downloadMarketFile, fetchMarketPlugins, marketLinks, pluginRepositoryLink } from "@/lib/lumMarketplace";
 import videoPlayer from "@/components/videoPlayer.vue";
 import saveFile from "@/lib/saveFile";
 import { writeClipboardText } from "@/lib/clipboard";

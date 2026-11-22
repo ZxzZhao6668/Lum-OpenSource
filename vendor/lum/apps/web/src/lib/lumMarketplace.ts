@@ -13,6 +13,17 @@ export const marketLinks = {
   submissions: `${import.meta.env.repositoryUrl}/pulls?q=is%3Apr+author%3A%40me`,
 };
 
+// Older installations can retain the upstream homepage in saved plugin metadata.
+const packageFolder: Record<Plugin["type"], string> = {
+  node: "nodes", tool: "tools", agent: "teams", skill: "skills", ext: "ext",
+};
+export function pluginRepositoryLink(plugin: Pick<Plugin, "github" | "type">) {
+  if (plugin.github && /^https?:\/\/(?:www\.)?(?:github\.com|gitee\.com|atomgit\.com)\/HBAI-Ltd\/Toonflow-app(?:\.git)?(?:[/?#]|$)/i.test(plugin.github)) {
+    return `${import.meta.env.repositoryUrl}/tree/main/vendor/lum/packages/${packageFolder[plugin.type]}`;
+  }
+  return plugin.github;
+}
+
 type Entry = (typeof catalog.plugins)[number] & { readme?: string };
 function listing(entries: Entry[], revision?: string): Plugin[] {
   return entries.map(entry => {
