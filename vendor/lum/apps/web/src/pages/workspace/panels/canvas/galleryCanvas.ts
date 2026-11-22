@@ -9,7 +9,8 @@ type GalleryNode = { id: string; type: GalleryType; label: string; x: number; y:
   parent?: string; width?: number; height?: number; text?: string; prompt?: string; media?: GalleryMedia };
 type GalleryEdge = { source: string; target: string; sourceHandle?: string; targetHandle?: string };
 export type GalleryMetadata = { title: string; author: string; description: string };
-export type GalleryCanvas = GalleryMetadata & { format: "lum-canvas-gallery"; version: 1; nodes: GalleryNode[]; edges: GalleryEdge[] };
+type GalleryFilm = { nodeId: string } | { media: GalleryMedia };
+export type GalleryCanvas = GalleryMetadata & { format: "lum-canvas-gallery"; version: 1 | 2; nodes: GalleryNode[]; edges: GalleryEdge[]; film?: GalleryFilm };
 export const galleryMaxBytes = 20 * 1024 * 1024;
 const nodeId = /^n[1-9]\d{0,3}$/;
 const portId = /^[\w-]{1,80}$/;
@@ -41,8 +42,9 @@ function portField(value: unknown) {
 }
 
 export function parseGalleryCanvas(value: unknown): GalleryCanvas {
-  const raw = record(value, ["format", "version", "title", "author", "description", "nodes", "edges"]);
-  if (raw.format !== "lum-canvas-gallery" || raw.version !== 1) invalid("当前版本不支持此分享文件");
+  const raw = record(value, ["format", "version", "title", "author", "description", "nodes", "edges", "film"]);
+  if (raw.format !== "lum-canvas-gallery" || (raw.version !== 1 && raw.version !== 2)) invalid("当前版本不支持此分享文件");
+  if ((raw.version === 2) !== (raw.film !== undefined)) invalid("成片信息与分享文件版本不符");
   if (!Array.isArray(raw.nodes) || !raw.nodes.length || raw.nodes.length > 500 || !Array.isArray(raw.edges) || raw.edges.length > 2000) {
     invalid("分享画布支持 1 至 500 个节点和最多 2000 条连线");
   }
@@ -83,8 +85,20 @@ export function parseGalleryCanvas(value: unknown): GalleryCanvas {
     return { source, target, ...(e.sourceHandle !== undefined && { sourceHandle: portField(e.sourceHandle) }),
       ...(e.targetHandle !== undefined && { targetHandle: portField(e.targetHandle) }) };
   });
-  const result: GalleryCanvas = { format: "lum-canvas-gallery", version: 1, title: stringField(raw.title, 100, true),
-    author: stringField(raw.author, 80, true), description: stringField(raw.description, 1500), nodes, edges };
+  let film: GalleryFilm | undefined;
+  if (raw.film !== undefined) {
+    const source = record(raw.film, ["nodeId", "media"]);
+    if (Object.keys(source).length !== 1) invalid("请选择一条视频作为成片");
+    if ("nodeId" in source) {
+      const nodeId = idField(source.nodeId);
+      if (!byId.get(nodeId)?.media?.mimeType.startsWith("video/")) invalid("选作成片的节点缺少视频附件");
+      film = { nodeId };
+    } else {
+      film = { media: parseGalleryMedia(source.media, "remote-videoNode") };
+    }
+  }
+  const result: GalleryCanvas = { format: "lum-canvas-gallery", version: raw.version, title: stringField(raw.title, 100, true),
+    author: stringField(raw.author, 80, true), description: stringField(raw.description, 1500), nodes, edges, ...(film && { film }) };
   if (new TextEncoder().encode(JSON.stringify(result, null, 2) + "\n").length > galleryMaxBytes) invalid("分享文件超过 20 MiB");
   return result;
 }

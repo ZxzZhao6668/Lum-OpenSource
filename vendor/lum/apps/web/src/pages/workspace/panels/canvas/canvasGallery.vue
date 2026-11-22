@@ -26,7 +26,7 @@
             <section aria-label="作品预览" :aria-busy="loadingWork">
               <p v-if="loadingWork" role="status">正在读取画布…</p>
               <template v-else-if="selected">
-                <galleryPreview :work="selected" />
+                <galleryPreview v-if="visible && tab === 'browse'" :work="selected" />
                 <div class="actions">
                   <el-button size="small" :disabled="working" @click="download(selected)">下载分享文件</el-button>
                   <el-button type="primary" size="small" :loading="working" :disabled="!canImport" @click="importSelected">导入为副本</el-button>
@@ -50,19 +50,35 @@
           <p v-if="shareError" class="error" role="alert">{{ shareError }}</p>
           <section v-if="draft" class="review" aria-label="投稿预览">
             <p v-if="draft.converted.length">以下节点将转换为可编辑的文本节点：{{ draft.converted.join("、") }}。勾选附上正文时保留其文字输出。</p>
+            <fieldset class="filmChoice">
+              <legend>成片预览</legend>
+              <label>作品详情中播放的视频
+                <select v-model="filmSource">
+                  <option value="">不附成片</option>
+                  <option v-for="video in draft.attachments.filter(item => item.mimeType.startsWith('video/'))" :key="video.id" :value="video.id">
+                    画布视频 · {{ video.label }}（{{ video.id }}）
+                  </option>
+                  <option value="local">选择本地 MP4</option>
+                </select>
+              </label>
+              <label v-if="filmSource === 'local'">本地 MP4 文件
+                <input type="file" accept=".mp4,video/mp4" @change="selectFilmFile" />
+              </label>
+              <p class="hint">单条成片最多 10 MiB，随作品一起分享，下载后也能播放。</p>
+            </fieldset>
             <fieldset v-if="draft.media.length">
               <legend>选择随作品公开的媒体附件</legend>
               <p>每个节点可选当前输出，单个文件最多 10 MiB，作品文件合计最多 20 MiB。未勾选的媒体只分享节点与连线。</p>
               <el-checkbox-group v-model="chosenMedia">
-                <el-checkbox v-for="attachment in draft.attachments" :key="attachment.id" :value="attachment.id">
+                <el-checkbox v-for="attachment in draft.attachments.filter(item => item.id !== filmSource)" :key="attachment.id" :value="attachment.id">
                   {{ attachment.label }} · {{ attachment.mimeType }}
                 </el-checkbox>
               </el-checkbox-group>
               <p v-if="draft.media.length !== draft.attachments.length" class="hint">部分节点没有支持的本地输出。可选格式为 PNG、JPEG、GIF、WebP、MP4、WebM、MP3、WAV、Ogg 和 M4A。</p>
-              <el-button v-if="!reviewed" size="small" :loading="loadingMedia" @click="reviewMedia">更新附件预览</el-button>
             </fieldset>
+            <el-button v-if="!reviewed" size="small" :disabled="filmSource === 'local' && !filmFile" :loading="loadingMedia" @click="reviewMedia">更新作品预览</el-button>
             <template v-if="reviewed">
-              <galleryPreview :work="reviewed" />
+              <galleryPreview v-if="visible && tab === 'share'" :work="reviewed" />
               <details><summary>核对投稿内容与附件清单</summary><pre>{{ reviewManifest }}</pre></details>
               <div class="actions"><el-button size="small" @click="download(reviewed)">保存完整分享文件</el-button></div>
               <gallerySubmission :work="reviewed" />
@@ -80,7 +96,7 @@ import { ElMessage } from "element-plus";
 import saveFile from "@/lib/saveFile";
 import { listGalleryEntries, loadGalleryEntry } from "@/lib/canvasGalleryRepository";
 import { galleryFileStem, galleryMaxBytes, parseGalleryCanvas, type GalleryCanvas, type GalleryMetadata, type prepareGalleryCanvas } from "./galleryCanvas";
-import type { GalleryAttachment } from "./galleryMedia";
+import { readLocalFilm, type GalleryAttachment } from "./galleryMedia";
 import galleryPreview from "./galleryPreview.vue";
 import gallerySubmission from "./gallerySubmission.vue";
 
@@ -101,6 +117,8 @@ const title = ref(""), author = ref(""), description = ref(""), includeText = re
 const draft = shallowRef<GalleryDraft>();
 const reviewed = shallowRef<GalleryCanvas>();
 const chosenMedia = ref<string[]>([]);
+const filmSource = ref("");
+const filmFile = shallowRef<File>();
 const loadingMedia = ref(false);
 const reviewManifest = computed(() => reviewed.value && JSON.stringify(reviewed.value, (key, value) =>
   key === "base64" && typeof value === "string" ? "已包含二进制附件（" + value.length + " 个 Base64 字符）" : value, 2));
@@ -151,9 +169,13 @@ function prepare() {
   } catch (error) { shareError.value = errorText(error); }
 }
 function clearDraft() {
-  mediaRequest?.abort(); draft.value = undefined; chosenMedia.value = []; reviewed.value = undefined; shareError.value = "";
+  mediaRequest?.abort(); draft.value = undefined; chosenMedia.value = []; filmSource.value = ""; filmFile.value = undefined; reviewed.value = undefined; shareError.value = "";
 }
-watch(chosenMedia, () => {
+function selectFilmFile(event: Event) {
+  filmFile.value = (event.currentTarget as HTMLInputElement).files?.[0];
+}
+watch(filmSource, () => { filmFile.value = undefined; }, { flush: "sync" });
+watch([chosenMedia, filmSource, filmFile], () => {
   mediaRequest?.abort(); loadingMedia.value = false; reviewed.value = undefined; shareError.value = "";
 }, { deep: true, flush: "sync" });
 async function reviewMedia() {
@@ -164,7 +186,10 @@ async function reviewMedia() {
   try {
     const nodes = source.work.nodes.map(node => ({ ...node }));
     let size = new TextEncoder().encode(JSON.stringify(source.work, null, 2)).length;
-    for (const id of chosenMedia.value) {
+    const sourceId = filmSource.value;
+    const attachments = new Set(chosenMedia.value);
+    if (sourceId && sourceId !== "local") attachments.add(sourceId);
+    for (const id of attachments) {
       const candidate = source.attachments.find(item => item.id === id);
       const target = nodes.find(node => node.id === id);
       if (!candidate || !target) throw Error("媒体选项已变化，请重新生成预览");
@@ -174,8 +199,15 @@ async function reviewMedia() {
       if (size > galleryMaxBytes) throw Error("作品超过 20 MiB，请减少所选附件");
       target.media = media;
     }
+    let film: GalleryCanvas["film"];
+    if (sourceId === "local") {
+      if (!filmFile.value) throw Error("请选择本地 MP4 成片");
+      film = { media: await readLocalFilm(filmFile.value, request.signal) };
+    } else if (sourceId) {
+      film = { nodeId: sourceId };
+    }
     request.signal.throwIfAborted();
-    reviewed.value = parseGalleryCanvas({ ...source.work, nodes });
+    reviewed.value = parseGalleryCanvas({ ...source.work, nodes, ...(film && { version: 2, film }) });
   } catch (error) { if (!request.signal.aborted) shareError.value = errorText(error); }
   finally { if (!request.signal.aborted) loadingMedia.value = false; }
 }
@@ -221,6 +253,12 @@ onScopeDispose(() => { listing?.abort(); reading?.abort(); mediaRequest?.abort()
   .review > p { overflow-wrap: anywhere; }
   fieldset { margin: 12px 0; padding: 12px; min-width: 0; border: 1px solid var(--el-border-color); }
   fieldset :deep(.el-checkbox) { white-space: normal; max-width: 100%; }
+  .filmChoice {
+    label { display: grid; gap: 5px; margin-block: 4px 10px; }
+    select, input { max-width: 100%; font: inherit; }
+    select { padding: 6px 8px; color: var(--el-text-color-primary); background: var(--el-bg-color); border: 1px solid var(--el-border-color); border-radius: var(--el-border-radius-base); }
+    p { margin: 4px 0; }
+  }
   details { margin: 12px 0; }
   summary { cursor: pointer; }
   pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 240px; overflow-y: auto; }

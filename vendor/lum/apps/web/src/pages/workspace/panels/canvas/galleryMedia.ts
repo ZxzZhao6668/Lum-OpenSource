@@ -68,6 +68,23 @@ export function galleryMediaPath(id: string, media: GalleryMedia) {
   return "assets/" + id + "/shared." + extensions[media.mimeType];
 }
 
+function encodeMedia(bytes: Uint8Array, mimeType: Mime): GalleryMedia {
+  if (!bytes.length || bytes.length > singleLimit) throw Error("所选文件为空或超过 10 MiB");
+  if (!signature(bytes, mimeType, bytes.length)) throw Error("文件内容与所选媒体格式不符");
+  let binary = "";
+  for (let offset = 0; offset < bytes.length; offset += 0x8000) binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+  return { mimeType, base64: btoa(binary) };
+}
+
+export async function readLocalFilm(file: File, signal: AbortSignal) {
+  if (!file.size || file.size > singleLimit) throw Error("成片文件为空或超过 10 MiB");
+  if (!/\.mp4$/i.test(file.name)) throw Error("请选择 MP4 成片文件");
+  signal.throwIfAborted();
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  signal.throwIfAborted();
+  return encodeMedia(bytes, "video/mp4");
+}
+
 function localOutput(node: Node) {
   const kind = outputKind(node.type);
   if (!kind) return;
@@ -110,12 +127,7 @@ export function galleryAttachments(nodes: Node[], files: ReturnType<typeof useWo
         signal.throwIfAborted();
         const bytes = new Uint8Array(await (await fetch(url, { signal })).arrayBuffer());
         check(); signal.throwIfAborted();
-        if (!bytes.length || bytes.length > singleLimit) throw Error("所选附件为空或超过 10 MiB");
-        if (!signature(bytes, source.mimeType, bytes.length)) throw Error("媒体文件签名与节点输出格式不符");
-        let binary = "";
-        for (let offset = 0; offset < bytes.length; offset += 0x8000) binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
-        check(); signal.throwIfAborted();
-        return { mimeType: source.mimeType, base64: btoa(binary) };
+        return encodeMedia(bytes, source.mimeType);
       } finally { signal.removeEventListener("abort", release); release(); }
     } });
   });

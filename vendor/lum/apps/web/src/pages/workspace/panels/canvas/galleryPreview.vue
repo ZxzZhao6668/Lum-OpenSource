@@ -3,6 +3,12 @@
     <h3>{{ work.title }}</h3>
     <p class="byline">{{ work.author }} · {{ work.nodes.length }} 个节点 · {{ work.edges.length }} 条连线</p>
     <p v-if="work.description" class="description">{{ work.description }}</p>
+    <section v-if="filmUrl" class="filmPreview" aria-label="成片预览">
+      <h4>成片预览</h4>
+      <video ref="filmPlayer" :key="filmUrl" :src="filmUrl" controls playsinline preload="metadata"
+        :aria-label="work.title + ' · 成片'" @play="clearMedia" @error="filmFailed = true" />
+      <p v-if="filmFailed" role="alert">当前浏览器无法播放这条成片。请核对视频编码，MP4 推荐使用 H.264。</p>
+    </section>
     <svg class="graph" :viewBox="graph.bounds" role="img" aria-label="节点布局与连线">
       <g v-for="n in graph.groups" :key="n.id">
         <rect :x="n.x" :y="n.y" :width="n.w" :height="n.h" rx="8" class="group" />
@@ -44,13 +50,29 @@ import type { GalleryCanvas } from "./galleryCanvas";
 
 const props = defineProps<{ work: GalleryCanvas }>();
 type AttachedNode = GalleryCanvas["nodes"][number] & { media: GalleryMedia };
-const attached = computed(() => props.work.nodes.filter((node): node is AttachedNode => !!node.media));
+const attached = computed(() => {
+  const film = props.work.film;
+  const filmId = film && "nodeId" in film ? film.nodeId : undefined;
+  return props.work.nodes.filter((node): node is AttachedNode => !!node.media && node.id !== filmId);
+});
+const filmPlayer = shallowRef<HTMLVideoElement>();
+const filmUrl = shallowRef("");
+const filmFailed = shallowRef(false);
+watch(() => props.work, (work, _, onCleanup) => {
+  filmFailed.value = false;
+  const film = work.film;
+  const media = film && ("media" in film ? film.media : work.nodes.find(node => node.id === film.nodeId)?.media);
+  const url = media ? URL.createObjectURL(galleryMediaBlob(media)) : "";
+  filmUrl.value = url;
+  if (url) onCleanup(() => URL.revokeObjectURL(url));
+}, { immediate: true, flush: "sync" });
 const activeMedia = shallowRef<{ id: string; kind: string; url: string; label: string }>();
 function clearMedia() {
   if (activeMedia.value) URL.revokeObjectURL(activeMedia.value.url);
   activeMedia.value = undefined;
 }
 function previewMedia(node: AttachedNode) {
+  filmPlayer.value?.pause();
   clearMedia();
   activeMedia.value = { id: node.id, label: node.label || node.id, kind: node.media.mimeType.split("/")[0]!,
     url: URL.createObjectURL(galleryMediaBlob(node.media)) };
@@ -94,6 +116,12 @@ const graph = computed(() => {
   .mediaOptions { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
   .mediaOptions :deep(.el-button) { margin: 0; max-width: 100%; white-space: normal; height: auto; }
   img, video, audio { display: block; max-width: 100%; max-height: 320px; margin-bottom: 8px; }
+  .filmPreview {
+    margin: 12px 0 16px;
+    h4 { margin: 0 0 8px; }
+    video { width: 100%; max-height: min(44vh, 440px); object-fit: contain; background: #101112; border-radius: var(--el-border-radius-base); }
+    p { color: var(--el-color-danger); }
+  }
   details { margin-top: 12px; }
   summary { cursor: pointer; }
   .nodeDetail { padding: 8px 0; border-bottom: 1px solid var(--el-border-color-lighter); }
