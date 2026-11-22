@@ -6,7 +6,10 @@ Lum 把剧本写作、分镜和三维白模预演放在同一套创作工具中�
 
 ## Windows 安装包
 
-[下载 Lum 1.0.11 Windows x64 安装包（EXE）](https://github.com/ZxzZhao6668/Lum-OpenSource/releases/download/v1.0.11/Lum-Setup-1.0.11-x64.exe) · [查看版本说明和其他版本](https://github.com/ZxzZhao6668/Lum-OpenSource/releases)
+Lum 1.0.11 · Windows x64 · 664.4 MiB
+
+- [国内下载（百度网盘）](https://pan.baidu.com/s/1Gd73OJ3xmLAJn1rbhNBGlQ?pwd=6668)（提取码 `6668`）
+- [GitHub 直接下载（EXE）](https://github.com/ZxzZhao6668/Lum-OpenSource/releases/download/v1.0.11/Lum-Setup-1.0.11-x64.exe) · [查看版本说明和其他版本](https://github.com/ZxzZhao6668/Lum-OpenSource/releases)
 
 ## 从源码运行
 
