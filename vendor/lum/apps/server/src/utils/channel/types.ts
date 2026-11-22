@@ -63,7 +63,7 @@ export type ExploreProject = {
   collectionCount: number;
 };
 export type ExploreParams = { cursor?: string; limit: number; categoryId?: string; searchKeyword?: string };
-export type ExplorePage = { categories: ExploreCategory[]; list: ExploreProject[]; nextCursor: string | null };
+export type ExplorePage = { source?: "repository"; categories: ExploreCategory[]; list: ExploreProject[]; nextCursor: string | null };
 export type ExploreDetail = ExploreProject & { description: string; videoUrl: string; shareUrl: string };
 export type ExploreUploadSignatureParams = { kind: "cover" | "video" | "download"; fileName: string };
 export type ExploreUploadSignature = { uploadUrl: string; fileKey: string; contentType: string };

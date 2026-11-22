@@ -6,6 +6,7 @@ import { actualPlatform } from "./platform";
 type MobileConnection = { mode: "local" | "remote"; name?: string; url?: string; online?: boolean | null; appVersion?: string; remoteAppVersion?: string };
 
 export const mobileConnection = ref<MobileConnection>({ mode: actualPlatform.isRemoteConnection ? "remote" : "local" });
+export const deviceLinkGuideUrl = `${import.meta.env.repositoryUrl}/blob/main/docs/device-link.md`;
 export const deviceHubEnabled = ref(false);
 export const deviceConnectionSupported = ref(true);
 export function getDeviceVersionWarning(appVersion?: string, remoteAppVersion?: string) {

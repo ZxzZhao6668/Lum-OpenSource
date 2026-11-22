@@ -4,5 +4,5 @@ export default createNodeConfig({
   name: "audioNode",
   displayName: "音频",
   author: "Lum",
-  github: "https://github.com/HBAI-Ltd/Toonflow-app",
+  github: "https://github.com/ZxzZhao6668/Lum-OpenSource/tree/main/vendor/lum/packages/nodes/audioNode",
 }, import.meta.url);

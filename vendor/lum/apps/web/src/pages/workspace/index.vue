@@ -79,26 +79,16 @@
                       tag="a"
                       text
                       :icon="IconBook"
-                      href="https://qcn7xdsqgc4z.feishu.cn/docx/RXFqdgR2Xo0dXZxGfd0cZCGgnwf"
+                      :href="userGuideUrl"
                       target="_blank"
                       rel="noopener noreferrer"
                       @click="helpVisible = false">
                       使用教程
                     </el-button>
-                    <el-button
-                      class="helpAction"
-                      tag="a"
-                      text
-                      :icon="IconBug"
-                      href="https://docs.qq.com/smartsheet/form/EmvmQBrmlPmr%2Fss_vsqk2v%2FvhiGzE?tab=ss_vsqk2v"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="Lum 需求/BUG反馈表"
-                      @click="helpVisible = false">
-                      汇报 BUG
-                    </el-button>
-                    <el-button class="helpAction" text :icon="IconBrandWechat" @click="showContact('community')">加入交流群</el-button>
-                    <el-button class="helpAction" text :icon="IconBriefcase" @click="showContact('business')">商务合作</el-button>
+                    <el-button v-for="(contact, type) in contacts" :key="type" class="helpAction" text
+                      :icon="contact.icon" :tag="wechatContactUrl ? 'button' : 'a'"
+                      :href="wechatContactUrl ? undefined : contactPage(type)" :target="wechatContactUrl ? undefined : '_blank'"
+                      rel="noopener noreferrer" @click="showContact(type)">{{ contact.title }}</el-button>
                   </div>
                 </el-popover>
               </span>
@@ -128,16 +118,9 @@
     <settings v-model="settingsVisible" />
     <el-dialog v-model="contactVisible" :title="contactInfo.title" width="min(360px, calc(100vw - 32px))" alignCenter appendToBody>
       <div class="contactContent">
-        <q-r-code
-          :value="contactInfo.url"
-          :size="192"
-          type="svg"
-          color="#000000"
-          bgColor="#ffffff"
-          borderless
-          role="img"
-          :aria-label="`${contactInfo.title}二维码`" />
-        <p class="contactTip">{{ contactInfo.tip }}</p>
+        <img v-if="wechatContactUrl" class="contactQr" :src="wechatContactUrl" :alt="`${contactInfo.title}微信二维码`" width="224" height="224" />
+        <p v-if="wechatContactUrl" class="contactTip">{{ contactInfo.tip }}</p>
+        <a :href="contactPage(contactType)" target="_blank" rel="noopener noreferrer">查看{{ contactInfo.title }}说明</a>
       </div>
     </el-dialog>
   </main>
@@ -152,7 +135,7 @@ import http from "@/lib/http";
 import { embeddedProjectId } from "@/lib/embeddedProject";
 import { IconScript, IconVector, IconFileText, IconMovie, IconPointer, IconHandStop, IconPlus, IconSearch, IconHelp, IconBook, IconBug, IconBrandWechat, IconBriefcase } from "@tabler/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { QRCode } from "tdesign-vue-next";
+
 import settings from "@/components/settings/index.vue";
 import { useWorkspaceStore } from "@/stores/workspace";
 import { registerWorkspaceControl, waitForControlValue } from "@/lib/mcpControl";
@@ -267,27 +250,31 @@ onScopeDispose(() => {
   window.removeEventListener("blur", blurAgentLauncher);
 });
 const settingsVisible = ref(false);
+const repositoryDocs = `${import.meta.env.repositoryUrl}/blob/main/docs`;
+const userGuideUrl = `${repositoryDocs}/user-guide.md`;
 const helpVisible = ref(false);
 const contactVisible = ref(false);
-const contactType = ref<"community" | "business">("community");
+const bundledContactImages = import.meta.glob<string>("../../assets/wechatContact.png", {
+  eager: true, query: "?url", import: "default",
+});
+const wechatContactUrl = import.meta.env.VITE_LUM_WECHAT_QR || Object.values(bundledContactImages)[0];
 const contacts = {
-  community: {
-    title: "加入交流群",
-    url: "https://work.weixin.qq.com/u/vc36adcc89845edcbe?v=5.0.3.63936&bb=85b8d228e8",
-    tip: "Lum 是为爱发电的开源项目。欢迎文明交流、友善反馈；回复可能需要一些时间，请避免责问或命令式沟通，感谢你的理解与尊重。",
-  },
-  business: {
-    title: "商务合作",
-    url: "https://work.weixin.qq.com/u/vc0f54596c5837d05a?v=5.0.8.70675",
-    tip: "此联系方式仅用于商务合作接洽，不提供问题答疑。使用问题欢迎在交流群交流，需求与 BUG 可通过反馈表提交。感谢理解。",
-  },
+  bug: { icon: IconBug, title: "汇报 BUG", tip: "微信扫码添加联系人，备注「Lum 反馈」，并附上软件版本和复现步骤。" },
+  community: { icon: IconBrandWechat, title: "加入交流群", tip: "微信扫码添加联系人，备注「Lum 入群」。" },
+  business: { icon: IconBriefcase, title: "商务合作", tip: "微信扫码添加联系人，备注「Lum 合作」，简要说明合作意向。" },
 };
+type ContactType = keyof typeof contacts;
+const contactType = ref<ContactType>("community");
 const contactInfo = computed(() => contacts[contactType.value]);
 
-function showContact(type: "community" | "business") {
+function contactPage(type: ContactType) {
+  return `${repositoryDocs}/contact.md#${type}`;
+}
+
+function showContact(type: ContactType) {
   contactType.value = type;
   helpVisible.value = false;
-  contactVisible.value = true;
+  contactVisible.value = Boolean(wechatContactUrl);
 }
 const canvasPanelRef = ref<InstanceType<typeof canvasPanel>>();
 let importingWriting = false;
@@ -884,6 +871,12 @@ function saveDocumentNode(directory: string, canvasPath: string, nodeId: string,
   flex-direction: column;
   align-items: center;
   gap: 16px;
+
+  .contactQr {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
 
   .contactTip {
     margin: 0;

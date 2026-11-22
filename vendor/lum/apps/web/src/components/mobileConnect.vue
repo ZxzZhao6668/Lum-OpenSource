@@ -16,6 +16,7 @@
       <section v-else-if="!deviceConnectionSupported" class="connectionInfo" aria-label="设备互联说明">
         <icon-device-desktop :size="40" aria-hidden="true" />
         <p class="description">请使用 Lum 桌面端或 Android 客户端连接其他设备。<br />本机共享可在“设置 → 设备互联”中管理。</p>
+        <el-link :href="deviceLinkGuideUrl" type="primary" target="_blank" rel="noopener noreferrer">查看客户端获取与配对说明</el-link>
       </section>
       <section v-else-if="view === 'current'" class="connectionInfo" aria-label="当前连接">
         <icon-device-desktop :size="40" aria-hidden="true" />
@@ -42,7 +43,7 @@
         </div>
       </section>
       <section v-else-if="view === 'manual'" class="manualPanel" aria-label="手动连接">
-        <p class="description">在对方“设备互联”中展开“手动连接信息”，查看地址和配对码。</p>
+        <p class="description">在对方“设置 → 设备互联”的“连接新设备”下，查看连接地址和 12 位配对码。</p>
         <el-form labelPosition="top" size="large" :disabled="submitting" @submit.prevent="connectManually">
           <el-form-item label="服务器地址">
             <el-input v-model="manualUrl" placeholder="192.168.1.10:43123 或 https://example.com" inputmode="url" autocomplete="off" autocapitalize="none" :spellcheck="false" aria-label="服务器地址" />
@@ -90,7 +91,7 @@ import axios from "axios";
 import jsQR from "jsqr";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { IconCamera, IconPhoto, IconQrcode, IconDeviceDesktop, IconKeyboard } from "@tabler/icons-vue";
-import { changeDeviceConnection, deviceConnectionSupported, deviceHubEnabled, getDeviceVersionWarning, mobileConnection, mobileConnectionLabel, mobileConnectionVersionWarning, refreshMobileConnection } from "@/lib/mobile";
+import { changeDeviceConnection, deviceConnectionSupported, deviceHubEnabled, deviceLinkGuideUrl, getDeviceVersionWarning, mobileConnection, mobileConnectionLabel, mobileConnectionVersionWarning, refreshMobileConnection } from "@/lib/mobile";
 import { isDesktop } from "@/lib/platform";
 
 type Candidate = { name: string; url: string; qrCode: string; appVersion?: string };

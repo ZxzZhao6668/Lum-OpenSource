@@ -15,6 +15,7 @@
         <div class="settingInfo">
           <h3 id="deviceLinkTitle">允许其他设备连接</h3>
           <p class="description">其他电脑、安卓设备可使用这里的项目与配置。连接时请保持 Lum 运行。</p>
+          <el-link :href="deviceLinkGuideUrl" type="primary" target="_blank" rel="noopener noreferrer">查看客户端获取与配对说明</el-link>
         </div>
         <el-switch :modelValue="form.enabled" :disabled="busy || !status" aria-label="允许其他设备连接" @change="value => saveConfig(value === true)" />
       </div>
@@ -92,7 +93,7 @@
               <p class="description">无法连接时可尝试其他地址，并检查电脑防火墙是否允许 Lum 联网。</p>
             </el-form-item>
             <el-form-item v-if="addressMode === 'public'" label="公网 HTTPS 地址">
-              <el-input v-model="form.publicUrl" placeholder="https://toonflow.example.com" aria-label="公网 HTTPS 地址" />
+              <el-input v-model="form.publicUrl" placeholder="https://lum.example.com" aria-label="公网 HTTPS 地址" />
               <p class="description">请将这个 HTTPS 地址转发到下方互联端口，保留请求路径。保存后生效。</p>
             </el-form-item>
             <el-form-item label="互联端口">
@@ -131,7 +132,7 @@ import { IconFolderPlus, IconQrcode, IconRefresh } from "@tabler/icons-vue";
 import { useWorkspaceStore } from "@/stores/workspace";
 import workspacePicker from "@/pages/home/workspacePicker.vue";
 import { writeClipboardText } from "@/lib/clipboard";
-import { changeDeviceConnection, deviceHubEnabled, getDeviceVersionWarning, mobileConnection, mobileConnectionLabel, mobileConnectionVersionWarning } from "@/lib/mobile";
+import { changeDeviceConnection, deviceHubEnabled, deviceLinkGuideUrl, getDeviceVersionWarning, mobileConnection, mobileConnectionLabel, mobileConnectionVersionWarning } from "@/lib/mobile";
 import { isRemoteConnection } from "@/lib/platform";
 
 type LinkStatus = { enabled: boolean; hubEnabled?: boolean; initialized: boolean; pairingAvailable: boolean; port: number; addresses: string[]; publicUrl: string; directories: string[]; appVersion?: string; devices: { id: string; name: string; online: boolean; lastSeen?: number; appVersion?: string }[] };

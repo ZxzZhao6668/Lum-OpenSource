@@ -9,8 +9,7 @@
     "url": "git+https://github.com/ZxzZhao6668/Lum-OpenSource.git"
   },
   "bugs": {
-    "url": "https://github.com/ZxzZhao6668/Lum-OpenSource/issues",
-    "email": "ltlctools@outlook.com"
+    "url": "https://github.com/ZxzZhao6668/Lum-OpenSource/issues"
   },
   "type": "module",
   "packageManager": "bun@1.4.3",

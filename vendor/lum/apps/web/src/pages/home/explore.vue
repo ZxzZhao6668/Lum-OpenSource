@@ -2,16 +2,20 @@
   <section ref="exploreElement" class="explore" aria-labelledby="exploreTitle">
     <div class="exploreToolbar">
       <h2 id="exploreTitle">探索</h2>
-      <div class="toolbarActions">
+      <div v-if="source === 'repository'" class="toolbarActions">
+        <el-link :href="userGuideUrl" type="primary" target="_blank" rel="noopener noreferrer">Lum 使用教程</el-link>
+        <el-link :href="marketLinks.catalog" type="primary" target="_blank" rel="noopener noreferrer">浏览 Lum 插件市场</el-link>
+      </div>
+      <div v-else-if="source === 'channel'" class="toolbarActions">
         <el-input v-model="search" class="searchInput" :prefixIcon="IconSearch" placeholder="搜索项目" aria-label="搜索云端项目" clearable />
         <el-button v-if="lumAccountToken" :icon="IconPlus" aria-haspopup="dialog" :aria-expanded="publishVisible" @click="publishVisible = true">发布作品</el-button>
       </div>
     </div>
-    <div class="categoryFilters" role="group" aria-label="项目分类">
+    <div v-if="source === 'channel'" class="categoryFilters" role="group" aria-label="项目分类">
       <button type="button" :class="{ active: !selectedCategory }" :aria-pressed="!selectedCategory" @click="selectedCategory = ''">全部</button>
       <button v-for="category in categories" :key="category.id" type="button" :class="{ active: selectedCategory === category.id }" :aria-pressed="selectedCategory === category.id" @click="selectedCategory = category.id">{{ category.name }}</button>
     </div>
-    <div ref="gridElement" class="projectGrid" :style="{ height: `${rowVirtualizer.getTotalSize()}px` }" :aria-busy="loading" aria-label="云端项目">
+    <div v-if="source === 'channel'" ref="gridElement" class="projectGrid" :style="{ height: `${rowVirtualizer.getTotalSize()}px` }" :aria-busy="loading" aria-label="云端项目">
       <div v-for="{ row, items } in visibleRows" :key="String(row.key)" class="projectRow" :style="{ height: `${row.size}px`, gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`, transform: `translateY(${row.start - scrollMargin}px)` }">
         <button v-for="item in items" :key="item.id" class="projectCard" type="button" :aria-label="`查看作品：${item.title}，作者 ${item.author.name}`" @click="selectedProjectId = item.id">
           <img v-if="item.coverUrl" class="cardCover" :src="item.coverUrl" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
@@ -47,6 +51,7 @@ import { useVirtualizer } from "@tanstack/vue-virtual";
 import { IconHeart, IconPlus, IconSearch } from "@tabler/icons-vue";
 import type { ExploreCategory, ExplorePage, ExploreProject } from "@lum/server/channel";
 import http from "@/lib/http";
+import { marketLinks } from "@/lib/lumMarketplace";
 import { lumAccountToken } from "@/stores/settings";
 import exploreDetail from "./exploreDetail.vue";
 import publishWorkDialog from "./publishWorkDialog.vue";
@@ -60,6 +65,8 @@ const selectedCategory = ref("");
 const selectedProjectId = ref("");
 const publishVisible = ref(false);
 const search = ref("");
+const source = ref<"repository" | "channel">();
+const userGuideUrl = `${import.meta.env.repositoryUrl}/blob/main/docs/user-guide.md`;
 const loading = ref(false);
 const loadError = ref("");
 const unavailable = ref(false);
@@ -110,6 +117,7 @@ async function loadMore() {
     if (result.nextCursor !== null && (result.nextCursor === cursor || loadedCursors.has(result.nextCursor))) throw new Error("云端分页游标重复，请重试");
     const newItems = [...new Map(result.list.map(item => [item.id, item])).values()].filter(item => !loadedIds.has(item.id));
     if (!newItems.length && result.nextCursor !== null) throw new Error("云端没有返回新的作品，请重试");
+    source.value = result.source ?? "channel";
     categories.value = result.categories;
     for (const item of newItems) loadedIds.add(item.id);
     projects.value.push(...newItems);
