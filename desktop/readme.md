@@ -35,6 +35,13 @@ npm run prepare:app
 npm run dist -- --config.directories.output='C:\LumBuild'
 ```
 
+制作带首页视频的安装包时，先把视频和封面放进 `app/public/brand/`，在本机的 `app/.env.local` 中填写下列路径，再运行 `prepare:app`。Vite 会把两个文件复制到桌面版，首页可离线播放。
+
+```dotenv
+VITE_LUM_HOME_VIDEO=/brand/lumHomeBackground.mp4
+VITE_LUM_HOME_POSTER=/brand/lumHomePoster.jpg
+```
+
 首次构建不使用 `--reuse-plugins`。该选项仅供插件已全部构建且未变化时重建宿主。`out/writing` 是构建目录，每次准备会清理并重建。
 
 写作端使用随包 `app/pnpm-lock.yaml`；画布使用 `vendor/lum/bun.lock`；桌面使用 `desktop/package-lock.json`。本次交付以 Node 22.20.0 和 pnpm 10.20.0 安装写作依赖，保留这些锁文件以复现版本。请勿把整个 `src/**/runtime` 目录当作运行数据删除；`apps/server/src/agent/runtime` 是必需源文件。

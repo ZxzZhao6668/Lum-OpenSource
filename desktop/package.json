@@ -1,6 +1,6 @@
 {
   "name": "lum-desktop",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "private": true,
   "description": "Lum · 影纪：让想象先成为画面",
   "author": "Lum",
@@ -53,7 +53,7 @@
         }
       ],
       "icon": "assets/lum.ico",
-      "artifactName": "影纪Lum-${version}-安装包.exe"
+      "artifactName": "Lum-Setup-${version}-${arch}.exe"
     },
     "nsis": {
       "oneClick": false,
