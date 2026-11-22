@@ -2,7 +2,7 @@
 
 Lum 把剧本写作、分镜和三维白模预演放在同一套创作工具中。写作者可以按章节组织场次与对白，导出交稿文档，也可以把文稿带入画布，安排人物、机位与拍摄。AI 功能使用创作者在设置中配置的模型与密钥。
 
-[使用教程](docs/user-guide.md) · [反馈与联系](docs/contact.md) · [设备互联](docs/device-link.md) · [插件投稿](marketplace/README.md)
+[使用教程](docs/user-guide.md) · [反馈与联系](docs/contact.md) · [设备互联](docs/device-link.md) · [插件投稿](marketplace/README.md) · [仓库统计](docs/repository-stats.md)
 
 ## 从源码运行
 

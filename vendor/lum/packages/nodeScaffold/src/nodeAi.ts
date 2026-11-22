@@ -48,6 +48,7 @@ export type NodeAiRequest = {
   modelId: string;
   prompt: string;
   systemPrompt?: string;
+  requireComplete?: boolean;
   /** 推理档位，取自所选模型的 reasoningLevels；不传则由模型决定。 */
   thinkingLevel?: string;
   directory?: string;
@@ -508,7 +509,7 @@ export function useNodeAi() {
     const message = messages.findLast((message): message is AssistantMessage => message.role === "assistant");
     if (!message) throw new Error("AI 未返回结果");
     if (message.stopReason === "error" || message.stopReason === "aborted") throw new Error(message.errorMessage || "AI 请求失败");
-    if (definitions.length && message.stopReason === "length") throw new Error("模型输出达到上限，请精简任务后重试");
+    if ((input.requireComplete || definitions.length) && message.stopReason === "length") throw new Error("模型输出达到上限，请精简任务后重试");
     if (message.content.some(part => part.type === "toolCall")) throw new Error("AI 已达到 40 轮调用上限，请缩小任务后重试");
     const text = message.content.filter(part => part.type === "text").map(part => part.text).join("");
     const reasoning = message.content.filter(part => part.type === "thinking").map(part => part.thinking).join("");

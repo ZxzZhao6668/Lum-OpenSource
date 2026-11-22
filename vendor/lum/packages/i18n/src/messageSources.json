@@ -1480,57 +1480,6 @@
   "开发版本不提供更新检查，请使用正式桌面客户端。": [
     "apps/web/src/components/settings/panels/about/index.vue"
   ],
-  "匿名使用统计": [
-    "apps/web/src/components/settings/panels/about/privacy.vue"
-  ],
-  "帮助我们了解常用功能，改进使用体验。默认开启，可随时关闭。": [
-    "apps/web/src/components/settings/panels/about/privacy.vue"
-  ],
-  "统计内容": [
-    "apps/web/src/components/settings/panels/about/privacy.vue"
-  ],
-  "统计不包含提示词、对话、文件内容、项目名称、路径、账号或密钥。": [
-    "apps/web/src/components/settings/panels/about/privacy.vue"
-  ],
-  "匿名 ID": [
-    "apps/web/src/components/settings/panels/about/privacy.vue"
-  ],
-  "使用与回访": [
-    "apps/web/src/components/settings/panels/about/privacy.vue"
-  ],
-  "随机匿名标识、访问次数与时间": [
-    "apps/web/src/components/settings/panels/about/privacy.vue"
-  ],
-  "使用活跃": [
-    "apps/web/src/components/settings/panels/about/privacy.vue"
-  ],
-  "使用时长和交互次数，不含输入内容": [
-    "apps/web/src/components/settings/panels/about/privacy.vue"
-  ],
-  "运行环境": [
-    "apps/web/src/components/settings/panels/about/privacy.vue"
-  ],
-  "软件版本、桌面或网页端、系统、浏览器和语言": [
-    "apps/web/src/components/settings/panels/about/privacy.vue"
-  ],
-  "功能使用": [
-    "apps/web/src/components/settings/panels/about/privacy.vue"
-  ],
-  "引导、画布与文档的使用情况": [
-    "apps/web/src/components/settings/panels/about/privacy.vue"
-  ],
-  "使用规模": [
-    "apps/web/src/components/settings/panels/about/privacy.vue"
-  ],
-  "项目、模型配置、节点与连线数量，以及节点类型": [
-    "apps/web/src/components/settings/panels/about/privacy.vue"
-  ],
-  "Agent 使用": [
-    "apps/web/src/components/settings/panels/about/privacy.vue"
-  ],
-  "发送次数、完成情况和耗时": [
-    "apps/web/src/components/settings/panels/about/privacy.vue"
-  ],
   "正在加载图表…": [
     "apps/web/src/components/settings/panels/account/accountChart.vue"
   ],
@@ -1775,6 +1724,7 @@
     "apps/web/src/components/settings/panels/pluginMarket/index.vue"
   ],
   "查看详情": [
+    "apps/web/src/components/settings/panels/about/privacy.vue",
     "apps/web/src/components/settings/panels/account/modelCatalog.vue",
     "apps/web/src/components/settings/panels/pluginMarket/index.vue"
   ],
@@ -11373,5 +11323,8 @@
   ],
   "FFmpeg 不能操作悬空符号链接": [
     "packages/ffmpeg/src/runtime.ts"
+  ],
+  "Lum 不收集或上报软件使用数据。项目仅使用 GitHub 提供的仓库访问、克隆及发布文件下载统计。": [
+    "apps/web/src/components/settings/panels/about/privacy.vue"
   ]
 }

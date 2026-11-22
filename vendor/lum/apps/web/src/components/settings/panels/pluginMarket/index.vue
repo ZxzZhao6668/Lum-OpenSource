@@ -23,6 +23,8 @@
           <el-button size="small" nativeType="submit">搜索</el-button>
         </form>
         <div class="marketActions">
+          <el-button size="small" :icon="IconBook" @click="authoringType = 'skill'">AI Skill 制作</el-button>
+          <el-button size="small" :icon="IconSparkles2" @click="authoringType = 'tool'">AI 插件开发</el-button>
           <el-button tag="a" :href="marketLinks.submit" target="_blank" rel="noopener noreferrer" size="small" type="primary" plain :icon="IconCloudUpload">提交插件</el-button>
           <template v-if="activeTab === 'installed'">
             <el-button size="small" type="primary" :icon="IconUpload" :loading="installing" aria-label="安装本地插件" @click="pluginFileInput?.click()">
@@ -230,6 +232,7 @@
         layout="total, prev, pager, next"
         size="small" />
       <pluginConfigDialog v-if="selectedConfigPlugin" v-model="configVisible" :plugin="selectedConfigPlugin" :canManage="canConfigurePlugin(selectedConfigPlugin)" />
+      <aiAuthorDialog v-if="visible && authoringType" :type="authoringType" @closed="authoringType = undefined" />
       <agentEditorDialog v-if="selectedAgent" :key="selectedAgent.key" :agent="selectedAgent" :canManage="canManageAgents" @saved="refreshInstalled" @closed="selectedAgent = undefined" />
       <agentConnectDialog v-if="agentConnectVisible" @saved="refreshInstalled" @closed="agentConnectVisible = false" />
       <a2aSettingsDialog v-if="a2aSettingsVisible" @saved="refreshInstalled" @closed="a2aSettingsVisible = false" />
@@ -309,6 +312,8 @@ import type { Plugin, PluginType } from "./types";
 import { installPluginFile } from "../../installPluginFile";
 
 const { visible = true } = defineProps<{ visible?: boolean }>();
+const aiAuthorDialog = defineAsyncComponent(() => import("./aiAuthorDialog.vue"));
+const authoringType = ref<"tool" | "skill">();
 // ACT: Agent 插件市场仍在测试，暂时关闭入口。
 const agentMarketEnabled = false;
 const pluginTypes = {

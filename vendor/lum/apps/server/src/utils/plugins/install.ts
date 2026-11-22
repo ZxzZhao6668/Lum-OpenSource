@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, lstat, readFile, readdir, rename, rm, unlink, writeFile
 import { dirname, join, resolve } from "node:path";
 import { createRequire } from "node:module";
 import { crc32, inflateRawSync } from "node:zlib";
-import { parseFrontmatter } from "@earendil-works/pi-coding-agent";
+import { loadSkillsFromDir, parseFrontmatter } from "@earendil-works/pi-coding-agent";
 import type { PluginInstallType } from "@/types/desktop";
 import conf from "@/utils/conf";
 import { parseTool, toolsDirectory } from "@/utils/plugins/tools";
@@ -133,7 +133,8 @@ export async function installExt(fileName: string, source: string, force = false
   if (Buffer.byteLength(source, "utf8") > maxBytes) invalid("文件扩展不能超过 20 MB", 413);
   const name = fileName.slice(0, -7);
   const metadata = parseExt(source, name);
-  if (!/(?:lum|toonflow)ExtHost/.test(source) || !new RegExp(`(?:lum|toonflow)Exts\\s*\\[\\s*["']${name}["']\\s*\\]`).test(source)) {
+  const exportKey = new RegExp(`(?:lum|toonflow)Exts\\s*\\[\\s*(["'\`])${name}\\1\\s*\\]`);
+  if (!/(?:lum|toonflow)ExtHost/.test(source) || !exportKey.test(source)) {
     invalid("文件不是兼容的 Lum 文件扩展，请使用扩展脚手架构建并保留原文件名");
   }
   try { new Bun.Transpiler({ loader: "js" }).scan(source); }
@@ -158,7 +159,7 @@ export async function installExt(fileName: string, source: string, force = false
   return { name };
 }
 
-export async function installTool(fileName: string, source: string, force = false, marketVersion?: string) {
+export async function installTool(fileName: string, source: string, force: boolean | "createOnly" = false, marketVersion?: string) {
   if (!/^[a-z][a-zA-Z0-9]*\.tool\.js$/.test(fileName)) invalid("工具文件名无效，请选择小驼峰命名的 .tool.js 文件");
   if (!source.trim()) invalid("工具文件内容为空，请重新上传工具脚本");
   if (Buffer.byteLength(source, "utf8") > maxBytes) invalid("工具文件不能超过 20 MB", 413);
@@ -173,6 +174,7 @@ export async function installTool(fileName: string, source: string, force = fals
   const release = lockWorkspaceFiles([path]);
   try {
     const current = await lstat(path).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; });
+    if (current && force === "createOnly") invalid(t`工具“${name}”已存在，请修改 name 后重新安装`, 409);
     if (current && !current.isFile()) invalid("现有工具必须是普通文件", 403);
     if (current && !force) {
       let version: unknown;
@@ -341,7 +343,7 @@ async function skillArchive(bytes: Uint8Array) {
   return result;
 }
 
-export async function installSkill(fileName: string, bytes: Uint8Array, force = false, marketVersion?: string) {
+export async function installSkill(fileName: string, bytes: Uint8Array, force: boolean | "createOnly" = false, marketVersion?: string) {
   if (!fileName || fileName.length > 128 || /[\\/]/.test(fileName) || !/\.(md|zip|tar|tar\.gz|tgz)$/i.test(fileName)) invalid("请选择 .zip、.md、.tar、.tar.gz 或 .tgz 技能文件");
   skillPath(fileName);
   if (!bytes.byteLength) invalid("技能文件不能为空");
@@ -371,6 +373,9 @@ export async function installSkill(fileName: string, bytes: Uint8Array, force = 
   let preserveBackup = false;
   try {
     const existing = (await readdir(directory)).find(item => item.toLowerCase() === name.toLowerCase());
+    if (force === "createOnly" && (existing || loadSkillsFromDir({ dir: directory, source: "user" }).skills.some(skill => skill.name.toLowerCase() === name.toLowerCase()))) {
+      invalid(t`技能“${name}”已存在，请修改 name 后重新安装`, 409);
+    }
     if (existing && existing !== name) invalid(t`技能目录“${existing}”与“${name}”大小写冲突，请先统一名称`, 409);
     if (existing) {
       if (!(await lstat(target)).isDirectory()) invalid("现有技能必须是独立的普通目录", 403);

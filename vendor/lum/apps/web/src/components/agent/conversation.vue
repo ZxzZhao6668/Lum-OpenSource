@@ -72,7 +72,6 @@ import { syncLumAgentSkills } from "@/lib/lumAgentSkills";
 import { onAgentStopped, stopAgent } from "@/lib/agentControl";
 import { writeClipboardText } from "@/lib/clipboard";
 import { showNotification } from "@/lib/notification";
-import anonymousData from "@/lib/anonymousData";
 import { modelChoices } from "@/stores/settings";
 import { useWorkspaceStore } from "@/stores/workspace";
 import type { AgentAttachment, AgentConversation, AgentMessage } from "./types";
@@ -525,7 +524,6 @@ async function sendMessage(source?: AgentMessage, nodeRequest?: { prompt: string
     for (const id of runIds) stoppedRunIds.add(id);
     if (canvasCall?.runIds.some(id => stoppedRunIds.has(id))) canvasCall.controller.abort();
   });
-  const finishStats = anonymousData.startAgent();
   try {
     if (useSkills) await syncLumAgentSkills(directory, requestController.signal);
     if (!source && !nodeRequest) await instance.clearDraft();
@@ -644,7 +642,6 @@ async function sendMessage(source?: AgentMessage, nodeRequest?: { prompt: string
     pendingRunIds.delete(requestRunId);
     if (runId === requestRunId) runId = undefined;
     if (source && !accepted) throw new Error("服务端未确认重发，请重新打开对话后重试");
-    finishStats("success");
     emit("sent", mentionPlainText(prompt, mentions) || attachments[0]?.name || "新对话");
     if (accepted && ownsStream && !forwarded && !isSuperseded() && !props.initialSession?.parentFile && !stopping.value && !projectStops.value
       && !requestController.signal.aborted && !stoppedRunIds.has(requestRunId)) {
@@ -660,7 +657,6 @@ async function sendMessage(source?: AgentMessage, nodeRequest?: { prompt: string
         clearQueue();
       }
     }
-    finishStats(requestController.signal.aborted ? "cancelled" : "failed");
     if (nodeRequest) { stream.finish(); throw error; }
     const responseMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
     const message = requestController.signal.aborted || stoppedRunIds.has(requestRunId) ? translate("已停止生成") : responseMessage || (error instanceof Error ? error.message : translate("发送失败，请重试"));

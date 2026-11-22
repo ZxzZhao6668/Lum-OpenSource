@@ -23,7 +23,6 @@ import { registerDownloads } from "@/lib/saveFile";
 import { actualPlatform } from "@/lib/platform";
 import "@/lib/mobile";
 import { getMissingBrowserFeatures } from "@/lib/browserCapabilities";
-import { registerAnonymousData } from "@/lib/anonymousData";
 import { loadSettings, settingsStorage } from "@/stores/settings";
 import { registerDesktopAutoUpdate } from "@/stores/desktopUpdate";
 import { registerLanguage } from "@/lib/i18n";
@@ -56,7 +55,6 @@ async function notifyDesktopReady(failed = false) {
   app.use(router);
   await router.isReady();
   app.onUnmount(registerLegacyPluginEvents());
-  app.onUnmount(registerAnonymousData());
   app.mount("#app");
   app.onUnmount(installLumStartup());
   isMounted = true;
