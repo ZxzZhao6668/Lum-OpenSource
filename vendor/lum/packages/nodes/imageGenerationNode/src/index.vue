@@ -55,6 +55,10 @@
           @remove="removeReference" />
         <p v-if="writingSetupStyle(data.writingProduction).label">{{ writingSetupStyle(data.writingProduction).label }}</p>
         <el-button v-if="canReadProjectSetup() && !data.inpaint" text :disabled="generating || choosingStyle" @click="adoptProjectStyle">采用最新项目设定</el-button>
+        <details v-if="blockingText" class="shotBlocking nodrag nopan">
+          <summary>本镜走位 · 分镜构图</summary>
+          <p>{{ blockingText }}</p>
+        </details>
         <promptInput v-if="editor?.mode === 'inpaint'" v-model="data.inpaintPromptModel" v-model:text="data.inpaintPrompt" :references="referenceMentions" :materials="materialMentions" :selectMaterial="selectMaterialReference" :selectAsset="selectAssetReference" expandable />
         <promptInput v-else v-model="data.promptModel" v-model:text="data.prompt" :references="referenceMentions" :materials="materialMentions" :selectMaterial="selectMaterialReference" :selectAsset="selectAssetReference" expandable />
         <mediaPromptEditor v-if="editor?.mode !== 'inpaint'" v-model="data.promptAnalysis" kind="image" :input="analysisContext.input" :error="analysisContext.error" :disabled="generating || deleting || uploading" @apply="applyAnalyzedPrompt" />
@@ -170,7 +174,7 @@ const { id, node, nodeProps, nodeEvent, outputs, files, ai, updateNodeInternals 
   label: "图片生成",
 });
 type PromptModel = NonNullable<InstanceType<typeof promptInput>["$props"]["modelValue"]>;
-const data = computed(() => node.data as { prompt: string; promptModel: PromptModel; promptAnalysis: MediaPromptAnalysisState; promptReferenceSelection?: boolean; inpaintPrompt: string; inpaintPromptModel: PromptModel; model: string; followDefaultModel?: boolean; size: string; ratio: string; other: Record<string, unknown>; inpaint?: ImageInpaint; writingProduction?: Partial<NodeProjectAppearance> & {setupSnapshots?: WritingSetupSnapshot[]; styleOverride?: string} });
+const data = computed(() => node.data as { shotBlocking?: { image?: unknown }; prompt: string; promptModel: PromptModel; promptAnalysis: MediaPromptAnalysisState; promptReferenceSelection?: boolean; inpaintPrompt: string; inpaintPromptModel: PromptModel; model: string; followDefaultModel?: boolean; size: string; ratio: string; other: Record<string, unknown>; inpaint?: ImageInpaint; writingProduction?: Partial<NodeProjectAppearance> & {setupSnapshots?: WritingSetupSnapshot[]; styleOverride?: string} });
 const taskData = computed(() => node.data as {
   mediaTask?: NodeGenerationTask;
   imageWorkbenchAttempt?: { sourceNodeId: string; candidateId: string };
@@ -231,6 +235,11 @@ const uploading = ref(false);
 const fileInput = ref<HTMLInputElement>();
 const gridSplit = ref<InstanceType<typeof imageGridSplit>>();
 const editor = ref<InstanceType<typeof imageEditor>>();
+const blockingText = computed(() => {
+  const text = data.value.shotBlocking?.image;
+  if (data.value.inpaint || editor.value?.mode === "inpaint" || taskData.value.imageWorkbenchAttempt || typeof text !== "string") return "";
+  return text.slice(0, 8000).replaceAll("{", "｛").replaceAll("}", "｝").trim();
+});
 const generateInpaint = useImageInpaint((input, signal, recoveryData) => generationState.generate("image", input, signal, recoveryData));
 const paintToolbar = ref<HTMLElement>();
 const lighting = ref<InstanceType<typeof imageLighting>>();
@@ -324,6 +333,7 @@ const generationInput = computed<Omit<NodeImageRequest, "directory"> | undefined
     outputDirectory: `assets/${id}`,
     images: [...references.flatMap(item => item.dataType === "IMAGE" && item.value ? [{ path: item.value.url, mimeType: item.value.mimeType }] : []), ...(!inpaint && projectAppearance()?.projectStyleImage ? [projectAppearance()!.projectStyleImage!] : [])],
   };
+  if (input.prompt && blockingText.value) input.prompt += `\n\n本镜走位要求\n${blockingText.value}`;
   if (inpaint) {
     let imageIndex = 3 + (inpaint.images?.length ?? 0);
     const mapping = refList.value.flatMap((item, index) => item.dataType === "IMAGE" && item.value
@@ -745,6 +755,12 @@ nodeTools.register({
 }
 
 .promptCard {
+  .shotBlocking {
+    margin: 8px 0;
+    font-size: 12px;
+    summary { cursor: pointer; }
+    p { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 140px; overflow: auto; }
+  }
   .inpaintInfo { margin-bottom: 8px; }
   .promptFooter {
     display: flex;

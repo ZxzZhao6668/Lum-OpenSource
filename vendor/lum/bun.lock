@@ -520,7 +520,7 @@
     },
     "packages/nodes/imageGenerationNode": {
       "name": "@lum/node-image-generation",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "dependencies": {
         "@tabler/icons-vue": "^3.46.0",
       },
@@ -614,7 +614,7 @@
     },
     "packages/nodes/shotScriptNode": {
       "name": "@lum/node-shot-script",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "dependencies": {
         "@tabler/icons-vue": "^3.46.0",
       },
@@ -706,7 +706,7 @@
     },
     "packages/nodes/videoGenerationNode": {
       "name": "@lum/node-video-generation",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "dependencies": {
         "@tabler/icons-vue": "^3.46.0",
       },

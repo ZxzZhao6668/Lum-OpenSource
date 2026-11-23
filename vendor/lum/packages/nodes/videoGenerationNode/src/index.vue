@@ -85,6 +85,11 @@
           <label><input type="checkbox" :checked="data.continuation.autoCompose" :disabled="generating || deleting" @change="data.continuation.autoCompose = ($event.target as HTMLInputElement).checked" />生成完成后自动拼接成片</label>
         </div>
         <div class="videoPromptHeading"><b>视频提示词</b><el-button text :disabled="generating || deleting || uploading" @click="addAssetPromptReference().catch(error => showNodeError(error, '引用资产失败'))">@ 引用资产</el-button></div>
+        <details v-if="blockingText" class="shotBlocking">
+          <summary>本镜走位 · 视频运动</summary>
+          <p>{{ blockingText }}</p>
+        </details>
+        <div v-if="blockingText" class="referenceHint" role="status">{{ blockingFrameStatus }}</div>
         <p v-if="writingSetupStyle(data.writingProduction).label">{{ writingSetupStyle(data.writingProduction).label }}</p>
         <el-button v-if="canReadProjectSetup()" text :disabled="generating || choosingStyle" @click="adoptProjectStyle">采用最新项目设定</el-button>
         <promptInput v-model="data.promptModel" v-model:text="data.prompt" :references="referenceMentions" :materials="materialMentions" :selectMaterial="selectMaterialReference" :selectAsset="selectAssetReference" placeholder="描述本镜头的动作、运镜和衔接要求，输入 @ 选择人物、场景或道具资产" expandable />
@@ -120,7 +125,8 @@
             v-model:duration="data.duration"
             v-model:resolution="data.resolution"
             v-model:ratio="data.ratio"
-            v-model:mode="data.mode"
+            :mode="data.mode"
+            @update:mode="chooseMode"
             v-model:generateAudio="data.generateAudio"
             v-model:other="data.other"
             :ratios="ratioOptions"
@@ -183,6 +189,7 @@ import videoPromptAnalysis from "@lum/node-shared/mediaPromptEditor";
 import { readVideoPrompt, readVideoPromptContext, isVideoAssetReference, selectVideoReferences, type VideoPromptAnalysisState } from "./videoPromptContext";
 import shotDesignBar from "./shotDesign/shotDesignBar.vue";
 import { shotDesignPrompt, type ShotDesign } from "./shotDesign/catalog";
+import { availableBlockingFrames, frameLayout, isFrameMode, readBlockingFrame, type BlockingFrames } from "./blockingFrames";
 
 defineOptions({
   inheritAttrs: false,
@@ -197,7 +204,7 @@ const { id, node, nodeProps, nodeEvent, outputs, files, ai, updateNodeInternals 
   label: "视频生成",
 });
 type PromptModel = NonNullable<InstanceType<typeof promptInput>["$props"]["modelValue"]>;
-const data = computed(() => node.data as { prompt: string; promptModel: PromptModel; model: string; followDefaultModel?: boolean; duration?: number; resolution: string; ratio: string; mode: string; generateAudio: boolean; other: Record<string, unknown>; identityReferences: string[]; promptReferenceSelection?: boolean; promptAnalysis: VideoPromptAnalysisState; shotDesign: ShotDesign; continuation?: VideoContinuationLink; writingProduction?: Partial<NodeProjectAppearance> & {clipId?: string; setupSnapshots?: WritingSetupSnapshot[]; styleOverride?: string; referenceEdges?: {source: string}[]; referenceNodeId?: string} });
+const data = computed(() => node.data as { shotBlocking?: { video?: unknown; startFrame?: unknown; endFrame?: unknown; storyboardNodeId?: string }; shotSource?: { ownerId: string; shotId: string }; prompt: string; promptModel: PromptModel; model: string; followDefaultModel?: boolean; duration?: number; resolution: string; ratio: string; mode: string; generateAudio: boolean; other: Record<string, unknown>; identityReferences: string[]; promptReferenceSelection?: boolean; promptAnalysis: VideoPromptAnalysisState; shotDesign: ShotDesign; continuation?: VideoContinuationLink; writingProduction?: Partial<NodeProjectAppearance> & {clipId?: string; setupSnapshots?: WritingSetupSnapshot[]; styleOverride?: string; referenceEdges?: {source: string}[]; referenceNodeId?: string} });
 data.value.prompt ??= "";
 data.value.promptModel ??= [];
 data.value.model ??= "";
@@ -277,7 +284,7 @@ const referenceSelection = computed(() => {
   try { return {selected: readGenerationReferences(), error: ""}; }
   catch (error) { return {selected: undefined, error: error instanceof Error ? error.message : "镜头引用读取失败"}; }
 });
-const selectedReferences = computed(() => referenceSelection.value.selected);
+const selectedReferences = computed(() => referenceSelection.value.selected && referencesForMode(referenceSelection.value.selected, selectedMode.value));
 const assetReferences = computed(() => (selectedReferences.value?.references ?? []).filter(item => !item.projectStyle && !item.previousShot && isVideoAssetReference(item, referenceFlow.getNodes.value, data.value.identityReferences)));
 const requiresImageReferenceMode = computed(() => assetReferences.value.length > 0 || selectedReferences.value?.references.some(item => item.projectStyle) === true);
 const analysisContext = computed(() => {
@@ -357,6 +364,33 @@ const retakeSummary = computed(() => {
   };
 });
 const retakePersistence = useNodePersistence();
+const blockingText = computed(() => {
+  const text = data.value.shotBlocking?.video;
+  if (retakeData.value.videoRetakeAttempt || typeof text !== "string") return "";
+  return text.slice(0, 8000).replaceAll("{", "｛").replaceAll("}", "｝").trim();
+});
+const requestedFrames = computed<BlockingFrames>(() => blockingText.value ? {
+  start: readBlockingFrame(data.value.shotBlocking?.startFrame),
+  end: readBlockingFrame(data.value.shotBlocking?.endFrame),
+} : {});
+const blockingFrames = shallowRef<BlockingFrames>({});
+const checkingFrames = ref(false);
+const frameRevision = ref(0);
+let preparingFrames = false;
+let frameInspection: Promise<void> | undefined;
+watch([requestedFrames, () => retakePersistence?.()?.directory, frameRevision], ([requested], _, onCleanup) => {
+  let current = true;
+  onCleanup(() => { current = false; });
+  checkingFrames.value = !!(requested.start || requested.end);
+  blockingFrames.value = {};
+  frameInspection = undefined;
+  if (checkingFrames.value) {
+    frameInspection = Promise.resolve().then(() => availableBlockingFrames(requested, files.getWorkspaceFiles()))
+      .then(available => { if (current) blockingFrames.value = available; })
+      .catch(() => { /* 工作区不可读时保留文字约束。 */ })
+      .finally(() => { if (current) checkingFrames.value = false; });
+  }
+}, { immediate: true, flush: "sync" });
 const choosingStyle = ref(false);
 async function adoptProjectStyle() {
   if (choosingStyle.value || generating.value) return;
@@ -414,20 +448,52 @@ const ratioOptions = ["16:9", "9:16", "1:1", "4:3", "3:4"];
 const selectedModel = computed(() => models.value.find((item) => JSON.stringify([item.providerId, item.modelId]) === data.value.model));
 useModelForm(data, selectedModel);
 const selectedMode = computed(() => selectedModel.value?.mode?.find((item) => JSON.stringify(item) === data.value.mode) as NodeVideoRequest["mode"]);
-const frameMode = computed(() => ["startEndRequired", "endFrameOptional", "startFrameOptional"].includes(String(selectedMode.value)));
-const mediaCounts = computed(() => ({
-  image: selectedReferences.value?.references.filter((item) => item.dataType === "IMAGE").length ?? 0,
-  video: selectedReferences.value?.references.filter((item) => item.dataType === "VIDEO").length ?? 0,
-  audio: selectedReferences.value?.references.filter((item) => item.dataType === "AUDIO").length ?? 0,
-}));
+const frameMode = computed(() => isFrameMode(selectedMode.value));
 const matchingModes = computed(() => getMatchingModes(selectedModel.value));
 
+function isShotStoryboard(item: GenerationReference) {
+  const shot = data.value.shotSource, source = referenceFlow.findNode(item.source);
+  const storyboardId = data.value.shotBlocking?.storyboardNodeId;
+  return (!storyboardId || storyboardId === item.source) && item.dataType === "IMAGE" && !item.previousShot && !item.projectStyle && !!shot?.ownerId && !!shot?.shotId
+    && source?.type === "remote-imageGenerationNode" && source.data.shotSource?.ownerId === shot.ownerId && source.data.shotSource?.shotId === shot.shotId;
+}
+
+function referencesForMode(selected: ReturnType<typeof readGenerationReferences>, mode: unknown) {
+  if (!blockingText.value) return selected;
+  // 脚本自动连入的本镜分镜是默认起镜。保留显式点名的图；只在默认图被替代时重排其他引用。
+  const { prompt, references } = selected;
+  const named = new Set([prompt, ...references.flatMap(item => item.dataType === "STRING" && item.value ? [item.value] : [])]
+    .flatMap(text => [...text.matchAll(/\{\{ref\s+(\d+)\}\}/g)].map(match => Number(match[1]) - 1)));
+  const frames = blockingFrames.value;
+  const hasOtherImage = references.some(item => item.dataType === "IMAGE" && !isShotStoryboard(item));
+  const indexes = references.flatMap((item, index) => {
+    if (named.has(index) || !isShotStoryboard(item) || item.dataType !== "IMAGE") return [index];
+    const path = item.value?.url;
+    if (!path || !readBlockingFrame(item.value) || mode === "text") return [];
+    if ((!frames.start && path === requestedFrames.value.start?.path) || (!frames.end && path === requestedFrames.value.end?.path)) return [];
+    if (isFrameMode(mode) && ((frames.start || frames.end) && hasOtherImage || frames.start && path !== frames.start.path
+      || frames.end?.path === path && frames.start?.path !== path)) return [];
+    return [index];
+  });
+  if (indexes.length === references.length) return selected;
+  const remap = (text: string) => text.replace(/\{\{ref\s+(\d+)\}\}/g, (_, number: string) => "{{ref " + (indexes.indexOf(Number(number) - 1) + 1) + "}}");
+  return { prompt: remap(prompt), references: indexes.map(index => {
+    const item = references[index]!;
+    return item.dataType === "STRING" && item.value ? {...item, value: remap(item.value)} : item;
+  }) };
+}
+
 function getMatchingModes(choice?: NodeMediaModel) {
+  const selected = referenceSelection.value.selected;
+  if (!selected) return [];
   return (choice?.mode ?? []).filter((mode) => {
-    const { image, video, audio } = mediaCounts.value;
+    const { references } = referencesForMode(selected, mode);
+    const image = references.filter(item => item.dataType === "IMAGE").length;
+    const video = references.filter(item => item.dataType === "VIDEO").length;
+    const audio = references.filter(item => item.dataType === "AUDIO").length;
     const link = data.value.continuation;
     if (link?.previousShot && link.method === "frame" && Array.isArray(mode)) return false;
-    if (Array.isArray(mode)) return image + video + audio > 0 && Object.entries(mediaCounts.value).every(([type, count]) =>
+    if (Array.isArray(mode)) return image + video + audio > 0 && Object.entries({ image, video, audio }).every(([type, count]) =>
       count <= Number(mode.find((item) => item.startsWith(`${type}Reference:`))?.split(":")[1] ?? 0)
     );
     // 资产外观和画风图必须使用参考模式，不能作为首尾帧。
@@ -435,6 +501,9 @@ function getMatchingModes(choice?: NodeMediaModel) {
     if (mode === "text") return image + video + audio === 0;
     if (video || audio) return false;
     if (mode === "singleImage") return image === 1;
+    if (isFrameMode(mode) && (blockingFrames.value.start || blockingFrames.value.end)) {
+      return collectMedia(references, mode).frames.fits;
+    }
     if (mode === "startEndRequired") return image === 2;
     return ["endFrameOptional", "startFrameOptional"].includes(mode) && image >= 1 && image <= 2;
   });
@@ -450,9 +519,24 @@ function getResolutions(choice: NodeMediaModel, duration?: number) {
     .sort((left, right) => (Number.parseFloat(left) || Infinity) - (Number.parseFloat(right) || Infinity));
 }
 // ACT: 引用改变时只替换不适用的模式；普通媒体优先作为参考，避免自动变成首尾帧。
-watch([selectedModel, matchingModes, selectedReferences, () => data.value.mode], ([choice, matches, selected]) => {
+let automaticMode: string | undefined;
+function chooseMode(mode: string) {
+  automaticMode = undefined;
+  data.value.mode = mode;
+}
+watch([selectedModel, matchingModes, selectedReferences, () => data.value.mode, checkingFrames], ([choice, matches, selected]) => {
   // 引用校验出错时无法推断可用模式。保留用户选择，修正引用后再重新判断。
-  if (!choice || !selected || matches.some((item) => JSON.stringify(item) === data.value.mode)) return;
+  if (!choice || !selected || checkingFrames.value) return;
+  const { start, end } = blockingFrames.value;
+  let stagedMode: string | undefined, usedFrames = 0;
+  if (start || end) for (const mode of ["endFrameOptional", "startEndRequired", "startFrameOptional"]) {
+    if (!matches.includes(mode)) continue;
+    const plan = collectMedia(referencesForMode(referenceSelection.value.selected!, mode).references, mode).frames;
+    const score = Number(!!start && start.path === plan.firstFrame?.path) + Number(!!end && end.path === plan.lastFrame?.path);
+    if (score > usedFrames) { stagedMode = mode; usedFrames = score; }
+  }
+  if (matches.some(item => JSON.stringify(item) === data.value.mode)
+    && (!stagedMode || automaticMode !== data.value.mode || data.value.mode === JSON.stringify(stagedMode))) return;
   const modes = choice.mode ?? [];
   // 续写的尾帧要当首帧用：优先选首尾帧模式（供应商按 first_frame 提交），其次单图，最后才是参考模式；
   // 单图在部分供应商那里只是参考图。尾帧连线还没送达时也先按首帧模式预选，
@@ -460,10 +544,11 @@ watch([selectedModel, matchingModes, selectedReferences, () => data.value.mode],
   const continuing = data.value.continuation?.method === "frame";
   const firstFrameMode = (items: typeof modes) => continuing
     ? items.find((item) => item === "endFrameOptional") ?? items.find((item) => item === "startFrameOptional") ?? items.find((item) => item === "singleImage") : undefined;
-  const mode = firstFrameMode(matches) ?? matches.find(Array.isArray) ?? matches.find((item) => item === "singleImage")
+  const mode = stagedMode ?? firstFrameMode(matches) ?? matches.find(Array.isArray) ?? matches.find((item) => item === "singleImage")
     ?? matches.find((item) => item === "endFrameOptional") ?? matches[0]
     ?? modes.find((item) => JSON.stringify(item) === data.value.mode) ?? firstFrameMode(modes) ?? modes.find(Array.isArray) ?? modes[0];
-  data.value.mode = mode === undefined ? "" : JSON.stringify(mode);
+  automaticMode = mode === undefined ? "" : JSON.stringify(mode);
+  data.value.mode = automaticMode;
 }, { flush: "sync" });
 // ACT: 参数在节点内归一化，未选中、未挂载底部设置时也可由 Agent 直接生成。
 watch([selectedModel, () => data.value.duration], ([choice]) => {
@@ -546,6 +631,7 @@ function getGenerationPrompt(prompt: string, references: GenerationReference[]) 
       : `{{ref ${imageIndex + 1}}} 是上一段视频的最后一帧：新视频从这一画面开始并自然接着往下演，${keep}。`);
   }
   if (!lines.length) return "";
+  if (blockingText.value) lines.push(`本镜走位要求\n${blockingText.value}`);
   // 镜头设定紧跟在用户提示词之后，参考图说明排在后面。
   const design = shotDesignPrompt(data.value.shotDesign);
   if (design) lines.splice(prompt.trim() ? 1 : 0, 0, design);
@@ -556,7 +642,7 @@ function getGenerationPrompt(prompt: string, references: GenerationReference[]) 
 const generationPrompt = computed(() => selectedReferences.value ? getGenerationPrompt(selectedReferences.value.prompt, selectedReferences.value.references) : "");
 const generationInput = computed(() => {
   const selected = selectedReferences.value, choice = selectedModel.value;
-  if (selected && choice && generationPrompt.value && !generationModeError(choice)) return getGenerationInput(selected, choice);
+  if (!checkingFrames.value && selected && choice && generationPrompt.value && !generationModeError(choice)) return getGenerationInput(selected, choice);
 });
 
 function generationModeError(choice: NodeMediaModel) {
@@ -572,7 +658,7 @@ function generationModeError(choice: NodeMediaModel) {
   if (choice.mode?.length && !matching) return "当前模型没有适合这些参考素材的生成模式，请更换模型或调整引用";
 }
 
-function getGenerationInput({prompt, references}: ReturnType<typeof readGenerationReferences>, choice: NodeMediaModel): Omit<NodeVideoRequest, "directory"> {
+function collectMedia(references: GenerationReference[], mode: unknown) {
   const images: NonNullable<NodeVideoRequest["images"]> = [];
   const link = data.value.continuation;
   const boundFrame = link?.method === "frame" && link.previousShot ? link.previousShot.referencePath : undefined;
@@ -596,10 +682,14 @@ function getGenerationInput({prompt, references}: ReturnType<typeof readGenerati
     return { type: "text" };
   });
   // 续写：原片尾帧排在第一张时始终按首帧提交。「首帧可选」模式平时把唯一的一张图当尾帧，续写时那样会接反。
-  const tailFirst = !!boundFrame || (link?.method === "frame" && references.find(item => item.dataType === "IMAGE" && item.value)?.source === link.tailFrameNodeId);
-  const singleAsLast = selectedMode.value === "startFrameOptional" && images.length === 1 && !tailFirst;
-  const firstFrame = frameMode.value && !singleAsLast ? images[0] : undefined;
-  const lastFrame = frameMode.value ? images[singleAsLast ? 0 : 1] : undefined;
+  const firstImage = references.find(item => item.dataType === "IMAGE" && item.value);
+  const tailFirst = !!boundFrame || !!firstImage && link?.method === "frame" && firstImage.source === link.tailFrameNodeId;
+  const defaultStart = !!(blockingFrames.value.start || blockingFrames.value.end) && !!firstImage && isShotStoryboard(firstImage);
+  const frames = frameLayout(mode, images, tailFirst, defaultStart, blockingFrames.value);
+  return { images, videos, audios, referenceOrder, frames };
+}
+function getGenerationInput({prompt, references}: ReturnType<typeof readGenerationReferences>, choice: NodeMediaModel): Omit<NodeVideoRequest, "directory"> {
+  const { images, videos, audios, referenceOrder, frames } = collectMedia(references, selectedMode.value);
   return {
     providerId: choice.providerId,
     modelId: choice.modelId,
@@ -612,14 +702,30 @@ function getGenerationInput({prompt, references}: ReturnType<typeof readGenerati
     other: Object.keys(data.value.other).length ? { ...data.value.other } : undefined,
     outputDirectory: `assets/${id}`,
     images: frameMode.value ? undefined : images,
-    firstFrame,
-    lastFrame,
+    firstFrame: frameMode.value ? frames.firstFrame : undefined,
+    lastFrame: frameMode.value ? frames.lastFrame : undefined,
     videos,
     audios,
     referenceOrder: referenceOrder.map(reference => frameMode.value && reference.type === "image"
-      ? { type: reference.index === 0 && firstFrame ? "firstFrame" : "lastFrame" } : reference),
+      ? { type: reference.index === 0 && !frames.onlyLast ? "firstFrame" : "lastFrame" } : reference),
   };
 }
+const blockingFrameStatus = computed(() => {
+  if (checkingFrames.value) return "正在核对走位分镜帧…";
+  const { start, end } = blockingFrames.value;
+  const modeError = selectedModel.value && generationModeError(selectedModel.value);
+  if (modeError) return modeError;
+  if (!start && !end) return data.value.shotBlocking?.startFrame || data.value.shotBlocking?.endFrame
+    ? "指定的走位分镜帧不可用，本镜采用走位文字。" : "未指定走位分镜帧，本镜采用走位文字。";
+  if (!selectedModel.value) return "选择视频模型后可查看走位分镜帧的采用情况。";
+  if (!frameMode.value) return matchingModes.value.some(isFrameMode)
+    ? "当前模式采用走位文字，可在生成设置中选择首尾帧模式以使用分镜帧。" : "当前模型或引用组合不支持走位首尾帧，本镜采用走位文字。";
+  const { firstFrame, lastFrame } = collectMedia(selectedReferences.value?.references ?? [], selectedMode.value).frames;
+  const status = (label: string, requested: unknown, available: typeof start, used?: string) => !requested ? ""
+    : !available ? `${label}文件不可用，采用走位文字` : available.path === used ? `已采用走位${label}` : `走位${label}未采用，沿用本镜引用及走位文字`;
+  return [status("首帧", data.value.shotBlocking?.startFrame, start, firstFrame?.path),
+    status("尾帧", data.value.shotBlocking?.endFrame, end, lastFrame?.path)].filter(Boolean).join("；");
+});
 const outputFile = computed(() => outputs.value.video?.dataType === "VIDEO" ? outputs.value.video.value : undefined);
 const canCompose = computed(() => !!outputFile.value && (!data.value.continuation?.previousShot || data.value.continuation.previousShot.resultPath === outputFile.value.url));
 const previousDisabled = computed(() => !!(retakeSummary.value || generating.value || pendingRecovery.value || deleting.value || uploading.value || actions.value?.processing || continuation.value?.processing));
@@ -780,9 +886,21 @@ async function startGeneration(expectedTaskId?: string, retake?: VideoRetakeSubm
       data.value.writingProduction={...data.value.writingProduction,...appearance};await context.save();
     } finally {choosingStyle.value=false;}
   }
+  if (requestedFrames.value.start || requestedFrames.value.end) {
+    if (preparingFrames) throw Error("正在核对走位分镜帧，请稍候");
+    const context = retakePersistence?.();
+    preparingFrames = true;
+    try {
+      if (!checkingFrames.value) frameRevision.value++;
+      const inspection = frameInspection;
+      await inspection;
+      if (inspection !== frameInspection || disposed || deleting.value || referenceFlow.findNode(id) !== node
+        || context?.directory !== retakePersistence?.()?.directory || context?.canvasPath !== retakePersistence?.()?.canvasPath) throw Error("画布或走位分镜帧已变化，请重试");
+    } finally { preparingFrames = false; }
+  }
   const choice = selectedModel.value;
   // ACT: 提交时按稳定 ID 解析，避免依赖编辑器挂载及异步重排同步。
-  const selected = readGenerationReferences();
+  const selected = referencesForMode(readGenerationReferences(), selectedMode.value);
   const {references} = selected;
   if (!choice) throw new Error("请先选择视频模型");
   const modeError = generationModeError(choice);
@@ -902,7 +1020,7 @@ nodeTools.register({
     data.value.duration = duration;
     data.value.resolution = resolution;
     if (args.ratio !== undefined) data.value.ratio = args.ratio;
-    if (args.mode !== undefined) data.value.mode = JSON.stringify(args.mode);
+    if (args.mode !== undefined) chooseMode(JSON.stringify(args.mode));
     if (args.generateAudio !== undefined) data.value.generateAudio = args.generateAudio;
     return getConfig();
   },
@@ -966,6 +1084,12 @@ nodeTools.register({
 .promptCard {
   max-height: min(560px, 54vh);
   overflow: auto;
+  .shotBlocking {
+    margin: 8px 0;
+    font-size: 12px;
+    summary { cursor: pointer; }
+    p { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 140px; overflow: auto; }
+  }
   .videoPromptHeading { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; font-size: 13px; }
   .referenceHint {
     margin: 8px 0;

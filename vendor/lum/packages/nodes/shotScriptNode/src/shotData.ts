@@ -1,3 +1,6 @@
+import type { BlockingPlan } from "./blockingTypes";
+import { normalizeBlocking } from "./shotBlocking";
+
 /** 脚本节点的数据格式（assets/<节点ID>/shots.json），说明见实施记录 dataFormat.md。 */
 export type AssetKind = "character" | "scene" | "prop";
 export interface ShotDialogue { kind: "line" | "narration"; speaker?: string; text: string }
@@ -34,7 +37,8 @@ export interface ShotDocument {
   style: string;
   shots: Shot[];
   assets: ShotAsset[];
-  batch: { assetGroupId: string | null; imageGroupId: string | null; videoGroupId: string | null; imageNodes: Record<string, string>; videoNodes: Record<string, string> };
+  blocking?: BlockingPlan;
+  batch: { assetGroupId: string | null; imageGroupId: string | null; videoGroupId: string | null; imageNodes: Record<string, string>; videoNodes: Record<string, string>; endFrameNodes?: Record<string, string> };
 }
 
 export const shotSizes = ["大远景", "远景", "全景", "中远景", "中景", "中近景", "近景", "特写", "大特写"];
@@ -101,6 +105,7 @@ export function normalizeShotDocument(value: unknown): ShotDocument {
     mode: raw.mode === "script" || raw.mode === "character" || raw.mode === "manual" ? raw.mode : null,
     step: raw.step === 2 || raw.step === 3 ? raw.step : 1,
     style: str(raw.style, 2000),
+    blocking: normalizeBlocking(raw.blocking),
     shots: (Array.isArray(raw.shots) ? raw.shots : []).slice(0, 300).map(normalizeShot),
     assets: (Array.isArray(raw.assets) ? raw.assets : []).slice(0, 200).flatMap(item => {
       if (!item || typeof item !== "object") return [];
@@ -119,6 +124,7 @@ export function normalizeShotDocument(value: unknown): ShotDocument {
     batch: {
       assetGroupId: str(batch.assetGroupId, 64) || null, imageGroupId: str(batch.imageGroupId, 64) || null, videoGroupId: str(batch.videoGroupId, 64) || null,
       imageNodes: ids(batch.imageNodes), videoNodes: ids(batch.videoNodes),
+      ...(batch.endFrameNodes ? {endFrameNodes: ids(batch.endFrameNodes)} : {}),
     },
   };
 }

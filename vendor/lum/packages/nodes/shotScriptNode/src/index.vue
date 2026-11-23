@@ -97,6 +97,8 @@
       <promptBoard v-else :document="shots" :busy="promptBusy" :running="synthesizing" :focusShot="focusShot" :textModel="textModel" @change="changed" @synthesize="synthesize" />
     </div>
     <footer class="workbenchFooter">
+      <el-button v-if="shots.step === 1" :disabled="!file.ready.value || !shots.shots.length || generating" @click="openBlocking">人物站位与走位</el-button>
+      <el-button v-if="shots.step === 1 && shots.blocking" :disabled="!!batching || savingBlocking" @click="createEndBoards">创建尾帧分镜</el-button>
       <el-button v-if="shots.step > 1" @click="setStep((shots.step - 1) as 1 | 2)">← 上一步</el-button>
       <span class="spacer" />
       <el-button v-if="shots.step < 3" type="primary" @click="setStep((shots.step + 1) as 2 | 3)">下一步：{{ shots.step === 1 ? "准备资产" : "合成提示词" }} →</el-button>
@@ -106,6 +108,9 @@
       </template>
     </footer>
   </el-dialog>
+
+  <blockingEditor v-if="blockingDraft" :document="shots" :initial="blockingDraft" :saving="savingBlocking" :suggest="suggestBlocking"
+    :frameChoices="blockingFrames" @close="!savingBlocking && (blockingDraft = undefined)" @apply="saveBlocking" />
 
   <el-dialog v-model="generateAll.visible" title="一键生成所有资产" width="min(960px, calc(100vw - 32px))" appendToBody>
     <div class="generateList">
@@ -130,17 +135,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from "vue";
+import { computed, reactive, ref, shallowRef, watch } from "vue";
 import { useVueFlow } from "@vue-flow/core";
 import { ElAlert, ElButton, ElCard, ElCheckbox, ElDialog, ElDivider, ElDropdown, ElDropdownItem, ElDropdownMenu, ElInput, ElMessage, ElMessageBox, ElOption, ElOptionGroup, ElSelect, ElTag } from "element-plus";
 import { IconArrowUp, IconChevronDown, IconDownload, IconFileText, IconLayoutGrid, IconListDetails, IconPencil, IconPlayerPlay, IconPlayerTrackNext, IconRefresh, IconUser, IconX } from "@tabler/icons-vue";
 import { nodeSkeleton, nodeTools, useNode, useNodeInputs, z, type NodeHandle } from "@lum/nodes-scaffold/runtime";
+import { useNodePersistence } from "@lum/nodes-scaffold/nodeDocument";
 import { useNodeJsonFile } from "@lum/node-shared/useNodeJsonFile";
 import { thinkingLevelLabels, useTextModel } from "@lum/node-shared/useTextModel";
 import { maxImageReferences, useMediaModels } from "@lum/node-shared/useMediaModels";
 import { addGroupedNodes, useNodeCaller } from "@lum/node-shared/canvasBatch";
 import { normalizeScriptDocument, parseEntities, scriptEntities, type ScriptDocument } from "@lum/node-shared/scriptDocument";
 import shotTable from "./shotTable.vue";
+import blockingEditor from "./blockingEditor.vue";
+import { draftBlocking, normalizeBlocking, shotConstraint } from "./shotBlocking";
+import { applyBlockingSuggestion, blockingContext, blockingSystem } from "./blockingSuggestion";
+import type { BlockingPlan } from "./blockingTypes";
 import assetBoard from "./assetBoard.vue";
 import promptBoard from "./promptBoard.vue";
 import imageSettingsBar from "./imageSettingsBar.vue";
@@ -157,7 +167,7 @@ defineOptions({
   ] satisfies NodeHandle[],
 });
 
-const { id, node, nodeProps, outputs, files } = useNode({ label: "脚本", outputs: { text: { dataType: "STRING", value: "" } } });
+const { id, node, nodeProps, outputs, files, ai } = useNode({ label: "脚本", outputs: { text: { dataType: "STRING", value: "" } } });
 const data = computed(() => node.data as typeof node.data & { model?: string; followDefaultModel?: boolean; thinkingLevel?: string; imageSettings?: ImageSettings });
 data.value.imageSettings ??= createImageSettings();
 const imageSettings = computed(() => data.value.imageSettings!);
@@ -232,6 +242,105 @@ function openWorkbench(step?: 1 | 2 | 3) { if (step) shots.value.step = step; wo
 function setStep(step: 1 | 2 | 3) { shots.value.step = step; if (step === 2) syncAssetsFromShots(); changed(); }
 function viewPrompt(shotId: string) { focusShot.value = shotId; setStep(3); }
 
+const blockingDraft = shallowRef<BlockingPlan>();
+const savingBlocking = ref(false);
+const persistence = useNodePersistence();
+let originalBlocking = "";
+function blockingRevision() {
+  return JSON.stringify([shots.value.episodeId, shots.value.shots.map(({id, description, camera, dialogues, duration, shotSize}) =>
+    [id, description, camera, dialogues, duration, shotSize]), shots.value.blocking]);
+}
+function openBlocking() {
+  if (blockingDraft.value || !file.ready.value) return;
+  try {
+    originalBlocking = blockingRevision();
+    blockingDraft.value = draftBlocking(shots.value, shots.value.blocking);
+  } catch (error) { ElMessage.error(error instanceof Error ? error.message : "无法读取镜头走位"); }
+}
+const blockingFrames = computed(() => {
+  if (!blockingDraft.value) return [];
+  const seen = new Set<string>();
+  return flow.getNodes.value.flatMap(source => {
+    const image = nodeImage(source.id);
+    if (!image || seen.has(image.path)) return [];
+    seen.add(image.path);
+    return [{label: String(source.data.label || "画布图片"), url: image.path, mimeType: image.mimeType}];
+  });
+});
+async function suggestBlocking(plan: BlockingPlan, shotId: string, signal: AbortSignal, useImage = true) {
+  if (!textModel.models.value.length) await textModel.load();
+  const model = textModel.selected.value;
+  if (!model) throw new Error("请先在脚本节点选择文本模型，或直接手动编辑走位");
+  const doc = shots.value, stage = plan.shots[shotId];
+  const mapped = doc.batch.imageNodes[shotId];
+  const source = mapped ? flow.findNode(mapped) : undefined;
+  const linked = source?.data.shotSource?.ownerId === id && source.data.shotSource.shotId === shotId ? nodeImage(mapped!) : undefined;
+  const frame = useImage ? stage?.startFrame ?? (linked && {url: linked.path, mimeType: linked.mimeType}) : undefined;
+  const directory = frame ? (await files.getWorkspaceFiles().list()).directory : undefined;
+  signal.throwIfAborted();
+  const result = await ai.generate({providerId: model.providerId, modelId: model.modelId, thinkingLevel: textModel.thinkingLevel.value || undefined,
+    systemPrompt: blockingSystem, prompt: blockingContext(doc, plan, shotId), signal, requireComplete: true,
+    ...(frame ? {directory, references: [{dataType: "IMAGE" as const, value: frame}], requireImageReferences: true} : {}),
+  });
+  signal.throwIfAborted();
+  if (!blockingDraft.value || shots.value !== doc || originalBlocking !== blockingRevision()) throw Error("镜头表已变化，请关闭后重新打开走位编辑器");
+  return applyBlockingSuggestion(plan, doc, shotId, result.text);
+}
+function boundBlocking(shotId: string) {
+  const plan = shots.value.blocking, stage = plan?.shots[shotId];
+  if (!plan || !stage) return;
+  const constraint = shotConstraint(plan, shots.value.shots, shotId);
+  if (!constraint) return;
+  const first = shots.value.batch.imageNodes[shotId], last = shots.value.batch.endFrameNodes?.[shotId];
+  const firstSource = first ? flow.findNode(first)?.data.shotSource : undefined;
+  const lastSource = last ? flow.findNode(last)?.data.shotEndSource : undefined;
+  const firstImage = first && firstSource?.ownerId === id && firstSource.shotId === shotId ? nodeImage(first) : undefined;
+  const lastImage = last && lastSource?.ownerId === id && lastSource.shotId === shotId && lastSource.layout === constraint.endImage ? nodeImage(last) : undefined;
+  const startFrame = stage.startFrame ?? (firstImage && {url:firstImage.path, mimeType:firstImage.mimeType});
+  const endFrame = stage.endFrame ?? (lastImage && {url:lastImage.path, mimeType:lastImage.mimeType});
+  return { image: constraint.image, video: constraint.video,
+    ...(first && firstSource?.ownerId === id && firstSource.shotId === shotId ? {storyboardNodeId:first} : {}),
+    ...(startFrame ? {startFrame} : {}), ...(endFrame ? {endFrame} : {}) };
+}
+function syncBlocking() {
+  const doc = shots.value;
+  if (!doc.blocking) return;
+  const active = new Set(doc.shots.map(shot => shot.id));
+  const cache = new Map<string, ReturnType<typeof boundBlocking>>();
+  for (const child of flow.getNodes.value) {
+    const source = child.data.shotSource;
+    if (source?.ownerId !== id || !active.has(source.shotId) || !["remote-imageGenerationNode", "remote-videoGenerationNode"].includes(child.type ?? "")
+      || child.data.videoRetakeAttempt || child.data.imageRetakeAttempt) continue;
+    if (!cache.has(source.shotId)) cache.set(source.shotId, boundBlocking(source.shotId));
+    const binding = cache.get(source.shotId);
+    if (JSON.stringify(child.data.shotBlocking) !== JSON.stringify(binding)) child.data.shotBlocking = binding;
+  }
+}
+watch([() => file.ready.value, () => flow.getNodes.value.length, () => shots.value.blocking && [
+  ...Object.values(shots.value.batch.imageNodes), ...Object.values(shots.value.batch.endFrameNodes ?? {}),
+].map(source => nodeImage(source)?.path).join("\n")], ([ready]) => { if (ready && !savingBlocking.value) syncBlocking(); }, {flush: "post"});
+async function saveBlocking(draft: BlockingPlan) {
+  if (savingBlocking.value || !blockingDraft.value) return;
+  savingBlocking.value = true;
+  const doc = shots.value;
+  try {
+    const plan = normalizeBlocking(draft);
+    if (!plan || doc.shots.some(shot => !plan.shots[shot.id])) throw Error("走位草稿中缺少镜头或场景，请核对后再同步");
+    if (originalBlocking !== blockingRevision()) throw Error("镜头表或走位已变化，请关闭后重新打开编辑器");
+    const old = doc.blocking;
+    doc.blocking = plan;
+    try { await file.touch(true); }
+    catch (error) { doc.blocking = old; throw error; }
+    if (flow.findNode(id) !== node || doc !== shots.value) throw Error("画布已切换，请在原画布查看已保存走位");
+    originalBlocking = blockingRevision();
+    syncBlocking();
+    await persistence?.()?.save();
+    blockingDraft.value = undefined;
+    ElMessage.success("走位已保存，已关联的分镜图和视频节点会在下次生成时采用");
+  } catch (error) { ElMessage.error(error instanceof Error ? error.message : "走位保存失败"); }
+  finally { savingBlocking.value = false; }
+}
+
 // —— 生成镜头表 ——
 function startMode(mode: "script" | "character" | "manual") {
   if (mode === "manual") {
@@ -278,6 +387,7 @@ async function generateShots(mode: "script" | "character") {
     const reply = await textModel.generate(prompt, shotSystemPrompt, text => { progress.value = Math.min(95, Math.round(text.length / expected * 100)); }, controller.signal);
     seedAssetsFromScript();
     applyShotReply(document, reply, known);
+    delete document.blocking;
     document.mode = mode;
     document.step = 1;
     const episode = script?.episodes[episodeIndex.value];
@@ -489,7 +599,7 @@ async function batchImages() {
     const { groupId, ids } = addGroupedNodes(flow, self, `分镜图组 · ${shots.value.episodeTitle || nodeProps.value.label} · ${shots.value.shots.length} 张`, shots.value.shots.map((shot, index) => {
       const used = mentionedAssets(shot.description, shots.value.assets).filter(asset => asset.nodeId);
       const prompt = [shot.imagePrompt, used.length ? `参考图依次为：${used.map(asset => `${asset.name}（${assetKindLabels[asset.kind]}）`).join("、")}。角色参考图只参考形象，场景参考图只参考空间与光线。` : ""].filter(Boolean).join("\n\n");
-      return { type: "remote-imageGenerationNode", label: `分镜 ${String(index + 1).padStart(2, "0")}`, width: 360, height: 300, data: imageNodeData(prompt, "16:9", { shotSource: { ownerId: id, shotId: shot.id } }) };
+      return { type: "remote-imageGenerationNode", label: `分镜 ${String(index + 1).padStart(2, "0")}`, width: 360, height: 300, data: imageNodeData(prompt, "16:9", { shotSource: { ownerId: id, shotId: shot.id }, shotBlocking: boundBlocking(shot.id) }) };
     }), { columns: 6, offsetY: 420 });
     const edges = shots.value.shots.flatMap((shot, index) => mentionedAssets(shot.description, shots.value.assets).flatMap(asset => asset.nodeId && flow.findNode(asset.nodeId)
       ? [{ id: crypto.randomUUID(), source: asset.nodeId, sourceHandle: sourceHandle(asset.nodeId), target: ids[index]!, targetHandle: "in" }] : []));
@@ -503,6 +613,42 @@ async function batchImages() {
       else ElMessage.success(`已开始生成 ${ids.length} 张分镜`);
     } else ElMessage.success(`已创建 ${ids.length} 个分镜图节点，可用「整组执行」统一生成`);
   } catch (error) { ElMessage.error(error instanceof Error ? error.message : "批量生成分镜失败"); }
+  finally { batching.value = ""; }
+}
+async function createEndBoards() {
+  const doc = shots.value, plan = doc.blocking, self = flow.findNode(id);
+  if (!plan || !self || batching.value) return;
+  const plans = doc.shots.flatMap((shot, index) => {
+    const stage = plan.shots[shot.id], layout = shotConstraint(plan, doc.shots, shot.id)?.endImage;
+    if (!layout || !stage || stage.endFrame) return [];
+    const existingId = doc.batch.endFrameNodes?.[shot.id], existing = existingId ? flow.findNode(existingId) : undefined;
+    if (existing?.data.shotEndSource?.ownerId === id && existing.data.shotEndSource.shotId === shot.id && existing.data.shotEndSource.layout === layout) return [];
+    return [{shot, index, layout}];
+  });
+  if (!plans.length) { ElMessage.info("当前各镜已有对应的尾帧分镜，或已指定尾帧图片"); return; }
+  batching.value = "image";
+  try {
+    const ok = await ElMessageBox.confirm(`将创建 ${plans.length} 个尾帧分镜图节点。可在画布逐张生成，出图后自动提供给对应视频节点。`, "创建尾帧分镜",
+      {confirmButtonText:"创建节点", cancelButtonText:"取消"}).then(() => true, () => false);
+    if (!ok || shots.value !== doc || doc.blocking !== plan || flow.findNode(id) !== self) return;
+    await ensureAssetNodes();
+    const items = plans.map(({shot,index,layout}) => {
+      const firstId = doc.batch.imageNodes[shot.id], first = firstId && flow.findNode(firstId);
+      const references = new Set<string>();
+      if (first && first.data.shotSource?.ownerId === id && first.data.shotSource.shotId === shot.id && nodeImage(first.id)) references.add(first.id);
+      for (const asset of mentionedAssets(shot.description, doc.assets)) if (asset.nodeId && asset.image && flow.findNode(asset.nodeId)) references.add(asset.nodeId);
+      const prompt = [shot.imagePrompt || concatImagePrompt(shot, doc), "只画这一镜动作结束时的一幅分镜。沿用参考素材的角色身份、服装、环境和光线。"].join("\n\n");
+      const data = imageNodeData(prompt, "16:9", {shotBlocking: {image:layout, video:""}, shotEndSource: {ownerId:id, shotId:shot.id, layout}});
+      return {spec:{type:"remote-imageGenerationNode", label:`尾帧分镜 ${String(index + 1).padStart(2, "0")}`, width:360, height:300, data}, references};
+    });
+    const {ids} = addGroupedNodes(flow, self, `尾帧分镜 · ${doc.episodeTitle || nodeProps.value.label}`, items.map(item => item.spec), {columns:6, offsetY:1260});
+    const edges = items.flatMap(({references}, index) => [...references].map(source => ({id:crypto.randomUUID(), source, sourceHandle:sourceHandle(source), target:ids[index]!, targetHandle:"in"})));
+    if (edges.length) flow.addEdges(edges);
+    doc.batch.endFrameNodes = {...doc.batch.endFrameNodes, ...Object.fromEntries(plans.map(({shot}, i) => [shot.id, ids[i]!]))};
+    await file.touch(true);
+    await persistence?.()?.save();
+    ElMessage.success(`已创建 ${ids.length} 个尾帧分镜节点，可回画布生成`);
+  } catch (error) { ElMessage.error(error instanceof Error ? error.message : "尾帧分镜创建失败"); }
   finally { batching.value = ""; }
 }
 const referenceKey = (source: string, handle: string) => encodeURIComponent(JSON.stringify([source, handle]));
@@ -546,6 +692,7 @@ async function batchVideos() {
       type: "remote-videoGenerationNode", label: `镜头 ${String(index + 1).padStart(2, "0")} · ${shot.duration}s`, width: 360, height: 300,
       data: {
         prompt, promptModel: prompt.split("\n").map(text => [{ type: "Write", text }]), duration: Math.max(2, Math.round(shot.duration)), ratio: "16:9", shotSource: { ownerId: id, shotId: shot.id },
+        shotBlocking: boundBlocking(shot.id),
         // 资产图标为外观参考：走参考生视频，不会被当成首尾帧；顺序固定为分镜图在前。
         identityReferences: references.filter(item => item.asset).map(item => referenceKey(item.source, item.handle)),
         referenceOrder: { in: references.map(item => referenceKey(item.source, item.handle)) },
