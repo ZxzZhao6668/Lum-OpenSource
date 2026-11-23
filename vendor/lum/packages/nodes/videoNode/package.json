@@ -10,6 +10,7 @@
     "./videoRetakeState": "./src/videoRetakeState.ts",
     "./videoRetake": "./src/videoRetake.ts",
     "./videoContinuation": "./src/components/videoContinuation.vue",
+    "./videoProcessing": "./src/videoProcessing.ts",
     "./videoContinuationPlan": "./src/videoContinuation.ts"
   },
   "scripts": {

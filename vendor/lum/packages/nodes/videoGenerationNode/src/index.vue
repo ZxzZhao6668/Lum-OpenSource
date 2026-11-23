@@ -16,7 +16,7 @@
       <el-button :icon="IconScissors" text :disabled="!outputFile || generating || deleting || uploading || actions?.processing" @click.stop="actions?.open('trim')">截取片段</el-button>
       <el-button :icon="IconMovie" text :loading="retake?.loading" :disabled="!outputFile || generating || deleting || uploading || actions?.processing" @click.stop="retake?.open()">片段重拍</el-button>
       <el-button :icon="IconPlayerTrackNext" text :loading="continuation?.processing && !continuation?.composing" :disabled="!outputFile || generating || deleting || uploading || actions?.processing || continuation?.processing" @click.stop="continuation?.open()">视频续写</el-button>
-      <el-button v-if="data.continuation" :icon="IconArrowsJoin" text :loading="continuation?.composing" :disabled="!outputFile || generating || deleting || uploading || actions?.processing || continuation?.processing" title="把原片和各段续写按顺序拼成一条视频" @click.stop="continuation?.compose()">拼接成片</el-button>
+      <el-button v-if="data.continuation" :icon="IconArrowsJoin" text :loading="continuation?.composing" :disabled="!canCompose || generating || deleting || uploading || actions?.processing || continuation?.processing" title="把原片和各段续写按顺序拼成一条视频" @click.stop="continuation?.compose()">拼接成片</el-button>
       <el-button :icon="IconMovie" text :loading="actions?.creatingAnalysis" :disabled="!outputFile || generating || deleting || uploading || actions?.processing || actions?.creatingAnalysis" @click.stop="actions?.createFrameAnalysis()">逐帧拉片</el-button>
       <mediaHistory mediaType="video" :current="outputFile" :disabled="generating || deleting || uploading" @select="outputs.video = { dataType: 'VIDEO', value: $event }" />
       <el-button :icon="IconTransfer" :loading="uploading" :disabled="generating || deleting" text title="替换视频" aria-label="替换视频" @click.stop="fileInput?.click()">替换视频</el-button>
@@ -76,8 +76,11 @@
         <div v-else-if="frameMode" class="referenceHint">
           {{ continuationFirstFrame ? "续写：原片尾帧作为本段首帧提交；再连接一张图片时，它作为本段尾帧" : selectedMode === "startFrameOptional" ? "仅一张图片时作为尾帧；两张图片按顺序作为首帧、尾帧" : "图片引用按顺序作为首帧、尾帧" }}
         </div>
+        <el-button :icon="IconPlayerTrackNext" text :disabled="previousDisabled" @click.stop="previousShotPanel?.open()">承接上一镜</el-button>
+        <el-button v-if="data.continuation?.previousShot && canCompose" text :disabled="previousDisabled" @click.stop="previousShotPanel?.previewSeam()">预览接缝</el-button>
         <div v-if="data.continuation" class="referenceHint continuationHint">
           <div>续写自「{{ data.continuation.sourceLabel || '上一段视频' }}」 · {{ continuationSummary }}</div>
+          <img v-if="boundFramePreview" class="boundFrame" :src="boundFramePreview" alt="本镜采用的衔接帧" />
           <div v-if="continuationWarning" class="continuationWarning" role="status">{{ continuationWarning }}</div>
           <label><input type="checkbox" :checked="data.continuation.autoCompose" :disabled="generating || deleting" @change="data.continuation.autoCompose = ($event.target as HTMLInputElement).checked" />生成完成后自动拼接成片</label>
         </div>
@@ -85,7 +88,7 @@
         <p v-if="writingSetupStyle(data.writingProduction).label">{{ writingSetupStyle(data.writingProduction).label }}</p>
         <el-button v-if="canReadProjectSetup()" text :disabled="generating || choosingStyle" @click="adoptProjectStyle">采用最新项目设定</el-button>
         <promptInput v-model="data.promptModel" v-model:text="data.prompt" :references="referenceMentions" :materials="materialMentions" :selectMaterial="selectMaterialReference" :selectAsset="selectAssetReference" placeholder="描述本镜头的动作、运镜和衔接要求，输入 @ 选择人物、场景或道具资产" expandable />
-        <p v-if="referenceSelection.error" class="referenceHint" role="status">{{ referenceSelection.error }}</p>
+        <p v-if="referenceSelection.error || previousModeError" class="referenceHint" role="status">{{ referenceSelection.error || previousModeError }}</p>
         <videoPromptAnalysis v-model="data.promptAnalysis" :input="analysisContext.input" :error="analysisContext.error" :disabled="generating || deleting || uploading" @apply="applyAnalyzedPrompt" />
         <label class="defaultModelFollow"><input type="checkbox" :checked="data.followDefaultModel !== false" :disabled="generating || deleting" @change="data.followDefaultModel = ($event.target as HTMLInputElement).checked" />使用全局默认模型</label>
         <div class="promptFooter">
@@ -129,7 +132,7 @@
             <el-button
               class="sendButton"
               :icon="generating ? IconPlayerStop : IconArrowUp"
-              :disabled="cancelling || deleting || uploading || (!generating && !pendingRecovery && (!generationPrompt || !selectedModel))"
+              :disabled="cancelling || deleting || uploading || previousShotPanel?.busy || (!generating && !pendingRecovery && (!generationPrompt || !selectedModel || !!previousModeError))"
               :title="generating ? '停止生成' : pendingRecovery ? '复查任务' : '生成视频'"
               :aria-label="generating ? '停止生成' : pendingRecovery ? '复查任务' : '生成视频'"
               @click="generating ? generationState.cancel().catch(error => showNodeError(error, '停止生成失败')) : startGeneration().catch((error) => showNodeError(error, '视频生成失败'))" />
@@ -142,6 +145,7 @@
   <videoActions ref="actions" :file="outputFile" :src="previewUrl" :disabled="generating || deleting || uploading" />
   <videoRetakeEntry ref="retake" :node="node" :file="outputFile" :disabled="generating || deleting || uploading || actions?.processing" />
   <videoContinuation ref="continuation" :file="outputFile" :disabled="generating || deleting || uploading" />
+  <previousShot ref="previousShotPanel" :link="data.continuation" :model="selectedModel" :output="outputFile" :disabled="previousDisabled" @apply="applyPreviousShot" />
 </template>
 
 <script setup lang="ts">
@@ -174,6 +178,7 @@ import referenceItem from "@lum/node-shared/referenceItem";
 import mediaHistory from "@lum/node-shared/mediaHistory";
 import mediaPrice from "@lum/node-shared/mediaPrice";
 import generationSettings from "./components/generationSettings.vue";
+import previousShot from "./components/previousShot.vue";
 import videoPromptAnalysis from "@lum/node-shared/mediaPromptEditor";
 import { readVideoPrompt, readVideoPromptContext, isVideoAssetReference, selectVideoReferences, type VideoPromptAnalysisState } from "./videoPromptContext";
 import shotDesignBar from "./shotDesign/shotDesignBar.vue";
@@ -207,7 +212,7 @@ data.value.shotDesign ??= {};
 const { refList, referenceMentions, materialMentions, selectMaterialReference: connectMaterial, selectAssetReference: connectAsset, setReferencePreview, removeReference } = useNodeReferences();
 const referenceFlow = useVueFlow();
 const candidateAssets = computed(() => refList.value.filter(item => isVideoAssetReference(item, referenceFlow.getNodes.value, data.value.identityReferences)));
-type GenerationReference = NodeInputValue & {projectStyle?: true};
+type GenerationReference = NodeInputValue & {projectStyle?: true; previousShot?: true};
 
 function validatePromptReferences(prompt: string, references: readonly NodeInputValue[]) {
   for (const match of prompt.matchAll(/\{\{ref (\d+)\}\}/g)) {
@@ -228,9 +233,44 @@ function readGenerationReferences() {
     if (reference.dataType === "STRING" && reference.value) validatePromptReferences(reference.value, selected.references);
   }
   const references: GenerationReference[] = [...selected.references];
+  let generationText = selected.prompt;
+  const link = data.value.continuation, shot = link?.previousShot;
+  if (link && shot) {
+    // 已连入的原视频在原引用编号处替换；在画布上直接挑选的素材追加，不移动其他 @ 引用。
+    const reference = {
+      source: link.sourceNodeId, sourceHandle: link.sourceHandleId, previousShot: true as const,
+      ...(link.method === "video"
+        ? {dataType: "VIDEO" as const, value: {url: shot.referencePath, mimeType: "video/mp4"}}
+        : {dataType: "IMAGE" as const, value: {url: shot.referencePath, mimeType: "image/png"}}),
+    };
+    const inherited = shot.inheritedReference;
+    const matches = references.flatMap((item, index) => (
+      (item.dataType === "VIDEO" && item.source === link.sourceNodeId && item.sourceHandle === link.sourceHandleId)
+      || (inherited && item.source === inherited.source && item.sourceHandle === inherited.handle)
+    ) ? [index] : []);
+    const [first, ...duplicates] = matches;
+    if (first === undefined) references.push(reference);
+    else {
+      references[first] = reference;
+      // 旧续写线及新选原片同时连入时，两处 @ 都指向同一份衔接素材。
+      if (duplicates.length) {
+        const remap = (value: string) => value.replace(/\{\{ref (\d+)\}\}/g, (_, number: string) => {
+          const index = Number(number) - 1;
+          const position = duplicates.includes(index) ? first : index - duplicates.filter(duplicate => duplicate < index).length;
+          return `{{ref ${position + 1}}}`;
+        });
+        generationText = remap(generationText);
+        for (const index of duplicates.reverse()) references.splice(index, 1);
+        references.forEach((item, index) => { if (item.dataType === "STRING" && item.value) references[index] = {...item, value: remap(item.value)}; });
+      }
+    }
+    if (link.method === "video" && link.tailFramePath) references.push({
+      source: link.sourceNodeId, sourceHandle: "previousShotTailImage", previousShot: true, dataType: "IMAGE", value: {url: link.tailFramePath, mimeType: "image/png"},
+    });
+  }
   const image = data.value.writingProduction?.projectStyleImage;
   if (image) references.push({source: id, sourceHandle: "projectStyleImage", dataType: "IMAGE", value: {url: image.path, mimeType: image.mimeType}, projectStyle: true});
-  return {prompt: selected.prompt, references};
+  return {prompt: generationText, references};
 }
 
 const referenceSelection = computed(() => {
@@ -238,7 +278,7 @@ const referenceSelection = computed(() => {
   catch (error) { return {selected: undefined, error: error instanceof Error ? error.message : "镜头引用读取失败"}; }
 });
 const selectedReferences = computed(() => referenceSelection.value.selected);
-const assetReferences = computed(() => (selectedReferences.value?.references ?? []).filter(item => !item.projectStyle && isVideoAssetReference(item, referenceFlow.getNodes.value, data.value.identityReferences)));
+const assetReferences = computed(() => (selectedReferences.value?.references ?? []).filter(item => !item.projectStyle && !item.previousShot && isVideoAssetReference(item, referenceFlow.getNodes.value, data.value.identityReferences)));
 const requiresImageReferenceMode = computed(() => assetReferences.value.length > 0 || selectedReferences.value?.references.some(item => item.projectStyle) === true);
 const analysisContext = computed(() => {
   try {return {input: readVideoPromptContext(node, referenceFlow.getNodes.value, refList.value, referenceMentions.value, data.value.identityReferences), error: ""};}
@@ -286,6 +326,7 @@ const player = ref<InstanceType<typeof videoPlayer>>();
 const actions = ref<InstanceType<typeof videoActions>>();
 const retake = ref<InstanceType<typeof videoRetakeEntry>>();
 const continuation = ref<InstanceType<typeof videoContinuation>>();
+const previousShotPanel = ref<InstanceType<typeof previousShot>>();
 const videoWidth = ref(0);
 let generationController: AbortController | undefined;
 const retakeData = computed(() => node.data as typeof node.data & { videoRetakeEditor?: string; videoRetakeAttempt?: VideoRetakeSubmission; videoRetakeResult?: { taskId: string; path: string; mimeType: string }; mediaTask?: import("@lum/node-shared/useNodeGeneration").NodeGenerationTask });
@@ -347,6 +388,14 @@ const generationState = useNodeGeneration(outputs, () => generationController?.a
       || retakeData.value.videoRetakeEditor !== retakeEditorIdentity()) throw Error("重拍子节点已被改作其他用途，原任务仍保留，请恢复原配置后查询");
   },
   stageOutput(task) {
+    const saved = task.recoveryData as {previousShotPath?: string; dropFirstFrame?: boolean} | undefined;
+    const link = data.value.continuation;
+    if (saved?.previousShotPath && link?.previousShot?.referencePath === saved.previousShotPath && task.state === "succeeded" && outputs.value.video?.dataType === "VIDEO") {
+      const shot = link.previousShot, previous = shot.resultPath, drop = link.dropFirstFrame;
+      shot.resultPath = outputs.value.video.value.url;
+      link.dropFirstFrame = saved.dropFirstFrame === true;
+      return () => { shot.resultPath = previous; link.dropFirstFrame = drop; };
+    }
     if (retakeData.value.videoRetakeAttempt?.taskId !== task.taskId || task.state !== "succeeded") return;
     const output = outputs.value.video;
     if (output?.dataType !== "VIDEO") return;
@@ -376,6 +425,8 @@ const matchingModes = computed(() => getMatchingModes(selectedModel.value));
 function getMatchingModes(choice?: NodeMediaModel) {
   return (choice?.mode ?? []).filter((mode) => {
     const { image, video, audio } = mediaCounts.value;
+    const link = data.value.continuation;
+    if (link?.previousShot && link.method === "frame" && Array.isArray(mode)) return false;
     if (Array.isArray(mode)) return image + video + audio > 0 && Object.entries(mediaCounts.value).every(([type, count]) =>
       count <= Number(mode.find((item) => item.startsWith(`${type}Reference:`))?.split(":")[1] ?? 0)
     );
@@ -425,10 +476,25 @@ watch([selectedModel, () => data.value.duration], ([choice]) => {
   if (choice.audio !== "optional") data.value.generateAudio = choice.audio === true;
 }, { flush: "sync" });
 const modelGroups = computed(() => groupNodeModels(models.value));
+function applyPreviousShot(link?: VideoContinuationLink, ratio?: string) {
+  const old = data.value.continuation;
+  if (link?.previousShot && old) {
+    const source = old.method === "frame" ? old.tailFrameNodeId : old.sourceNodeId;
+    const inherited = old.previousShot ? old.previousShot.inheritedReference : source && {source, handle: old.method === "frame" ? "image" : old.sourceHandleId};
+    if (inherited) link.previousShot.inheritedReference = inherited;
+  }
+  data.value.continuation = link;
+  if (ratio) data.value.ratio = ratio;
+  if (link?.method !== "frame") return;
+  const choices = matchingModes.value;
+  const mode = ["endFrameOptional", "startFrameOptional", "startEndRequired", "singleImage"].find(item => choices.some(choice => choice === item));
+  if (mode) data.value.mode = JSON.stringify(mode);
+}
 /** 续写的尾帧在本次请求里是否真的作为首帧提交。 */
 const continuationFirstFrame = computed(() => {
   const link = data.value.continuation;
   if (link?.method !== "frame") return false;
+  if (link.previousShot) return frameMode.value;
   const images = selectedReferences.value?.references.filter(item => item.dataType === "IMAGE") ?? [];
   // 首尾帧模式下尾帧排第一张就按首帧提交（见 getGenerationInput），包括「首帧可选」只有一张图的情况。
   return images[0]?.source === link.tailFrameNodeId && (selectedMode.value === "singleImage" || frameMode.value);
@@ -436,13 +502,18 @@ const continuationFirstFrame = computed(() => {
 const continuationSummary = computed(() => {
   const link = data.value.continuation;
   if (!link) return "";
-  if (link.method === "video") return "参考原视频";
+  if (link.method === "video") {
+    const shot = link.previousShot;
+    const format = (value: number) => Number(value.toFixed(3));
+    return shot ? `参考末尾 ${format(shot.end - shot.start)} 秒（原片 ${format(shot.start)} – ${format(shot.end)} 秒）${link.tailFramePath ? "，含尾帧参考图" : ""}` : "参考原视频";
+  }
   if (typeof link.tailTime !== "number") return "尾帧接首帧";
   return `尾帧接首帧（原片 ${link.tailTime.toFixed(2)} 秒处，${link.backFrames ? `已从最后一帧往前退 ${link.backFrames} 帧` : "最后一帧"}）`;
 });
 const continuationWarning = computed(() => {
   const link = data.value.continuation, references = selectedReferences.value?.references;
   if (!link || !selectedModel.value || !references) return "";
+  if (link.previousShot) return link.method === "frame" && selectedMode.value === "singleImage" ? "当前模型按单图输入提交衔接帧，起始画面精度由供应商决定。" : "";
   if (link.method === "video") {
     return references.some(item => item.dataType === "VIDEO" && item.source === link.sourceNodeId) ? "" : "原片没有被本次生成采用（连线已断开，或提示词改成了只用 @ 点名的引用），模型看不到上一段视频。";
   }
@@ -453,7 +524,7 @@ function getGenerationPrompt(prompt: string, references: GenerationReference[]) 
   const lines = [
     prompt.trim(),
     ...references.flatMap((item, index) => {
-      if (item.projectStyle) return [];
+      if (item.projectStyle || item.previousShot) return [];
       const source = referenceFlow.findNode(item.source)?.data.writingSource;
       if (item.dataType === "STRING" && item.value?.trim()) return [`参考 ${index + 1}：\n${item.value.trim()}`];
       if (item.dataType === "IMAGE" && source?.sourceKey?.startsWith("styleRef:")) return [`{{ref ${index + 1}}} 仅为光线、色彩、构图与材质的画风参考；不得带入参考图中的人物、物件或场景。`];
@@ -466,9 +537,10 @@ function getGenerationPrompt(prompt: string, references: GenerationReference[]) 
   if (link) {
     // 续写说明随请求附加，续写内容留空时也能直接生成。
     const keep = "保持人物、场景、光线、画风和镜头运动方向一致，不切换场景，不重新起幅";
-    const videoIndex = references.findIndex(item => item.dataType === "VIDEO" && item.source === link.sourceNodeId);
-    const imageIndex = references.findIndex(item => item.dataType === "IMAGE" && item.source === link.tailFrameNodeId);
+    const videoIndex = references.findIndex(item => item.dataType === "VIDEO" && item.source === link.sourceNodeId && (!link.previousShot || item.sourceHandle === link.sourceHandleId));
+    const imageIndex = references.findIndex(item => item.dataType === "IMAGE" && (link.previousShot ? item.value?.url === link.tailFramePath : item.source === link.tailFrameNodeId));
     if (link.method === "video" && videoIndex >= 0) lines.push(`{{ref ${videoIndex + 1}}} 是需要续写的上一段视频：新视频紧接它的最后一帧开始，不重复已有内容，${keep}。`);
+    if (link.method === "video" && link.previousShot && imageIndex >= 0) lines.push(`{{ref ${imageIndex + 1}}} 是该段动作结束时的画面，起镜时延续其中的人物位置、姿态和构图。`);
     else if (link.method === "frame" && imageIndex >= 0) lines.push(continuationFirstFrame.value
       ? `本段是上一段视频的续写，首帧就是上一段的最后一帧：从这一画面自然接着往下演，${keep}。`
       : `{{ref ${imageIndex + 1}}} 是上一段视频的最后一帧：新视频从这一画面开始并自然接着往下演，${keep}。`);
@@ -490,6 +562,10 @@ const generationInput = computed(() => {
 function generationModeError(choice: NodeMediaModel) {
   const mode = selectedMode.value;
   const matching = mode !== undefined && matchingModes.value.includes(mode);
+  const link = data.value.continuation;
+  if (link?.previousShot && !matching) return link.method === "video"
+    ? "当前模型无法同时接收所选末段视频和其他引用，请切换视频参考模型、减少其他引用或改用尾帧。"
+    : "当前模型无法用这些素材接首帧，请核对首尾帧数量、其他引用或改用视频参考。";
   if (requiresImageReferenceMode.value && (!matching || !Array.isArray(mode))) {
     return "当前模型或模式不支持已选图片参考，请选择支持图片参考的模型。资产与画风图不会自动作为首尾帧提交。";
   }
@@ -498,11 +574,15 @@ function generationModeError(choice: NodeMediaModel) {
 
 function getGenerationInput({prompt, references}: ReturnType<typeof readGenerationReferences>, choice: NodeMediaModel): Omit<NodeVideoRequest, "directory"> {
   const images: NonNullable<NodeVideoRequest["images"]> = [];
+  const link = data.value.continuation;
+  const boundFrame = link?.method === "frame" && link.previousShot ? link.previousShot.referencePath : undefined;
+  if (boundFrame) images.push({path: boundFrame, mimeType: "image/png"});
   const videos: NonNullable<NodeVideoRequest["videos"]> = [];
   const audios: NonNullable<NodeVideoRequest["audios"]> = [];
   const referenceOrder: NonNullable<NodeVideoRequest["referenceOrder"]> = references.map(item => {
     if (item.dataType === "IMAGE" && item.value) {
-      const index = images.push({ path: item.value.url, mimeType: item.value.mimeType }) - 1;
+      const index = boundFrame && item.source === link?.sourceNodeId && item.sourceHandle === link?.sourceHandleId
+        ? 0 : images.push({ path: item.value.url, mimeType: item.value.mimeType }) - 1;
       return { type: "image", index };
     }
     if (item.dataType === "VIDEO" && item.value) {
@@ -516,8 +596,7 @@ function getGenerationInput({prompt, references}: ReturnType<typeof readGenerati
     return { type: "text" };
   });
   // 续写：原片尾帧排在第一张时始终按首帧提交。「首帧可选」模式平时把唯一的一张图当尾帧，续写时那样会接反。
-  const link = data.value.continuation;
-  const tailFirst = link?.method === "frame" && references.find(item => item.dataType === "IMAGE" && item.value)?.source === link.tailFrameNodeId;
+  const tailFirst = !!boundFrame || (link?.method === "frame" && references.find(item => item.dataType === "IMAGE" && item.value)?.source === link.tailFrameNodeId);
   const singleAsLast = selectedMode.value === "startFrameOptional" && images.length === 1 && !tailFirst;
   const firstFrame = frameMode.value && !singleAsLast ? images[0] : undefined;
   const lastFrame = frameMode.value ? images[singleAsLast ? 0 : 1] : undefined;
@@ -542,6 +621,13 @@ function getGenerationInput({prompt, references}: ReturnType<typeof readGenerati
   };
 }
 const outputFile = computed(() => outputs.value.video?.dataType === "VIDEO" ? outputs.value.video.value : undefined);
+const canCompose = computed(() => !!outputFile.value && (!data.value.continuation?.previousShot || data.value.continuation.previousShot.resultPath === outputFile.value.url));
+const previousDisabled = computed(() => !!(retakeSummary.value || generating.value || pendingRecovery.value || deleting.value || uploading.value || actions.value?.processing || continuation.value?.processing));
+const previousModeError = computed(() => data.value.continuation?.previousShot && selectedModel.value ? generationModeError(selectedModel.value) : undefined);
+const boundFramePreview = files.useFileUrl(computed(() => {
+  const link = data.value.continuation;
+  return node.selected && link?.previousShot && link.tailFramePath ? {url: link.tailFramePath, mimeType: "image/png"} : undefined;
+}), error => showNodeError(error, "衔接帧预览失败"));
 const previewUrl = files.useFileUrl(
   outputFile,
   (error) => showNodeError(error, "视频读取失败")
@@ -554,7 +640,7 @@ watch(generating, (running, before) => {
     return;
   }
   const url = outputFile.value?.url;
-  if (!before || disposed || deleting.value || !data.value.continuation?.autoCompose || !url || url === continuationBaseline) return;
+  if (!before || disposed || deleting.value || !canCompose.value || !data.value.continuation?.autoCompose || !url || url === continuationBaseline) return;
   void nextTick().then(() => {
     if (!disposed && outputFile.value?.url === url) continuation.value?.compose({ auto: true });
   });
@@ -678,13 +764,14 @@ async function startGeneration(expectedTaskId?: string, retake?: VideoRetakeSubm
   if (cancelling.value) throw new Error("任务正在取消，请稍后重试");
   if (generating.value) throw new Error("视频正在生成，请等待完成");
   if (uploading.value) throw new Error("视频正在替换，请等待完成");
+  if (previousShotPanel.value?.busy) throw new Error("正在准备上一镜衔接素材，请等待完成");
   if (deleting.value) throw new Error("节点正在删除");
   if (pendingRecovery.value) {
     generation = generationState.resume().catch(error => showNodeError(error, "视频任务复查失败"));
     return { status: "generating" };
   }
   if (canReadProjectSetup() && !data.value.writingProduction?.setupSnapshots && !Object.hasOwn(data.value.writingProduction ?? {},'projectStyle')) {
-    if (!readVideoPrompt(node, referenceMentions.value) || !selectedModel.value) throw Error('请先填写提示词并选择视频模型');
+    if (!generationPrompt.value || !selectedModel.value) throw Error('请先填写提示词并选择视频模型');
     if (choosingStyle.value) throw Error('请先完成画风确认');
     choosingStyle.value=true;
     try {
@@ -704,6 +791,8 @@ async function startGeneration(expectedTaskId?: string, retake?: VideoRetakeSubm
   if (!input.prompt) throw new Error("请输入生成提示词");
   if (references.some(item => item.value === undefined)) throw new Error("本镜采用的引用暂无内容，请先补充引用内容");
   validatePromptReferences(input.prompt, references);
+  const bound = data.value.continuation?.previousShot;
+  const recovery = bound ? {previousShotPath: bound.referencePath, dropFirstFrame: input.firstFrame?.path === bound.referencePath} : undefined;
   const workspace = files.getWorkspaceFiles();
   const controller = new AbortController();
   generationController = controller;
@@ -712,7 +801,7 @@ async function startGeneration(expectedTaskId?: string, retake?: VideoRetakeSubm
     .list()
     .then(({ directory }) => {
       controller.signal.throwIfAborted();
-      return generationState.generate("video", { ...input, directory }, controller.signal);
+      return generationState.generate("video", { ...input, directory }, controller.signal, recovery);
     })
     .then(([result]) => {
       controller.signal.throwIfAborted();
@@ -886,6 +975,7 @@ nodeTools.register({
   .continuationHint {
     display: grid;
     gap: 4px;
+    .boundFrame { max-height: 80px; max-width: 160px; border-radius: 4px; }
     .continuationWarning { color: var(--el-color-warning); }
     label { display: flex; align-items: center; gap: 6px; }
   }

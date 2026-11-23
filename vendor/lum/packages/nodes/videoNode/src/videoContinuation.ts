@@ -23,6 +23,15 @@ export type VideoContinuationLink = {
   dropFirstFrame: boolean;
   autoCompose: boolean;
   composedNodeId?: string;
+  /** 在当前生成节点配置的衔接素材。原片用于拼接，referencePath 才随生成请求提交。 */
+  previousShot?: {
+    referencePath: string;
+    start: number;
+    end: number;
+    resultPath?: string;
+    frameDuration: number;
+    inheritedReference?: {source: string; handle: string};
+  };
 };
 
 export type VideoClipInfo = Readonly<{
@@ -43,7 +52,7 @@ export type VideoClipInfo = Readonly<{
 }>;
 export type VideoTailFrame = Readonly<{ path: string; pts: number; time: number; backFrames: number; clip: VideoClipInfo }>;
 /** endPts 为该片段保留的最后一帧 PTS（微秒，含）；缺省保留到结尾。 */
-export type VideoConcatClip = Readonly<{ path: string; dropFirstFrame?: boolean; endPts?: number }>;
+export type VideoConcatClip = Readonly<{ path: string; dropFirstFrame?: boolean; endPts?: number; startTime?: number; endTime?: number }>;
 export type VideoConcatResult = Readonly<{ path: string; duration: number; width: number; height: number; hasAudio: boolean; segments: number[] }>;
 
 const microseconds = 1_000_000;
@@ -159,6 +168,22 @@ export async function extractVideoTailFrame(ffmpeg: BrowserFfmpegFactory, source
   return { path: outputPath, pts, time, backFrames, clip };
 }
 
+/** 只把所选的末段画面交给模型。按视频流时钟裁切，声音不作为动作参考。 */
+export async function extractVideoTailClip(ffmpeg: BrowserFfmpegFactory, source: string, output: string, clip: VideoClipInfo, seconds: number, signal?: AbortSignal) {
+  const path = checkOutput(normalizeVideoPath(source), output, "mp4");
+  if (!Number.isFinite(seconds) || seconds <= 0 || seconds > clip.duration) throw new Error("参考时长须在原片时长以内");
+  const start = clip.duration - seconds;
+  const command = ffmpeg(source).inputOptions("-copyts", "-nostdin");
+  if (start > 2) command.seekInput(start - 2);
+  command.noAudio().videoCodec("libx264").format("mp4")
+    .videoFilters(`settb=AVTB,trim=start_pts=${clip.startPts + toPts(start)},setpts=PTS-STARTPTS,pad=ceil(iw/2)*2:ceil(ih/2)*2`)
+    .outputOptions("-map", `0:${clip.videoIndex}`, "-preset", "fast", "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart");
+  await runCommand(command.output(path), signal);
+  const result = readVideoClip(await probeMedia(ffmpeg, path, signal));
+  if (Math.abs(result.duration - seconds) > Math.max(0.1, 2 * clip.frameDuration)) throw new Error("导出的动作参考片段时长与选区不符");
+  return { path, start, end: clip.duration };
+}
+
 /**
  * 按顺序拼成一条视频：尺寸、帧率以第一段为准，其余等比缩放后补边；去掉续写片段里重复的首帧。
  * 统一重编码为 H.264 + AAC，有任意一段带声音时，其余片段补静音。
@@ -183,11 +208,13 @@ export async function concatVideoClips(ffmpeg: BrowserFfmpegFactory, clips: read
   clips.forEach((clip, index) => {
     const info = infos[index]!;
     if (clip.endPts !== undefined && !Number.isSafeInteger(clip.endPts)) throw new Error("片段的结束帧时间戳无效");
-    const start = clip.dropFirstFrame ? info.frameDuration : 0;
-    const end = clip.endPts === undefined ? info.duration : (clip.endPts - info.startPts) / microseconds + info.frameDuration;
+    const start = (clip.startTime ?? 0) + (clip.dropFirstFrame ? info.frameDuration : 0);
+    const end = clip.endTime ?? (clip.endPts === undefined ? info.duration : (clip.endPts - info.startPts) / microseconds + info.frameDuration);
     if (!(end - start >= info.frameDuration / 2)) throw new Error(`第 ${index + 1} 段视频太短，去重后没有可用画面`);
     segments.push(end - start);
-    filters.push(`[${index}:${info.videoIndex}]settb=AVTB${clip.endPts === undefined ? "" : `,trim=end_pts=${clip.endPts + 1}`},setpts=PTS-STARTPTS`
+    const stopPts = clip.endTime !== undefined ? info.startPts + toPts(clip.endTime) : clip.endPts !== undefined ? clip.endPts + 1 : undefined;
+    const trim = [clip.startTime !== undefined ? `start_pts=${info.startPts + toPts(clip.startTime)}` : "", stopPts !== undefined ? `end_pts=${stopPts}` : ""].filter(Boolean);
+    filters.push(`[${index}:${info.videoIndex}]settb=AVTB${trim.length ? `,trim=${trim.join(":")}` : ""},setpts=PTS-STARTPTS`
       + `${clip.dropFirstFrame ? ",select='gte(n,1)',setpts=PTS-STARTPTS" : ""},fps=${first.frameRate},${fit}[v${index}]`);
     labels.push(`[v${index}]`);
     if (!hasAudio) return;
@@ -235,14 +262,16 @@ export function planVideoContinuation(current: { id: string; path: string; label
     if (nodeIds.includes(link.sourceNodeId)) throw new Error("续写关系出现循环，无法拼接");
     if (clips.length >= 32) throw new Error("续写超过 32 段，请先拼接前面的片段再继续");
     const parent = find(link.sourceNodeId);
+    const previous = parent?.link;
+    const parentLink: VideoContinuationLink | undefined = previous?.previousShot && previous.previousShot.resultPath !== link.sourcePath ? undefined : previous;
     clips.unshift({
       path: link.sourcePath,
-      ...(parent?.link?.dropFirstFrame ? { dropFirstFrame: true } : {}),
+      ...(parentLink?.dropFirstFrame ? { dropFirstFrame: true } : {}),
       ...(link.method === "frame" && link.backFrames > 0 && link.tailPts !== undefined ? { endPts: link.tailPts } : {}),
     });
     nodeIds.unshift(link.sourceNodeId);
     rootLabel = parent?.label ?? link.sourceLabel ?? rootLabel;
-    link = parent?.link;
+    link = parentLink;
   }
   return { clips, nodeIds, rootLabel };
 }

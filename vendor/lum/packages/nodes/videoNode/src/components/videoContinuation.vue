@@ -274,6 +274,7 @@ async function compose(options: { auto?: boolean } = {}) {
   const current = link.value;
   if (!current) throw new Error("这个节点不是续写节点");
   if (!props.file) throw new Error("续写片段还没有生成");
+  if (current.previousShot && current.previousShot.resultPath !== props.file.url) throw new Error("请先用当前衔接设置生成本镜，再拼接成片");
   if (processing.value || props.disabled) throw new Error("节点正在处理其他操作，请稍后再拼接");
   if (!flow.nodeTypes?.value?.[videoType]) throw new Error("请先启用视频节点插件");
   const source = props.file.url, canvasId = getCanvas?.()?.id;
