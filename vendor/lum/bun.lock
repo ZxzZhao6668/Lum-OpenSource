@@ -559,6 +559,24 @@
         "vue": "^3.5.42",
       },
     },
+    "packages/nodes/mediaResultRecovery": {
+      "name": "@lum/node-media-result-recovery",
+      "version": "1.0.0",
+      "dependencies": {
+        "@tabler/icons-vue": "^3.46.0",
+      },
+      "devDependencies": {
+        "@lum/nodes-scaffold": "workspace:*",
+        "typescript": "~6.0.3",
+        "vite": "^8.2.2",
+        "vue-tsc": "^3.3.11",
+      },
+      "peerDependencies": {
+        "@vue-flow/core": "^1.48.2",
+        "element-plus": "^2.14.5",
+        "vue": "^3.5.42",
+      },
+    },
     "packages/nodes/scriptNode": {
       "name": "@lum/node-script",
       "version": "1.0.0",
@@ -1367,6 +1385,8 @@
     "@lum/node-image": ["@lum/node-image@workspace:packages/nodes/imageNode"],
 
     "@lum/node-image-generation": ["@lum/node-image-generation@workspace:packages/nodes/imageGenerationNode"],
+
+    "@lum/node-media-result-recovery": ["@lum/node-media-result-recovery@workspace:packages/nodes/mediaResultRecovery"],
 
     "@lum/node-script": ["@lum/node-script@workspace:packages/nodes/scriptNode"],
 
@@ -3231,6 +3251,8 @@
     "@lum/node-image/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 
     "@lum/node-image-generation/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
+
+    "@lum/node-media-result-recovery/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 
     "@lum/node-script/typescript": ["typescript@6.0.3", "https://registry.npmmirror.com/typescript/-/typescript-6.0.3.tgz", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw=="],
 
