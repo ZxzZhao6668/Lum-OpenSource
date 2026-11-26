@@ -3,7 +3,7 @@
     <div v-if="shot && settings && beat" class="gridDialog">
       <div class="gridToolbar">
         <label>统一取帧间隔
-          <select v-model="draft.interval" :disabled="busy || confirming">
+          <select v-model="draft.interval" :disabled="editingBlocked">
             <option v-for="interval in gridIntervals" :key="interval" :value="interval">每 {{ interval }} 秒一帧</option>
           </select>
         </label>
@@ -12,8 +12,9 @@
             <option v-for="(item, index) in shots" :key="item.id" :value="item.id">{{ shotLabel(index) }} · {{ item.duration }} 秒</option>
           </select>
         </label>
-        <label>本镜取帧间隔
-          <select :value="settings.interval ?? ''" :disabled="busy || confirming" @change="setShotInterval">
+        <label>本镜取帧方式
+          <select :value="settings.timing ?? settings.interval ?? ''" :disabled="editingBlocked" @change="setShotInterval">
+            <option v-if="settings.timing === 'segments' || settings.beats.some(item => item.action)" value="segments">按分镜时间段</option>
             <option value="">沿用统一间隔</option>
             <option v-for="interval in gridIntervals" :key="interval" :value="interval">每 {{ interval }} 秒一帧</option>
           </select>
@@ -23,21 +24,27 @@
 
       <div class="gridLayout">
         <section class="cuePane" aria-label="机位和切换设置">
-          <div class="sectionTitle"><h3>{{ shotTitle }}</h3></div>
+          <div class="sectionTitle">
+            <h3>{{ shotTitle }}</h3>
+            <el-button v-if="analyzing" size="small" text @click="cancelAnalysis">取消分析</el-button>
+            <el-button type="primary" size="small" :loading="analyzing" :disabled="editingBlocked || !hasVideoPrompt || !allowGenerate"
+              title="按本镜视频运动提示词拆分画面时段" @click="analyzeShot">AI 分镜</el-button>
+          </div>
           <p v-if="shot.description" class="shotDescription">{{ shot.description }}</p>
-          <div class="sectionTitle cueTitle"><h3>起始画面与切换点</h3></div>
-          <div class="cueTabs" aria-label="选择切换点">
+          <p v-if="analysisMessage" class="gridHelp" role="status">{{ analysisMessage }}</p>
+          <div class="sectionTitle cueTitle"><h3>画面时段与切换点</h3></div>
+          <div class="cueTabs" aria-label="选择画面时段">
             <button v-for="(item, index) in settings.beats" :key="index" type="button" :aria-pressed="index === cueIndex"
-              @click="selectCue(index)">{{ item.time }} 秒 · {{ gridViewLabel(item.view) }}</button>
+              @click="selectCue(index)">{{ frameTime(item.time, settings.beats[index + 1]?.time ?? gridShotDuration(shot)) }} · {{ gridViewLabel(item.view) }}</button>
           </div>
           <div class="cueActions">
-            <el-button size="small" :disabled="!canAddCut || busy || confirming" @click="addCut(false)">添加切换点</el-button>
-            <el-button v-if="settings.beats.length === 1" size="small" :disabled="!canAddCut || busy || confirming" @click="addCut(true)">设置正反打</el-button>
-            <el-button v-if="cueIndex > 0" size="small" text type="danger" :disabled="busy || confirming" @click="removeCut">移除切换点</el-button>
+            <el-button size="small" :disabled="!canAddCut || editingBlocked" @click="addCut(false)">添加切换点</el-button>
+            <el-button v-if="settings.beats.length === 1" size="small" :disabled="!canAddCut || editingBlocked" @click="addCut(true)">设置正反打</el-button>
+            <el-button v-if="cueIndex > 0" size="small" text type="danger" :disabled="editingBlocked" @click="removeCut">移除时段起点</el-button>
           </div>
-          <fieldset class="cueEditor" :disabled="busy || confirming">
-            <legend>{{ cueIndex === 0 ? '起始画面' : `${beat.time} 秒切换` }}</legend>
-            <label v-if="cueIndex > 0">切换时间（秒）
+          <fieldset class="cueEditor" :disabled="editingBlocked">
+            <legend>{{ cueIndex === 0 ? '起始画面' : `${beat.time} 秒起的画面` }}</legend>
+            <label v-if="cueIndex > 0">时段起点（秒）
               <input :key="beat.time" type="number" min="0.1" :max="maxCutTime / 10" step="0.1" :value="beat.time" @change="setCueTime" />
             </label>
             <label>画面视角
@@ -47,6 +54,7 @@
             </label>
             <label v-if="cueIndex > 0">切换方式
               <select v-model="beat.transition">
+                <option value="continue">{{ gridTransitionLabel('continue') }}</option>
                 <option value="cut">{{ gridTransitionLabel('cut') }}</option>
                 <option value="dissolve">{{ gridTransitionLabel('dissolve') }}</option>
               </select>
@@ -83,7 +91,7 @@
                   </template>
                   <template v-if="frame.action"><dt>动作</dt><dd>{{ frame.action }}</dd></template>
                 </dl>
-                <el-button v-if="frameStatus(frame) === 'ready'" size="small" text type="primary" :disabled="!allowGenerate || busy || confirming"
+                <el-button v-if="frameStatus(frame) === 'ready'" size="small" text type="primary" :disabled="!allowGenerate || !hasVideoPrompt || editingBlocked"
                   :aria-label="`重新生成第 ${page * pageSize + index + 1} 格`" @click="request([frame], true, true)">重新生成</el-button>
               </div>
             </article>
@@ -101,13 +109,14 @@
     <template #footer>
       <div class="gridFooter">
         <span v-if="busy" class="gridHelp" role="status">正在处理分镜图任务…</span>
-        <span v-else-if="!allowGenerate && frames.length" class="gridHelp">请先在脚本节点完成提示词。</span>
+        <span v-else-if="analyzing" class="gridHelp" role="status">正在分析本镜的视频运动提示词…</span>
+        <span v-else-if="!hasVideoPrompt && frames.length" class="gridHelp">填写本镜的视频运动提示词后即可分析和生图。</span>
         <span v-else-if="allPendingFrames.length > gridBatchLimit" class="gridHelp">单次最多 {{ gridBatchLimit }} 帧，请按镜头或逐页处理。</span>
         <div class="gridFooterActions">
-          <el-button :disabled="busy || confirming || !dirty" @click="save">保存设置</el-button>
-          <el-button :disabled="busy || confirming || !allowGenerate || !uncreatedFrames.length" @click="request(uncreatedFrames, false)">仅创建{{ creatingPage ? '本页' : '本镜' }}节点（{{ uncreatedFrames.length }}）</el-button>
-          <el-button :disabled="busy || confirming || !allowGenerate || !pendingFrames.length" @click="request(pendingFrames, true)">生成{{ generatingPage ? '本页' : '本镜' }}（{{ pendingFrames.length }}）</el-button>
-          <el-button type="primary" :disabled="busy || confirming || !allowGenerate || !allPendingFrames.length || allPendingFrames.length > gridBatchLimit" @click="request(allPendingFrames, true)">生成全部（{{ allPendingFrames.length }}）</el-button>
+          <el-button :disabled="editingBlocked || !dirty" @click="save">保存设置</el-button>
+          <el-button :disabled="editingBlocked || !allowGenerate || !hasVideoPrompt || !uncreatedFrames.length" @click="request(uncreatedFrames, false)">仅创建{{ creatingPage ? '本页' : '本镜' }}节点（{{ uncreatedFrames.length }}）</el-button>
+          <el-button :disabled="editingBlocked || !allowGenerate || !hasVideoPrompt || !pendingFrames.length" @click="request(pendingFrames, true)">生成{{ generatingPage ? '本页' : '本镜' }}（{{ pendingFrames.length }}）</el-button>
+          <el-button type="primary" :disabled="editingBlocked || !allowGenerate || !allPendingFrames.length || allPendingFrames.length > gridBatchLimit" @click="request(allPendingFrames, true)">生成全部（{{ allPendingFrames.length }}）</el-button>
         </div>
       </div>
     </template>
@@ -115,10 +124,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from "vue";
+import { computed, onScopeDispose, reactive, ref, watch } from "vue";
 import { ElButton, ElDialog, ElMessageBox } from "element-plus";
 import type { Shot } from "./shotData";
-import { frameTime, gridBatchLimit, gridFrames, gridIntervals, gridTransitionLabel, gridViewLabel, normalizeGrid } from "./storyboardGrid";
+import { frameTime, gridBatchLimit, gridFrames, gridIntervals, gridShotDuration, gridTransitionLabel, gridViewLabel, normalizeGrid } from "./storyboardGrid";
 import type { GridBeat, GridFrame, GridInterval, GridSettings, GridShotSettings, GridView } from "./storyboardGrid";
 import { downloadGridSheets, gridSheetPageSize } from "./storyboardGridSheet";
 
@@ -129,6 +138,7 @@ const props = defineProps<{
   allowGenerate: boolean;
   available: Record<string, 'ready' | 'created'>;
   readFrame: (key: string) => Promise<Blob | undefined>;
+  suggest: (shotId: string, interval: GridInterval, signal: AbortSignal) => Promise<GridBeat[]>;
 }>();
 const visible = defineModel<boolean>("visible", { required: true });
 const emit = defineEmits<{
@@ -156,6 +166,7 @@ const saved = computed(() => persistedSettings(props.grid));
 const dirty = computed(() => JSON.stringify(normalized.value) !== JSON.stringify(saved.value));
 const selectedId = ref(props.shots[0]?.id ?? "");
 const shot = computed(() => props.shots.find(item => item.id === selectedId.value) ?? props.shots[0]);
+const hasVideoPrompt = computed(() => !!shot.value?.videoPrompt.trim());
 const shotIndex = computed(() => shot.value ? props.shots.indexOf(shot.value) : 0);
 const shotLabel = (index: number) => `镜头 ${String(index + 1).padStart(2, '0')}`;
 const shotTitle = computed(() => shotLabel(shotIndex.value));
@@ -166,6 +177,10 @@ const cueError = ref("");
 const exportError = ref("");
 const exporting = ref(false);
 const confirming = ref(false);
+const analyzing = ref(false);
+const analysisMessage = ref("");
+const editingBlocked = computed(() => props.busy || confirming.value || analyzing.value);
+let analysisController: AbortController | undefined;
 const page = ref(0);
 const pageSize = gridSheetPageSize;
 const previewPane = ref<HTMLElement>();
@@ -174,13 +189,15 @@ function persistedSettings(grid: GridSettings): GridSettings {
   const result = normalizeGrid(grid, props.shots);
   for (const [id, entry] of Object.entries(result.shots)) {
     const head = entry.beats[0];
-    if (head?.time === 0 && head.view === 'main' && !head.action && cueFields.every(field => !head[field.key])) entry.beats.shift();
+    if (entry.timing !== "segments" && head?.time === 0 && head.view === 'main' && !head.action && cueFields.every(field => !head[field.key])) entry.beats.shift();
     if (!entry.interval && !entry.beats.length) delete result.shots[id];
   }
   return result;
 }
 
 watch(() => shot.value?.id, (id) => {
+  cancelAnalysis();
+  analysisMessage.value = "";
   selectCue(0);
   goToPage(0);
   exportError.value = "";
@@ -193,8 +210,9 @@ watch(() => shot.value?.id, (id) => {
   draft.value.shots[id] = entry;
   settings.value = draft.value.shots[id];
 }, { immediate: true });
+onScopeDispose(cancelAnalysis);
 
-const allFrames = computed(() => props.shots.flatMap(item => gridFrames(item, normalized.value)));
+const allFrames = computed(() => props.shots.flatMap(item => item.videoPrompt.trim() ? gridFrames(item, normalized.value) : []));
 const savedFrames = computed(() => new Map(props.shots.flatMap(item => gridFrames(item, saved.value)).map(frame => [frame.key, JSON.stringify(frame)])));
 const frames = computed(() => shot.value ? gridFrames(shot.value, normalized.value) : []);
 const pageCount = computed(() => Math.ceil(frames.value.length / pageSize));
@@ -260,8 +278,45 @@ function selectCue(index: number) {
 function setShotInterval(event: Event) {
   if (!settings.value) return;
   const value = (event.target as HTMLSelectElement).value;
+  if (value === "segments") {
+    settings.value.timing = value;
+    return;
+  }
+  delete settings.value.timing;
   if (value) settings.value.interval = Number(value) as GridInterval;
   else delete settings.value.interval;
+}
+
+function cancelAnalysis() {
+  analysisController?.abort();
+  analysisController = undefined;
+  analyzing.value = false;
+}
+
+async function analyzeShot() {
+  const activeShot = shot.value, entry = settings.value;
+  if (!activeShot || !entry || !hasVideoPrompt.value || !props.allowGenerate || editingBlocked.value) return;
+  const controller = new AbortController();
+  analysisController = controller;
+  analyzing.value = true;
+  analysisMessage.value = "";
+  cueError.value = "";
+  try {
+    const beats = await props.suggest(activeShot.id, entry.interval ?? draft.value.interval, controller.signal);
+    if (controller.signal.aborted || !visible.value || shot.value !== activeShot || settings.value !== entry) return;
+    entry.beats = beats;
+    entry.timing = "segments";
+    selectCue(0);
+    goToPage(0);
+    analysisMessage.value = `已拆分 ${beats.length} 个时段，可编辑后保存或生图。`;
+  } catch (error) {
+    if (!controller.signal.aborted) cueError.value = error instanceof Error ? error.message : "AI 分镜失败，请重试";
+  } finally {
+    if (analysisController === controller) {
+      analysisController = undefined;
+      analyzing.value = false;
+    }
+  }
 }
 
 function scriptValue(field: Parameter): string {
@@ -325,7 +380,7 @@ function save() {
 }
 
 async function request(selectedFrames: GridFrame[], run: boolean, replace = false) {
-  if (!selectedFrames.length || !props.allowGenerate || props.busy || confirming.value) return;
+  if (!selectedFrames.length || !props.allowGenerate || editingBlocked.value) return;
   const grid = normalized.value;
   const keys = selectedFrames.map(frame => frame.key);
   if (run) {

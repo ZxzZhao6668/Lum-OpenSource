@@ -115,7 +115,7 @@
     :frameChoices="blockingFrames" @close="!savingBlocking && (blockingDraft = undefined)" @apply="saveBlocking" />
 
   <storyboardGridDialog v-if="gridOpen" v-model:visible="gridOpen" :shots="shots.shots" :grid="gridSettings"
-    :busy="!!batching" :allowGenerate="stepsDone && !savingBlocking" :available="gridAvailable" :readFrame="readGridImage"
+    :busy="!!batching" :allowGenerate="file.ready.value && !savingBlocking" :available="gridAvailable" :readFrame="readGridImage" :suggest="suggestGrid"
     @save="saveGrid" @generate="batchGridImages" />
 
   <el-dialog v-model="generateAll.visible" title="一键生成所有资产" width="min(960px, calc(100vw - 32px))" appendToBody>
@@ -155,7 +155,8 @@ import { normalizeScriptDocument, parseEntities, scriptEntities, type ScriptDocu
 import shotTable from "./shotTable.vue";
 import blockingEditor from "./blockingEditor.vue";
 import storyboardGridDialog from "./storyboardGridDialog.vue";
-import { frameTime, gridBatchLimit, gridFrameBlocking, gridFrames, gridVideoTimeline, gridViewLabel, normalizeGrid, type GridFrame, type GridSettings } from "./storyboardGrid";
+import { frameTime, gridBatchLimit, gridFrameBlocking, gridFrames, gridVideoTimeline, gridViewLabel, normalizeGrid, type GridFrame, type GridInterval, type GridSettings } from "./storyboardGrid";
+import { gridSuggestionPrompt, gridSuggestionSystem, parseGridSuggestion } from "./storyboardGridSuggestion";
 import { draftBlocking, normalizeBlocking, shotConstraint } from "./shotBlocking";
 import { applyBlockingSuggestion, blockingContext, blockingSystem } from "./blockingSuggestion";
 import type { BlockingPlan } from "./blockingTypes";
@@ -592,8 +593,28 @@ function sourceHandle(nodeId: string) {
 }
 
 const gridSettings = computed(() => normalizeGrid(shots.value.grid, shots.value.shots));
+
+async function suggestGrid(shotId: string, interval: GridInterval, signal: AbortSignal) {
+  const doc = shots.value;
+  const shot = doc.shots.find(item => item.id === shotId);
+  if (!shot?.videoPrompt.trim()) throw new Error("请先填写本镜的视频运动提示词");
+  const prompt = gridSuggestionPrompt(shot, interval);
+  if (!textModel.models.value.length) await textModel.load();
+  const model = textModel.selected.value;
+  if (!model) throw new Error("请先在脚本节点选择文本模型");
+  signal.throwIfAborted();
+  const result = await ai.generate({ providerId: model.providerId, modelId: model.modelId,
+    thinkingLevel: textModel.thinkingLevel.value || undefined, systemPrompt: gridSuggestionSystem, prompt, signal, requireComplete: true,
+  });
+  signal.throwIfAborted();
+  if (shots.value !== doc || !doc.shots.includes(shot) || gridSuggestionPrompt(shot, interval) !== prompt) {
+    throw new Error("当前镜头或视频运动提示词已修改，请重新分析");
+  }
+  return parseGridSuggestion(result.text, shot);
+}
+
 function gridAssets(shot: Shot, frame: GridFrame) {
-  return mentionedAssets(`${shot.description}\n${frame.action}`, shots.value.assets).filter(asset => asset.nodeId && flow.findNode(asset.nodeId));
+  return mentionedAssets(`${shot.description}\n${frame.action || shot.videoPrompt}`, shots.value.assets).filter(asset => asset.nodeId && flow.findNode(asset.nodeId));
 }
 
 function gridImageInput(shot: Shot, assets: ShotAsset[]) {
@@ -639,12 +660,16 @@ async function saveGrid(grid: GridSettings) {
 }
 
 async function batchGridImages({ grid, keys, run, replace }: { grid: GridSettings; keys: string[]; run: boolean; replace?: boolean }) {
-  if (!stepsDone.value || batching.value || savingBlocking.value) return;
+  if (!file.ready.value || batching.value || savingBlocking.value) return;
   const doc = shots.value, self = flow.findNode(id);
   if (!self) return;
   const settings = normalizeGrid(grid, doc.shots), selected = new Set(keys);
-  const targets = doc.shots.flatMap((shot, index) => gridFrames(shot, settings)
-    .filter(frame => selected.has(frame.key)).map(frame => ({ shot, index, frame })));
+  const targets = doc.shots.flatMap((shot, index) => shot.videoPrompt.trim() ? gridFrames(shot, settings)
+    .filter(frame => selected.has(frame.key)).map(frame => ({ shot, index, frame })) : []);
+  if (targets.length !== selected.size) {
+    ElMessage.warning("镜头或视频运动提示词已变化，请核对画格后重试");
+    return;
+  }
   if (!targets.length) return;
   if (targets.length > gridBatchLimit) {
     ElMessage.warning(`单次最多处理 ${gridBatchLimit} 张分镜，请按镜头或逐页处理`);
@@ -666,11 +691,13 @@ async function batchGridImages({ grid, keys, run, replace }: { grid: GridSetting
       const used = gridAssets(shot, frame);
       const layout = gridFrameBlocking(doc.blocking, doc.shots, shot, frame);
       const lens = [frame.shotSize, frame.camera && `机位 ${frame.camera}`, frame.focalLength && `焦距 ${frame.focalLength}`, frame.aperture && `光圈 ${frame.aperture}`].filter(Boolean).join("，");
+      const segment = settings.shots[shot.id]?.timing === "segments" && frame.action;
       const prompt = [
-        `画面设定：${shot.imagePrompt}`,
-        `整镜动作参考：${shot.description}\n${shot.videoPrompt}`,
-        `选取整镜 ${shot.duration} 秒中第 ${frame.from} 秒的瞬间，动作进度约为 ${Math.round(frame.from / Math.max(shot.duration, 0.1) * 100)}%。只生成一张无边框、无文字、无字幕的画面。沿用角色外观、场景空间和光线。当前格的瞬间动作、机位和景别优先于画面设定，保持本格主体和动作连续。`,
-        `当前格为${gridViewLabel(frame.view)}${lens ? `，${lens}` : ""}。${frame.movement ? `构图取自运镜「${frame.movement}」的当前时刻。` : ""}${frame.action ? `本段动作提示：${frame.action}。` : ""}`,
+        `根据视频运动提示词绘制本镜 ${frameTime(frame.from, frame.to)} 的分镜图。取第 ${frame.from} 秒的瞬间，只生成一张无边框、无文字、无字幕的静帧。`,
+        frame.action ? `本格画面：${frame.action}。按这里指定的主体、站位和动作绘制。` : "",
+        segment ? "沿用已有的人物外观、空间、画风和光线。" : `视频运动提示词（限本格所在时段）：\n${shot.videoPrompt}`,
+        shot.description ? `角色和场景辅助设定：${shot.description}` : "",
+        `本格镜头为${gridViewLabel(frame.view)}${lens ? `，${lens}` : ""}。${frame.movement ? `构图取自运镜「${frame.movement}」的当前时刻。` : ""}`,
         used.length ? `参考图依次为：${used.map(asset => `${asset.name}（${assetKindLabels[asset.kind]}）`).join("、")}。角色参考图只参考形象，场景参考图只参考空间与光线。` : "",
       ].filter(Boolean).join("\n\n");
       return [{ frame, used, item: {

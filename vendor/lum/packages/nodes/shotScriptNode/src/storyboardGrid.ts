@@ -10,7 +10,7 @@ export type GridView = "main" | "a" | "b";
 export type GridBeat = {
   time: number;
   view: GridView;
-  transition: "cut" | "dissolve";
+  transition: "continue" | "cut" | "dissolve";
   shotSize: string;
   camera: string;
   movement: string;
@@ -19,7 +19,7 @@ export type GridBeat = {
   action: string;
 };
 
-export type GridShotSettings = { interval?: GridInterval; beats: GridBeat[] };
+export type GridShotSettings = { interval?: GridInterval; timing?: "segments"; beats: GridBeat[] };
 export type GridSettings = { interval: GridInterval; shots: Record<string, GridShotSettings> };
 
 export type GridFrame = Omit<GridBeat, "time" | "transition"> & {
@@ -27,7 +27,7 @@ export type GridFrame = Omit<GridBeat, "time" | "transition"> & {
   from: number;
   to: number;
   duration: number;
-  transition: "start" | "continue" | GridBeat["transition"];
+  transition: "start" | GridBeat["transition"];
 };
 
 const defaultInterval: GridInterval = 1.5;
@@ -55,6 +55,10 @@ function durationTicks(shot: Shot): number {
   return Math.max(1, toTicks(Math.min(60, duration)));
 }
 
+export function gridShotDuration(shot: Shot): number {
+  return durationTicks(shot) / ticksPerSecond;
+}
+
 function normalizeBeats(value: unknown, shot: Shot): GridBeat[] {
   if (!Array.isArray(value)) return [];
   const duration = durationTicks(shot);
@@ -67,7 +71,7 @@ function normalizeBeats(value: unknown, shot: Shot): GridBeat[] {
     beats.set(tick, {
       time: tick / ticksPerSecond,
       view: raw.view === "a" || raw.view === "b" ? raw.view : "main",
-      transition: raw.transition === "dissolve" ? "dissolve" : "cut",
+      transition: raw.transition === "dissolve" || raw.transition === "continue" ? raw.transition : "cut",
       shotSize: cleanText(raw.shotSize, 20),
       camera: cleanText(raw.camera, 120),
       movement: cleanText(raw.movement, 160),
@@ -88,7 +92,11 @@ export function normalizeGrid(value: unknown, shots: readonly Shot[]): GridSetti
     const shotSettings = record(rawShots[shot.id]);
     const interval = gridInterval(shotSettings.interval);
     const beats = normalizeBeats(shotSettings.beats, shot);
-    if (interval || beats.length) settings[shot.id] = { ...(interval && { interval }), beats };
+    if (interval || beats.length) settings[shot.id] = {
+      ...(interval && { interval }),
+      ...(shotSettings.timing === "segments" && beats[0]?.time === 0 ? { timing: "segments" } : {}),
+      beats,
+    };
   }
   return { interval: gridInterval(raw.interval) ?? defaultInterval, shots: settings };
 }
@@ -99,7 +107,10 @@ export function gridFrames(shot: Shot, grid: GridSettings): GridFrame[] {
   const interval = toTicks(gridInterval(settings?.interval) ?? gridInterval(grid.interval) ?? defaultInterval);
   const beats = new Map(normalizeBeats(settings?.beats, shot).map(beat => [toTicks(beat.time), beat]));
   const boundaries = new Set(beats.keys());
-  for (let tick = 0; tick < duration; tick += interval) boundaries.add(tick);
+  boundaries.add(0);
+  if (settings?.timing !== "segments" || !beats.has(0)) {
+    for (let tick = interval; tick < duration; tick += interval) boundaries.add(tick);
+  }
   const sorted = [...boundaries].sort((a, b) => a - b);
 
   let active: GridBeat | undefined;
