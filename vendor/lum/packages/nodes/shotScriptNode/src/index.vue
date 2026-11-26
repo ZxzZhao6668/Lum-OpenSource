@@ -10,6 +10,7 @@
       <el-card class="shotToolbar" shadow="never" :bodyStyle="{ padding: '6px' }">
         <el-button text :icon="IconRefresh" :disabled="!canGenerate || generating" @click="resetToChoose">重新生成</el-button>
         <el-button text :icon="IconLayoutGrid" :disabled="!stepsDone || !!batching" :loading="batching === 'image'" @click="batchImages">批量生成分镜</el-button>
+        <el-button text :disabled="!canGenerate || !shots.shots.length || !!batching" @click="gridOpen = true">宫格分镜</el-button>
         <el-button text :icon="IconPlayerPlay" :disabled="!stepsDone || !!batching" :loading="batching === 'video'" @click="batchVideos">批量生成视频</el-button>
         <el-dropdown trigger="click" :disabled="!hasBatch" @command="runGroup">
           <el-button text :icon="IconPlayerTrackNext" :disabled="!hasBatch">整组执行<icon-chevron-down :size="14" /></el-button>
@@ -99,6 +100,7 @@
     <footer class="workbenchFooter">
       <el-button v-if="shots.step === 1" :disabled="!file.ready.value || !shots.shots.length || generating" @click="openBlocking">人物站位与走位</el-button>
       <el-button v-if="shots.step === 1 && shots.blocking" :disabled="!!batching || savingBlocking" @click="createEndBoards">创建尾帧分镜</el-button>
+      <el-button :disabled="!canGenerate || !shots.shots.length || !!batching" @click="gridOpen = true">宫格分镜</el-button>
       <el-button v-if="shots.step > 1" @click="setStep((shots.step - 1) as 1 | 2)">← 上一步</el-button>
       <span class="spacer" />
       <el-button v-if="shots.step < 3" type="primary" @click="setStep((shots.step + 1) as 2 | 3)">下一步：{{ shots.step === 1 ? "准备资产" : "合成提示词" }} →</el-button>
@@ -111,6 +113,10 @@
 
   <blockingEditor v-if="blockingDraft" :document="shots" :initial="blockingDraft" :saving="savingBlocking" :suggest="suggestBlocking"
     :frameChoices="blockingFrames" @close="!savingBlocking && (blockingDraft = undefined)" @apply="saveBlocking" />
+
+  <storyboardGridDialog v-if="gridOpen" v-model:visible="gridOpen" :shots="shots.shots" :grid="gridSettings"
+    :busy="!!batching" :allowGenerate="stepsDone && !savingBlocking" :available="gridAvailable" :readFrame="readGridImage"
+    @save="saveGrid" @generate="batchGridImages" />
 
   <el-dialog v-model="generateAll.visible" title="一键生成所有资产" width="min(960px, calc(100vw - 32px))" appendToBody>
     <div class="generateList">
@@ -148,6 +154,8 @@ import { addGroupedNodes, useNodeCaller } from "@lum/node-shared/canvasBatch";
 import { normalizeScriptDocument, parseEntities, scriptEntities, type ScriptDocument } from "@lum/node-shared/scriptDocument";
 import shotTable from "./shotTable.vue";
 import blockingEditor from "./blockingEditor.vue";
+import storyboardGridDialog from "./storyboardGridDialog.vue";
+import { frameTime, gridBatchLimit, gridFrameBlocking, gridFrames, gridVideoTimeline, gridViewLabel, normalizeGrid, type GridFrame, type GridSettings } from "./storyboardGrid";
 import { draftBlocking, normalizeBlocking, shotConstraint } from "./shotBlocking";
 import { applyBlockingSuggestion, blockingContext, blockingSystem } from "./blockingSuggestion";
 import type { BlockingPlan } from "./blockingTypes";
@@ -155,7 +163,7 @@ import assetBoard from "./assetBoard.vue";
 import promptBoard from "./promptBoard.vue";
 import imageSettingsBar from "./imageSettingsBar.vue";
 import { createImageSettings, imageNodeSettings, type ImageSettings } from "./imageSettings";
-import { assetKindLabels, concatImagePrompt, concatVideoPrompt, createShotDocument, mentionedAssets, normalizeShotDocument, shotsMarkdown, totalDuration, type AssetKind, type ShotAsset, type ShotDocument } from "./shotData";
+import { assetKindLabels, concatImagePrompt, concatVideoPrompt, createShotDocument, mentionedAssets, normalizeShotDocument, shotsMarkdown, totalDuration, type AssetKind, type Shot, type ShotAsset, type ShotDocument } from "./shotData";
 import { applyPromptReply, applyShotReply, buildPromptRequest, buildShotPrompt, entityAssets, manualShots, promptSystemPrompt, shotSystemPrompt } from "./generation";
 
 defineOptions({
@@ -186,11 +194,12 @@ const pendingMode = ref<"script" | "character">("script");
 const generating = ref(false);
 const progress = ref(0);
 const workbench = ref(false);
+const gridOpen = ref(false);
 const focusShot = ref<string>();
 const assetBusy = reactive(new Set<string>());
 const promptBusy = reactive(new Set<string>());
 const synthesizing = ref(false);
-const batching = ref<"" | "image" | "video">("");
+const batching = ref<"" | "image" | "video" | "grid">("");
 let controller: AbortController | undefined;
 
 if (!Object.hasOwn(outputs.value, "toJSON")) Object.defineProperty(outputs.value, "toJSON", { value: () => ({}) });
@@ -581,6 +590,131 @@ function sourceHandle(nodeId: string) {
   const handles = (flow.findNode(nodeId)?.data as { handles?: { id: string; type: string; dataType: unknown }[] } | undefined)?.handles;
   return handles?.find(item => item.type === "source" && (item.dataType === "IMAGE" || (Array.isArray(item.dataType) && item.dataType.includes("IMAGE"))))?.id ?? "image";
 }
+
+const gridSettings = computed(() => normalizeGrid(shots.value.grid, shots.value.shots));
+function gridAssets(shot: Shot, frame: GridFrame) {
+  return mentionedAssets(`${shot.description}\n${frame.action}`, shots.value.assets).filter(asset => asset.nodeId && flow.findNode(asset.nodeId));
+}
+
+function gridImageInput(shot: Shot, assets: ShotAsset[]) {
+  return JSON.stringify([shot.imagePrompt, shot.description, shot.videoPrompt, assets.map(asset => [asset.name, asset.kind, asset.nodeId, nodeImage(asset.nodeId!)?.path ?? asset.image?.path])]);
+}
+
+function gridNode(shot: Shot, frame: GridFrame) {
+  const doc = shots.value;
+  const mapped = doc.batch.gridImageNodes?.[frame.key];
+  const source = mapped ? flow.findNode(mapped) : undefined;
+  const marker = source?.data.shotGridSource;
+  if (source?.type === "remote-imageGenerationNode" && marker?.ownerId === id && marker.shotId === shot.id
+    && marker.frame === JSON.stringify(frame) && marker.input === gridImageInput(shot, gridAssets(shot, frame))
+    && marker.layout === gridFrameBlocking(doc.blocking, doc.shots, shot, frame)) return source;
+}
+
+const gridResults = computed(() => Object.fromEntries((gridOpen.value && shots.value.grid ? shots.value.shots : []).flatMap(shot => {
+  return gridFrames(shot, gridSettings.value).flatMap(frame => {
+    const source = gridNode(shot, frame);
+    return source ? [[frame.key, nodeImage(source.id)] as const] : [];
+  });
+})));
+const gridAvailable = computed(() => Object.fromEntries(Object.entries(gridResults.value).map(([key, image]) => [key, image ? "ready" : "created"] as const)));
+
+async function readGridImage(key: string) {
+  const image = gridResults.value[key];
+  if (!image) return;
+  const content = await files.getWorkspaceFiles().read(image.path);
+  return new Blob([content], { type: image.mimeType });
+}
+
+async function saveGrid(grid: GridSettings) {
+  if (batching.value || !file.ready.value) return;
+  const doc = shots.value;
+  const previous = doc.grid;
+  batching.value = "grid";
+  try {
+    doc.grid = normalizeGrid(grid, doc.shots);
+    await file.touch(true);
+    ElMessage.success("已保存宫格分镜设置");
+  } catch (error) { doc.grid = previous; ElMessage.error(error instanceof Error ? error.message : "宫格分镜设置保存失败"); }
+  finally { batching.value = ""; }
+}
+
+async function batchGridImages({ grid, keys, run, replace }: { grid: GridSettings; keys: string[]; run: boolean; replace?: boolean }) {
+  if (!stepsDone.value || batching.value || savingBlocking.value) return;
+  const doc = shots.value, self = flow.findNode(id);
+  if (!self) return;
+  const settings = normalizeGrid(grid, doc.shots), selected = new Set(keys);
+  const targets = doc.shots.flatMap((shot, index) => gridFrames(shot, settings)
+    .filter(frame => selected.has(frame.key)).map(frame => ({ shot, index, frame })));
+  if (!targets.length) return;
+  if (targets.length > gridBatchLimit) {
+    ElMessage.warning(`单次最多处理 ${gridBatchLimit} 张分镜，请按镜头或逐页处理`);
+    return;
+  }
+  batching.value = "grid";
+  const previous = doc.grid, previousNodes = doc.batch.gridImageNodes;
+  let created: string[] = [], saved = false;
+  try {
+    await ensureAssetNodes();
+    if (shots.value !== doc || !flow.findNode(id)) throw new Error("脚本已变化，请重新打开宫格分镜");
+    const startIds: string[] = [];
+    const plans = targets.flatMap(({ shot, index, frame }) => {
+      const existing = replace ? undefined : gridNode(shot, frame);
+      if (existing) {
+        if (!nodeImage(existing.id)) startIds.push(existing.id);
+        return [];
+      }
+      const used = gridAssets(shot, frame);
+      const layout = gridFrameBlocking(doc.blocking, doc.shots, shot, frame);
+      const lens = [frame.shotSize, frame.camera && `机位 ${frame.camera}`, frame.focalLength && `焦距 ${frame.focalLength}`, frame.aperture && `光圈 ${frame.aperture}`].filter(Boolean).join("，");
+      const prompt = [
+        `画面设定：${shot.imagePrompt}`,
+        `整镜动作参考：${shot.description}\n${shot.videoPrompt}`,
+        `选取整镜 ${shot.duration} 秒中第 ${frame.from} 秒的瞬间，动作进度约为 ${Math.round(frame.from / Math.max(shot.duration, 0.1) * 100)}%。只生成一张无边框、无文字、无字幕的画面。沿用角色外观、场景空间和光线。当前格的瞬间动作、机位和景别优先于画面设定，保持本格主体和动作连续。`,
+        `当前格为${gridViewLabel(frame.view)}${lens ? `，${lens}` : ""}。${frame.movement ? `构图取自运镜「${frame.movement}」的当前时刻。` : ""}${frame.action ? `本段动作提示：${frame.action}。` : ""}`,
+        used.length ? `参考图依次为：${used.map(asset => `${asset.name}（${assetKindLabels[asset.kind]}）`).join("、")}。角色参考图只参考形象，场景参考图只参考空间与光线。` : "",
+      ].filter(Boolean).join("\n\n");
+      return [{ frame, used, item: {
+        type: "remote-imageGenerationNode", label: `分镜 ${String(index + 1).padStart(2, "0")} · ${frameTime(frame.from, frame.to)}`, width: 360, height: 300,
+        data: imageNodeData(prompt, "16:9", {
+          shotGridSource: { ownerId: id, shotId: shot.id, frame: JSON.stringify(frame), input: gridImageInput(shot, used), layout },
+          ...(layout ? { shotBlocking: { image: layout, video: "" } } : {}),
+        }),
+      } }];
+    });
+    const mapped = { ...doc.batch.gridImageNodes };
+    if (plans.length) {
+      const { groupId, ids } = addGroupedNodes(flow, self, `宫格分镜 · ${doc.episodeTitle || nodeProps.value.label} · ${plans.length} 张`, plans.map(plan => plan.item), { columns: 6, offsetY: 420 });
+      created = [...ids, groupId];
+      const edges = plans.flatMap(({ frame, used }, index) => {
+        const target = ids[index]!;
+        mapped[frame.key] = target;
+        startIds.push(target);
+        return used.map(asset => ({ id: crypto.randomUUID(), source: asset.nodeId!, sourceHandle: sourceHandle(asset.nodeId!), target, targetHandle: "in" }));
+      });
+      if (edges.length) flow.addEdges(edges);
+    }
+    doc.batch.gridImageNodes = mapped;
+    doc.grid = settings;
+    await file.touch(true);
+    saved = true;
+    if (flow.findNode(id) !== self || shots.value !== doc) throw new Error("画布已切换，请返回原画布查看宫格分镜");
+    if (run && startIds.length) {
+      const failed = await startAll(startIds, "node:generateImage");
+      if (failed) ElMessage.warning(`${failed} 张宫格分镜启动失败，可在画布上检查并重试`);
+      else ElMessage.success(`已开始生成 ${startIds.length} 张宫格分镜`);
+    } else if (plans.length) ElMessage.success(`已创建 ${plans.length} 个宫格分镜图节点`);
+    else ElMessage.info("所选画格已有图片节点");
+  } catch (error) {
+    if (!saved) {
+      doc.grid = previous;
+      doc.batch.gridImageNodes = previousNodes;
+      if (created.length) flow.removeNodes(created, true, false);
+    }
+    ElMessage.error(error instanceof Error ? error.message : "宫格分镜创建失败");
+  }
+  finally { batching.value = ""; }
+}
+
 async function batchImages() {
   if (!stepsDone.value || batching.value) return;
   const existing = Object.values(shots.value.batch.imageNodes).filter(nodeId => flow.findNode(nodeId));
@@ -660,11 +794,15 @@ async function batchVideos() {
   // 视频节点建好后用默认视频模型；它的参考生视频模式能接几张图，决定每镜最多带几张资产图。模型清单读不到时按常见的 9 张处理。
   const videoModel = media.defaultVideoModel.value;
   const limit = videoModel ? maxImageReferences(videoModel) : 9;
+  const durations = videoModel?.durationResolutionMap?.flatMap(item => item.duration) ?? [];
+  const durationMismatch = shots.value.grid && shots.value.shots.some(shot => shot.duration !== Math.max(2, Math.round(shot.duration))
+    || (durations.length > 0 && !durations.includes(shot.duration)));
   const mentioned = shots.value.shots.map(shot => mentionedAssets(shot.description, shots.value.assets).sort((a, b) => kindOrder[a.kind] - kindOrder[b.kind]));
   const waiting = new Set(mentioned.flat().filter(asset => !asset.image)).size;
   const notes = [
     waiting ? `有 ${waiting} 个出场资产还没有图片，这次不会被引用，建议先到「准备资产」生成。` : "",
     limit === 0 ? `当前默认视频模型「${videoModel!.label}」不支持多图参考，只会引用分镜图；要引用资产请先把默认视频模型换成支持图片参考的模型。` : "",
+    durationMismatch ? "部分镜头的宫格时间轴与视频节点可提交的时长不同。生成前请核对视频节点的时长。" : "",
   ].filter(Boolean).join("");
   const generate = await ElMessageBox.confirm(`将为 ${shots.value.shots.length} 个镜头各建一个视频生成节点，引用对应分镜图、本镜出场的角色、场景、道具资产图和视频运动提示词。${notes}现在就开始生成吗？（会调用视频模型 ${shots.value.shots.length} 次，费用较高）`, "批量生成视频", {
     distinguishCancelAndClose: true, confirmButtonText: "创建并生成", cancelButtonText: "只创建节点",
@@ -674,18 +812,36 @@ async function batchVideos() {
   try {
     await ensureAssetNodes();
     const self = flow.findNode(id)!;
-    let trimmed = 0, assetCount = 0;
+    let trimmed = 0, assetCount = 0, gridCount = 0;
     const plans = shots.value.shots.map((shot, index) => {
+      const frames = shots.value.grid ? gridFrames(shot, gridSettings.value) : [];
+      const binding = boundBlocking(shot.id);
+      const acceptsGridImage = !videoModel || limit > 0 || videoModel.mode?.some(mode => mode === "singleImage" || mode === "endFrameOptional" || mode === "startFrameOptional");
+      const first = frames[0] && acceptsGridImage && !binding?.startFrame && !binding?.endFrame ? gridNode(shot, frames[0]) : undefined;
+      const gridStart = first && nodeImage(first.id) ? first.id : undefined;
       const imageNode = shots.value.batch.imageNodes[shot.id];
       const references: { source: string; handle: string; text: string; asset: boolean }[] = [];
-      if (imageNode && flow.findNode(imageNode)) references.push({ source: imageNode, handle: "image", text: "为本镜分镜图，决定构图与起始画面", asset: false });
+      const start = gridStart ?? imageNode;
+      if (start && flow.findNode(start)) references.push({ source: start, handle: sourceHandle(start), text: "为本镜分镜图，决定构图与起始画面", asset: false });
+      if (gridStart) gridCount++;
       const ready = limit ? mentioned[index]!.filter(asset => asset.image && asset.nodeId && flow.findNode(asset.nodeId)) : [];
       const used = ready.slice(0, Math.max(0, limit - references.length));
       if (used.length < ready.length) trimmed++;
       assetCount += used.length;
       for (const asset of used) references.push({ source: asset.nodeId!, handle: sourceHandle(asset.nodeId!), text: `为${assetKindLabels[asset.kind]}「${asset.name}」${assetRole[asset.kind]}`, asset: true });
-      // 资产图在视频节点里必须被提示词点名才会提交；只有分镜图时保持原来的首帧用法，不加说明。
-      const prompt = used.length ? `${shot.videoPrompt}\n\n参考图：${references.map((item, order) => `{{ref ${order + 1}}} ${item.text}`).join("；")}。` : shot.videoPrompt;
+      if (gridStart && videoModel && !binding?.endFrame && references.length < limit) {
+        // 优先带上切点，再用余量补中间时刻。模型会把这些图片用作构图与动作参考。
+        const order = [...frames.slice(1).filter(frame => frame.transition !== "continue"), ...frames.slice(1).filter(frame => frame.transition === "continue")];
+        for (const frame of order) {
+          const still = gridNode(shot, frame);
+          if (!still || !nodeImage(still.id)) continue;
+          references.push({ source: still.id, handle: sourceHandle(still.id), text: `参考本镜第 ${frame.from} 秒的${gridViewLabel(frame.view)}构图与动作`, asset: false });
+          gridCount++;
+          if (references.length >= limit) break;
+        }
+      }
+      const prompt = [shot.videoPrompt, gridVideoTimeline(frames), (references.length > 1 || references.some(item => item.asset))
+        ? `参考图：${references.map((item, order) => `{{ref ${order + 1}}} ${item.text}`).join("；")}。` : ""].filter(Boolean).join("\n\n");
       return { shot, references, prompt };
     });
     const { groupId, ids } = addGroupedNodes(flow, self, `视频组 · ${shots.value.episodeTitle || nodeProps.value.label} · ${shots.value.shots.length} 段`, plans.map(({ shot, references, prompt }, index) => ({
@@ -705,7 +861,7 @@ async function batchVideos() {
     await file.touch(true);
     if (!plans.some(plan => plan.references.some(item => !item.asset))) ElMessage.info("还没有分镜图节点，视频节点不带分镜图；建议先「批量生成分镜」");
     if (trimmed) ElMessage.warning(`${trimmed} 个镜头的出场资产超过视频模型的参考图上限（${limit} 张），已按角色、场景、道具的顺序取前几张`);
-    const summary = `，共引用 ${assetCount} 张资产图`;
+    const summary = `，共引用 ${assetCount} 张资产图${gridCount ? `和 ${gridCount} 张宫格分镜图` : ""}`;
     if (generate) {
       const failed = await startAll(ids, "node:generateVideo");
       if (failed) ElMessage.warning(`${failed} 段视频未能开始生成（分镜图或资产图未完成，或视频模型不支持图片参考），可稍后用「整组执行」重试`);

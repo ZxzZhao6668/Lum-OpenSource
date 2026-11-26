@@ -1,5 +1,6 @@
 import type { BlockingPlan } from "./blockingTypes";
 import { normalizeBlocking } from "./shotBlocking";
+import { normalizeGrid, type GridSettings } from "./storyboardGrid";
 
 /** 脚本节点的数据格式（assets/<节点ID>/shots.json），说明见实施记录 dataFormat.md。 */
 export type AssetKind = "character" | "scene" | "prop";
@@ -38,7 +39,12 @@ export interface ShotDocument {
   shots: Shot[];
   assets: ShotAsset[];
   blocking?: BlockingPlan;
-  batch: { assetGroupId: string | null; imageGroupId: string | null; videoGroupId: string | null; imageNodes: Record<string, string>; videoNodes: Record<string, string>; endFrameNodes?: Record<string, string> };
+  grid?: GridSettings;
+  batch: {
+    assetGroupId: string | null; imageGroupId: string | null; videoGroupId: string | null;
+    imageNodes: Record<string, string>; videoNodes: Record<string, string>;
+    endFrameNodes?: Record<string, string>; gridImageNodes?: Record<string, string>;
+  };
 }
 
 export const shotSizes = ["大远景", "远景", "全景", "中远景", "中景", "中近景", "近景", "特写", "大特写"];
@@ -97,6 +103,7 @@ export function normalizeShotDocument(value: unknown): ShotDocument {
   const base = createShotDocument();
   const batch = (raw.batch && typeof raw.batch === "object" ? raw.batch : {}) as Record<string, unknown>;
   const ids = (item: unknown) => Object.fromEntries(Object.entries(item && typeof item === "object" ? item : {}).filter(([, id]) => typeof id === "string")) as Record<string, string>;
+  const shots = (Array.isArray(raw.shots) ? raw.shots : []).slice(0, 300).map(normalizeShot);
   return {
     ...base,
     sourceNodeId: str(raw.sourceNodeId, 64) || null,
@@ -106,7 +113,8 @@ export function normalizeShotDocument(value: unknown): ShotDocument {
     step: raw.step === 2 || raw.step === 3 ? raw.step : 1,
     style: str(raw.style, 2000),
     blocking: normalizeBlocking(raw.blocking),
-    shots: (Array.isArray(raw.shots) ? raw.shots : []).slice(0, 300).map(normalizeShot),
+    ...(raw.grid ? { grid: normalizeGrid(raw.grid, shots) } : {}),
+    shots,
     assets: (Array.isArray(raw.assets) ? raw.assets : []).slice(0, 200).flatMap(item => {
       if (!item || typeof item !== "object") return [];
       const asset = item as Record<string, unknown>;
@@ -125,6 +133,7 @@ export function normalizeShotDocument(value: unknown): ShotDocument {
       assetGroupId: str(batch.assetGroupId, 64) || null, imageGroupId: str(batch.imageGroupId, 64) || null, videoGroupId: str(batch.videoGroupId, 64) || null,
       imageNodes: ids(batch.imageNodes), videoNodes: ids(batch.videoNodes),
       ...(batch.endFrameNodes ? {endFrameNodes: ids(batch.endFrameNodes)} : {}),
+      ...(batch.gridImageNodes ? {gridImageNodes: ids(batch.gridImageNodes)} : {}),
     },
   };
 }
