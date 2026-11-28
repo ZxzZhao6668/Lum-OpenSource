@@ -1,8 +1,13 @@
 import './desktopShell.css';
+import type { InstallerUpdateAction, InstallerUpdateSnapshot } from './installerUpdateBridge';
+import { prepareWorkspaceNavigation } from '../canvas/productionBridge';
+import { flushWorkspaceEditors } from '../writing/workspaceFeedback';
 
 declare global {
   interface Window {
     lumDesktop?: {
+      installerUpdate?(action: InstallerUpdateAction): Promise<InstallerUpdateSnapshot>;
+      onPrepareInstall?(prepare: () => Promise<void>, release: () => void): () => void;
       saveWritingPdf(html: string, name: string): Promise<boolean>;
       ready(): void;
       windowAction(action: 'minimize' | 'maximize' | 'fullscreen' | 'close'): void;
@@ -75,6 +80,20 @@ export function installDesktopShell() {
   confirm.addEventListener('click', () => respond('confirm'));
   dialog.addEventListener('cancel', event => { event.preventDefault(); respond('cancel'); });
   document.body.append(dialog);
+  let releaseEditing: (() => void) | undefined;
+  const unsubscribeInstall = bridge.onPrepareInstall?.(async () => {
+    const root = document.getElementById('root');
+    if (!root || releaseEditing) throw Error('工作区正在切换，请稍后再试');
+    const previousInert = root.inert;
+    root.inert = true;
+    releaseEditing = () => { root.inert = previousInert; releaseEditing = undefined; };
+    const frame = root.querySelector('iframe[data-production-frame]');
+    if (frame && frame.closest('[data-connection]')?.getAttribute('data-connection') !== 'ready') {
+      throw Error('画布连接尚未就绪，无法确认已保存。请重新连接后安装');
+    }
+    await flushWorkspaceEditors();
+    if (frame) await prepareWorkspaceNavigation('leave', true);
+  }, () => releaseEditing?.());
   const unsubscribe = bridge.onQuitRequest(reason => {
     const unsaved = reason === 'unsaved';
     title.textContent = unsaved ? '还有内容未保存' : '结束这次创作？';
@@ -89,7 +108,7 @@ export function installDesktopShell() {
   });
   bridge.ready();
   return () => {
-    unsubscribe(); unsubscribeWindow(); titleObserver.disconnect();
+    unsubscribe(); unsubscribeWindow(); unsubscribeInstall?.(); releaseEditing?.(); titleObserver.disconnect();
     titlebar.remove(); dialog.remove(); delete document.documentElement.dataset.lumDesktop;
   };
 }

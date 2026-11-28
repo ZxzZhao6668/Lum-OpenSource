@@ -18,7 +18,7 @@ function ProjectWorkspace({ id }: { id: string }) {
   const [project,setProject]=useState<Project>();const [error,setError]=useState('');
   useEffect(()=>{let active=true;void getProject(id).then(value=>{if(!active)return;if(!value||value.trashedAt)setError('项目不存在或已移入回收站，请返回首页恢复。');else setProject(value);}).catch(e=>{if(active)setError(String(e));});return()=>{active=false;};},[id]);
   if(error)return <div className="localPageBody" role="alert">{error} <a href="/">返回首页</a></div>;
-  return project ? <WorkspaceHost projectKind={project.kind}/> : <p role="status">正在打开项目…</p>;
+  return project ? <WorkspaceHost projectKind={project.kind} projectName={project.name}/> : <p role="status">正在打开项目…</p>;
 }
 export function App() {
   const view=new URLSearchParams(location.search).get('view');

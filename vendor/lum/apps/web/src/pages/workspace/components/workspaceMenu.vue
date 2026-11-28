@@ -2,6 +2,7 @@
   <div class="workspaceMenu">
     <el-card shadow="never" :bodyStyle="{ padding: '2px 4px' }">
       <div class="menuContent">
+        <projectSwitcher v-if="!hostOrigin" :switchWorkspace="switchWorkspace" />
         <el-button class="toolButton" text aria-label="退出项目" title="退出项目" @click="exitVisible = true">
           <icon-logout :size="18" aria-hidden="true" />
         </el-button>
@@ -27,9 +28,13 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { IconLogout, IconSettings } from "@tabler/icons-vue";
 import { hasDesktopUpdate } from "@/stores/desktopUpdate";
+import { embeddedHostOrigin } from "@/lib/embeddedProject";
+import projectSwitcher from "./projectSwitcher.vue";
 
 const emit = defineEmits<{ openSettings: [] }>();
+defineProps<{ switchWorkspace: (directory: string, create: boolean) => Promise<void> }>();
 const router = useRouter();
+const hostOrigin = embeddedHostOrigin();
 const exitVisible = ref(false);
 const leaving = ref(false);
 
@@ -37,8 +42,7 @@ async function exitProject() {
   if (leaving.value) return;
   leaving.value = true;
   try {
-    const hostOrigin = URL.canParse(document.referrer) ? new URL(document.referrer).origin : "";
-    if (window.parent !== window && ["http://127.0.0.1:5178", "http://localhost:5178", "http://127.0.0.1:6178"].includes(hostOrigin)) {
+    if (hostOrigin) {
       // 由 Lum 主界面保存画布和写作内容后统一导航，避免落入画布模块的独立首页。
       window.parent.postMessage({ type: "lum:home" }, hostOrigin);
       exitVisible.value = false;

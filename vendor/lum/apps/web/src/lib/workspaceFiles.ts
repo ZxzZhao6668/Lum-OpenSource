@@ -165,6 +165,10 @@ export default function useWorkspaceFiles(directory?: MaybeRefOrGetter<string | 
     return write(path, `${JSON.stringify(data, null, 2)}\n`, exclusive);
   }
 
+  function createInitialCanvas() {
+    return writeJson("画布1.json", { lumCanvas: true, nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 } }, true);
+  }
+
   async function rename(path: string, target: string) {
     const directory = getDirectory();
     await client.post("/rename", { directory, path, target });
@@ -195,5 +199,5 @@ export default function useWorkspaceFiles(directory?: MaybeRefOrGetter<string | 
   }
 
   // ACT: 当前目录逐次读取；跨 await 或防抖的操作传入目录字符串，固定本次目标。
-  return { list, read, inspectBinary, importImage, cloneProject, exportZip, acquireUrl, readText, readJson, readTextSnapshot, writeTextSnapshot, write, writeJson, rename, copy, reveal, remove, mkdir };
+  return { list, read, inspectBinary, importImage, cloneProject, exportZip, acquireUrl, readText, readJson, readTextSnapshot, writeTextSnapshot, write, writeJson, createInitialCanvas, rename, copy, reveal, remove, mkdir };
 }

@@ -8,15 +8,25 @@ import type {VideoContinuity} from './productionClips';
 export interface ProductionNode {key:string;kind:'text'|'image';label:string;text?:string;image?:{path:string;mimeType:string};sourceKey:string;imageSource?:ProductionMaterial['imageSource'];episodeId?:string;entityKind?:string;setupSnapshot?:ShotSetupSnapshot;referenceKeys?:string[]}
 export interface ProductionBinding {id:string;canvasId?:string;batchId?:string}
 export interface ProductionOptions {clip:ProductionBinding;duration:number;mode?:'video'|'previs';continuity?:VideoContinuity;setupSnapshots?:readonly ShotSetupSnapshot[];styleOverride?:string;onBound?:(canvasId:string)=>Promise<void>}
-export function requestProduction<T>(frame:HTMLIFrameElement,method:'target'|'import'|'panel'|'storyContext'|'storyImport',params:Record<string,unknown>={}){
+export function requestProduction<T>(frame:HTMLIFrameElement,method:'target'|'import'|'panel'|'storyContext'|'storyImport'|'projectCheck',params:Record<string,unknown>={}){
  const target=frame.contentWindow,id=crypto.randomUUID();if(!target)return Promise.reject(Error('画布未连接'));
- return new Promise<T>((resolve,reject)=>{const timer=setTimeout(()=>{window.removeEventListener('message',receive);reject(Error('画布提交回执超时，请查看画布；再次送入会按来源去重'));},120000);const receive=(event:MessageEvent)=>{if(event.origin!==canvasOrigin||event.source!==target||lumBridgeType(event.data?.type)!=='lum:productionResponse'||event.data.id!==id)return;clearTimeout(timer);window.removeEventListener('message',receive);if(event.data.error)reject(Error(event.data.error));else resolve(event.data.result);};window.addEventListener('message',receive);target.postMessage({type:'laper:productionRequest',id,method,...params},canvasOrigin);});
+ return new Promise<T>((resolve,reject)=>{const timer=setTimeout(()=>{window.removeEventListener('message',receive);reject(Error(method==='projectCheck'?'目标画布检查超时，请重试':'画布提交回执超时，请查看画布；再次送入会按来源去重'));},method==='projectCheck'?12000:120000);const receive=(event:MessageEvent)=>{if(event.origin!==canvasOrigin||event.source!==target||lumBridgeType(event.data?.type)!=='lum:productionResponse'||event.data.id!==id)return;clearTimeout(timer);window.removeEventListener('message',receive);if(event.data.error)reject(Error(event.data.error));else resolve(event.data.result);};window.addEventListener('message',receive);target.postMessage({type:'laper:productionRequest',id,method,...params},canvasOrigin);});
 }
 function productionFrame(){const frame=document.querySelector<HTMLIFrameElement>('iframe[data-production-frame]');if(!frame?.contentWindow)throw Error('画布未连接');return frame;}
-export async function prepareWorkspaceNavigation(panel: 'canvas' | 'virtualStage' | 'leave') {
+export async function prepareWorkspaceNavigation(panel: 'canvas' | 'virtualStage' | 'leave', requireReady = false) {
  const frame=document.querySelector<HTMLIFrameElement>('iframe[data-production-frame]');
- if (!frame?.contentWindow || frame.closest('[data-connection]')?.getAttribute('data-connection') !== 'ready') return;
+ if (!frame?.contentWindow || frame.closest('[data-connection]')?.getAttribute('data-connection') !== 'ready') {
+   if (requireReady) throw Error('当前画布未连接，请重新连接后再切换项目');
+   return;
+ }
  await requestProduction(frame,'panel',{panel});
+}
+export async function checkProjectCanvas(id: string) {
+ const frame = productionFrame();
+ if (frame.closest('[data-connection]')?.getAttribute('data-connection') !== 'ready') throw Error('当前画布未连接，请重新连接后再切换项目');
+ const projectId = id === 'legacy' ? 'localProject' : id;
+ const result = await requestProduction<{ projectId: string }>(frame, 'projectCheck', { projectId });
+ if (result?.projectId !== projectId) throw Error('目标画布校验未完成，请重试');
 }
 export async function sendProductionMaterials(materials:ProductionMaterial[],options?:ProductionOptions,targetMode:'canvas'|'virtualStage'='canvas'){
  if(!materials.length||materials.length>100)throw Error('一次选择1—100条素材，场次包含的镜头及引用资产计入数量');

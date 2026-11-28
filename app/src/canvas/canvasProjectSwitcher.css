@@ -1,0 +1,72 @@
+.dsh-lum-header .canvasProjectTrigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(45vw, 280px);
+  font-weight: 600;
+  color: var(--lum-text, #171a19);
+}
+.canvasProjectTrigger span:first-child,
+.canvasProjectCard strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.canvasProjectDialog {
+  position: fixed;
+  inset: var(--picker-top, 48px) auto auto min(var(--picker-left, 12px), max(12px, calc(100vw - 388px)));
+  box-sizing: border-box;
+  width: min(376px, calc(100vw - 24px));
+  max-width: none;
+  max-height: calc(100dvh - var(--picker-top, 48px) - 12px);
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--lum-line, #dce4df);
+  border-radius: 14px;
+  background: var(--lum-surface, #fff);
+  color: var(--lum-text, #171a19);
+  box-shadow: var(--lum-float-shadow, 0 8px 30px #0003);
+}
+.canvasProjectDialog::backdrop { background: #0003; }
+.canvasProjectDialog[open],
+.canvasProjectDialog form { display: grid; gap: 10px; }
+.canvasProjectDialog header,
+.canvasProjectDialog footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.canvasProjectDialog h2 { margin: 0; font-size: 15px; }
+.canvasProjectDialog p { margin: 0; overflow-wrap: anywhere; }
+.canvasProjectDialog p[role="alert"] { color: var(--lum-danger, #b43b34); }
+.canvasProjectDialog label { display: grid; gap: 5px; }
+.canvasProjectDialog input,
+.canvasProjectDialog select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid var(--lum-line, #dce4df);
+  border-radius: 8px;
+  padding: 6px 9px;
+  background: var(--lum-input, #fff);
+  color: inherit;
+  font: inherit;
+}
+.canvasProjectDialog button:focus-visible { outline: 2px solid var(--lum-link, #398353); outline-offset: 1px; }
+.canvasProjectDialog button:disabled { cursor: default; }
+.canvasProjectList { max-height: min(42dvh, 330px); overflow-y: auto; }
+.canvasProjectDialog .canvasProjectCard {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding: 6px;
+  text-align: start;
+}
+.canvasProjectDialog .canvasProjectCard[aria-current="true"] { background: var(--lum-hover, #f3f6f4); }
+.canvasProjectCard strong, .canvasProjectCard small { display: block; }
+.canvasProjectCard small, .canvasProjectCurrent { color: var(--lum-muted, #59675f); font-size: 11px; }
+.canvasProjectCover {
+  width: 54px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 6px;
+  color: var(--lum-muted, #59675f);
+  background: var(--lum-hover, #f3f6f4);
+}
+.canvasProjectCover img { width: 100%; height: 100%; object-fit: cover; }

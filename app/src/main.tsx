@@ -8,6 +8,7 @@ import { initializeAppearance } from './appearance/appearance';
 import { installLumStartup } from './appearance/startupCover';
 import { installLumMotion } from './appearance/lumMotion';
 import { installDesktopShell } from './desktop/desktopShell';
+import { installInstallerUpdateBridge } from './desktop/installerUpdateBridge';
 import './appearance/lumTokens.css';
 import './appearance/lumHost.css';
 import './appearance/lumTypography.css';
@@ -18,7 +19,8 @@ const cleanupAppearance = initializeAppearance();
 const cleanupMotion = installLumMotion();
 const cleanupStartup = installLumStartup();
 const cleanupDesktop = installDesktopShell();
-if (import.meta.hot) import.meta.hot.dispose(() => { cleanupAppearance(); cleanupMotion(); cleanupStartup(); cleanupDesktop(); });
+const cleanupInstallerUpdate = installInstallerUpdateBridge();
+if (import.meta.hot) import.meta.hot.dispose(() => { cleanupAppearance(); cleanupMotion(); cleanupStartup(); cleanupDesktop(); cleanupInstallerUpdate(); });
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

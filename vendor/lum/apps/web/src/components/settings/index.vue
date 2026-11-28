@@ -25,7 +25,7 @@
               <component
                 :is="activePanel.component"
                 v-bind="
-                  ['pluginMarket', 'languageModel', 'mediaModel', 'personalization', 'deviceLink'].includes(activePanel.id) ? { visible } : {}
+                  ['pluginMarket', 'languageModel', 'mediaModel', 'personalization', 'deviceLink', 'about'].includes(activePanel.id) ? { visible } : {}
                 " />
             </keep-alive>
           </transition>

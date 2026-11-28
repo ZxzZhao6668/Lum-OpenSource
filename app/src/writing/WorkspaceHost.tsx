@@ -21,6 +21,7 @@ import { mountSceneCanvas } from "../script/sceneCanvas";
 import { upgradeOutline } from "../outline/outlineDoc";
 import { mountEpisodeOverview } from '../outline/episodeOverview';
 import { LumWorkspace } from "../canvas/LumWorkspace";
+import type { CoordinateProjectSwitch } from "../canvas/CanvasProjectSwitcher";
 import { prepareWorkspaceNavigation } from "../canvas/productionBridge";
 import type { Chapter } from "../episode/episodePanel";
 import { closeChapterDraft } from '../episode/chapterView';
@@ -36,7 +37,14 @@ import { createCanvasRail, createWritingWorkspace, markRailRoute } from "./works
 import { mountSharedAssetLibrary } from '../assetLibrary/libraryScreen';
 
 const SELECTED_SCRIPT_KEY = projectStorageKey("dsh:selectedScript");
+const startInCanvas = !writingWorkspace && new URLSearchParams(location.search).get('panel') === 'canvas';
 const CanvasBoard = lazy(async () => ({ default: (await import("../canvas/CanvasBoard")).CanvasBoard }));
+
+async function flushWriting() {
+  await closeChapterDraft();
+  await getActiveWritingEditor()?.flush();
+  await getActiveContentEditor()?.flush();
+}
 
 const onLiftedRailClick = (e: Event) => {
   const btn = e.target instanceof Element ? e.target.closest<HTMLButtonElement>('button') : null;
@@ -75,7 +83,7 @@ function dropRail() {
   document.querySelector('[data-dsh-lifted="1"]')?.remove();
 }
 
-export function WorkspaceHost({ projectKind = 'script' }: { projectKind?: ProjectKind }) {
+export function WorkspaceHost({ projectKind = 'script', projectName }: { projectKind?: ProjectKind; projectName?: string }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const writingCleanup = useRef<(() => void) | undefined>(undefined);
   const [screen, setScreen] = useState("01-script");
@@ -99,9 +107,23 @@ export function WorkspaceHost({ projectKind = 'script' }: { projectKind?: Projec
   }, []);
 
   const navigation = useRef(0);
+  const switchingProject = useRef(false);
+  const prepareProjectSwitch: CoordinateProjectSwitch = async work => {
+    if (switchingProject.current || hostRef.current?.hasAttribute('aria-busy')) throw Error('当前页面正在切换，请稍后重试');
+    if (isWritingBusy()) throw Error('请先停止当前写作任务再切换项目');
+    switchingProject.current = true;
+    try {
+      await work(async () => {
+        if (isWritingBusy()) throw Error('请先停止当前写作任务再切换项目');
+        await flushWriting();
+        if (isWritingBusy()) throw Error('请先停止当前写作任务再切换项目');
+      });
+    } finally { switchingProject.current = false; }
+  };
   const selectedScript = useRef({ id: "ep_001", title: "未分章草稿" });
   const go = useCallback(
     async (id: string, episodeId = selectedScript.current.id, episodeTitle = selectedScript.current.title, options: {outlineView?: 'board'|'document'; requireEpisode?: boolean; outlineDocId?: string} = {}) => {
+      if (switchingProject.current) return;
       if (writingWorkspace && ['canvas','virtualStage','04-storyboard','16-asset-library'].includes(id)) return;
       if (id === 'home' && isWritingBusy()) {
         showToast('请先停止当前写作任务再返回主页');
@@ -111,7 +133,7 @@ export function WorkspaceHost({ projectKind = 'script' }: { projectKind?: Projec
       // 在首次保存前冻结旧页面，避免异步加载期间的新输入在卸载时丢失。
       if (hostRef.current) { hostRef.current.inert = true; hostRef.current.setAttribute('aria-busy', 'true'); }
       try {
-      try { await closeChapterDraft(); await getActiveWritingEditor()?.flush(); await getActiveContentEditor()?.flush(); }
+      try { await flushWriting(); }
       catch (error) { showToast(error instanceof Error ? error.message : "剧本保存失败，已保留当前页面"); return; }
       if (ticket !== navigation.current) return;
       if (["canvas", "virtualStage"].includes(screenRef.current)) {
@@ -243,7 +265,7 @@ export function WorkspaceHost({ projectKind = 'script' }: { projectKind?: Projec
         selected = panel?.chapters.find(chapter => chapter.episodeId === id) ?? panel?.chapters[0];
       } catch { /* Fall back to the first episode if preferences are unavailable. */ }
       if (!cancelled && navigation.current === initialNavigation) {
-        await go(writingWorkspace ? "01-script" : "04-storyboard", selected?.episodeId ?? "ep_001", selected?.title ?? "未分章草稿");
+        await go(writingWorkspace ? "01-script" : startInCanvas ? "canvas" : "04-storyboard", selected?.episodeId ?? "ep_001", selected?.title ?? "未分章草稿");
       }
     })();
     return () => { cancelled = true; };
@@ -351,7 +373,7 @@ export function WorkspaceHost({ projectKind = 'script' }: { projectKind?: Projec
     <>
       <div ref={hostRef} className="lumWritingHost laper-host" data-screen={screen} />
       {(canvasOpened || settingsOpen) && (
-        <LumWorkspace active={(screen === "canvas" && !legacyCanvas) || screen === "virtualStage"} mode={screen === "virtualStage" ? "virtualStage" : "canvas"} settingsOpen={settingsOpen} onSettingsClose={() => { openSettings(false); window.dispatchEvent(new Event('dsh:models-changed')); }} onHome={() => { void go('home'); }} onStoryboard={() => { void go('04-storyboard'); }} />
+        <LumWorkspace active={(screen === "canvas" && !legacyCanvas) || screen === "virtualStage"} mode={screen === "virtualStage" ? "virtualStage" : "canvas"} projectName={projectName} prepareProjectSwitch={prepareProjectSwitch} settingsOpen={settingsOpen} onSettingsClose={() => { openSettings(false); window.dispatchEvent(new Event('dsh:models-changed')); }} onHome={() => { void go('home'); }} onStoryboard={() => { void go('04-storyboard'); }} />
       )}
       {screen === "canvas" && legacyCanvas && (
         <Suspense fallback={<p role="status">正在打开旧版画布…</p>}>

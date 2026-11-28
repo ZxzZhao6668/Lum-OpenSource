@@ -9,12 +9,15 @@ import {installAdoptionBridge} from './adoptionBridge';
 import {installProjectSetupBridge} from './projectSetupBridge';
 import {installStoryGridBridge} from './storyGridBridge';
 import {installPrevisSkillBridge} from '../skills/previsBridge';
+import { CanvasProjectSwitcher, type CoordinateProjectSwitch } from './CanvasProjectSwitcher';
 
 const origin = canvasOrigin;
 
 /** 设置与画布共用原版实例，隐藏而不卸载，避免中断后台任务。 */
-export function LumWorkspace({ active, settingsOpen, onSettingsClose, onHome, onStoryboard, standalone = false, mode = 'canvas' }: {
+export function LumWorkspace({ active, settingsOpen, onSettingsClose, onHome, onStoryboard, standalone = false, mode = 'canvas', projectName, prepareProjectSwitch }: {
   active: boolean; settingsOpen: boolean; onSettingsClose: () => void; onHome: () => void; onStoryboard?: () => void; standalone?: boolean; mode?: 'canvas' | 'virtualStage';
+  projectName?: string;
+  prepareProjectSwitch?: CoordinateProjectSwitch;
 }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const initialTheme = useRef(document.documentElement.dataset.lumTheme || 'lime');
@@ -31,6 +34,7 @@ export function LumWorkspace({ active, settingsOpen, onSettingsClose, onHome, on
   const [connectionNoticeDismissed,setConnectionNoticeDismissed]=useState(false);
   const reconnectButton=useRef<HTMLButtonElement>(null);
   const [materialsOpen,setMaterialsOpen]=useState(false);
+  const [displayName, setDisplayName] = useState(projectName || (currentProjectId ? '当前项目' : '本地画布'));
   useEffect(()=>{setConnection('loading');setConnectionNoticeDismissed(false);const timer=setTimeout(()=>setConnection(current=>current==='ready'?current:'error'),12000);return()=>clearTimeout(timer);},[attempt]);
   useEffect(()=>{if(connectionNoticeDismissed&&connection==='error')reconnectButton.current?.focus();},[connectionNoticeDismissed,connection]);
   const latest = useRef({ settingsOpen, onSettingsClose, onHome, mode, active });
@@ -44,7 +48,10 @@ export function LumWorkspace({ active, settingsOpen, onSettingsClose, onHome, on
     frame.current?.contentWindow?.postMessage({ type: 'lum:appearanceRequest' }, origin);
     frame.current?.contentWindow?.postMessage({ type: "laper:settings", open: latest.current.settingsOpen }, origin);
     void loadDoc<{name:string}>('project:meta').then(meta=>{
-      if(meta?.name)frame.current?.contentWindow?.postMessage({type:'laper:projectName',name:meta.name},origin);
+      if(meta?.name && currentProjectId) {
+        setDisplayName(meta.name);
+        frame.current?.contentWindow?.postMessage({type:'laper:projectName',name:meta.name},origin);
+      }
     }).catch(()=>{});
   };
   useEffect(() => {
@@ -67,8 +74,9 @@ export function LumWorkspace({ active, settingsOpen, onSettingsClose, onHome, on
   return (
     <section className={`dsh-lum-workspace dsh-toonflow-workspace${settingsOpen ? " is-settings" : ""}${standalone ? " is-standalone" : ""}${stageFullscreen ? " is-stage-fullscreen" : ""}`} data-connection={connection} data-settings-ready={settingsReady} hidden={!active && !settingsOpen} aria-label={settingsOpen?'Lum 设置':'Lum 画布工作区'}>
       <header className="dsh-lum-header dsh-toonflow-header">
+        {active && !settingsOpen && mode === 'canvas' && <CanvasProjectSwitcher projectName={displayName} ready={connection === 'ready'} prepareSwitch={prepareProjectSwitch} />}
         <button type="button" onClick={settingsOpen ? onSettingsClose : onHome}>{settingsOpen ? "← 关闭设置" : "← 返回首页"}</button>
-        <span>{settingsOpen ? "项目设置" : mode === 'virtualStage' ? '虚拟片场' : "画布"}</span>
+        {settingsOpen ? <span>项目设置</span> : mode === 'virtualStage' && <span>虚拟片场</span>}
         {!settingsOpen&&mode==='canvas'&&onStoryboard&&<button type="button" onClick={onStoryboard} title="打开当前剧集的分镜">分镜</button>}
         {!settingsOpen&&<button type="button" aria-expanded={materialsOpen} style={{marginLeft:'auto'}} onClick={()=>setMaterialsOpen(value=>!value)}>{mode==='virtualStage'?'项目素材':'写作文稿'}</button>}
         {connection==='error'&&connectionNoticeDismissed&&<button ref={reconnectButton} type="button" onClick={()=>setAttempt(n=>n+1)}>重新连接画布</button>}

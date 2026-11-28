@@ -1,10 +1,11 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, session, shell, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron';
 import { saveWritingPdf } from './writingPdf';
+import { createInstallerUpdate } from './installerUpdate';
 import { createServer, type Server } from 'node:http';
-import { createReadStream, existsSync, mkdirSync, readFileSync, statSync, appendFileSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, readFileSync, statSync, appendFileSync, writeFileSync } from 'node:fs';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { resolve, join, extname, relative, sep } from 'node:path';
+import { resolve, join, dirname, extname, relative, sep } from 'node:path';
 
 const hostOrigin = 'http://127.0.0.1:6178';
 const canvasOrigin = 'http://127.0.0.1:6181';
@@ -23,6 +24,10 @@ let closing = false;
 let ready = false;
 let shellReady = false;
 let quitRequested = false;
+const installerUpdate = createInstallerUpdate(app.getVersion(), join(dataRoot, 'updates'));
+let installInProgress = false;
+let installerToLaunch: { path: string; sha256: string } | undefined;
+let pendingInstallSave: { id: string; finish: (error?: string) => void } | undefined;
 const runtimeRoot = app.isPackaged ? join(process.resourcesPath, 'payload') : join(app.getAppPath(), 'payload');
 const assetsRoot = join(app.getAppPath(), 'assets');
 const writingRoot = join(app.getAppPath(), 'out', 'writing');
@@ -58,6 +63,76 @@ function toggleMaximize() {
 }
 function openExternal(url: string) {
   try { if (['https:', 'http:', 'mailto:'].includes(new URL(url).protocol)) void shell.openExternal(url); } catch { /* Ignore invalid external targets. */ }
+}
+
+function saveBeforeInstall(win: BrowserWindow) {
+  return new Promise<void>((resolveSave, reject) => {
+    const id = randomBytes(16).toString('hex');
+    const finish = (error?: string) => {
+      clearTimeout(timer);
+      pendingInstallSave = undefined;
+      if (error) reject(Error(error)); else resolveSave();
+    };
+    const timer = setTimeout(() => finish('等待项目保存超时，已取消安装'), 125000);
+    pendingInstallSave = { id, finish };
+    try { win.webContents.send('lum:prepareInstall', id); }
+    catch { finish('无法联系编辑窗口，已取消安装'); }
+  });
+}
+
+async function requestInstallerRestart(win: BrowserWindow) {
+  if (installInProgress || quitting || quitRequested) throw Error('窗口正在退出或准备安装');
+  if (!app.isPackaged || process.platform !== 'win32') throw Error('请在已安装的 Windows 版 Lum 中重启安装');
+  if (installerUpdate.read().status !== 'ready') throw Error('请先完成安装包下载和校验');
+  installInProgress = true;
+  const frame = win.webContents.mainFrame;
+  const confirmWindow = () => {
+    if (win.isDestroyed() || !shellReady || frame.detached || frame !== win.webContents.mainFrame) {
+      throw Error('编辑窗口已改变，已取消安装');
+    }
+  };
+  try {
+    const choice = await dialog.showMessageBox(win, {
+      type: 'question', title: '重启安装 Lum', message: '保存当前项目并重启安装更新？',
+      detail: '退出会中断正在生成或渲染的任务。也可以等任务完成后再安装。',
+      buttons: ['稍后安装', '保存并重启安装'], defaultId: 0, cancelId: 0,
+    });
+    if (choice.response !== 1) return;
+    confirmWindow();
+    await saveBeforeInstall(win);
+    const installer = await installerUpdate.verifiedInstaller();
+    confirmWindow();
+    installerToLaunch = installer;
+    quitting = true;
+    win.close();
+  } finally {
+    if (!installerToLaunch && !win.isDestroyed()) win.webContents.send('lum:releaseInstall');
+    installInProgress = false;
+  }
+}
+
+function launchInstaller(installer: { path: string; sha256: string }) {
+  // Run outside the installation directory so Windows can replace every file there.
+  const helper = join(dirname(installer.path), 'Lum-Install-' + randomBytes(12).toString('hex') + '.exe');
+  writeFileSync(helper, readFileSync(join(app.getAppPath(), 'out/installUpdate.exe')), { flag: 'wx' });
+  const child = spawn(helper, [String(process.pid), installer.path, installer.sha256, process.execPath], {
+    cwd: dirname(installer.path), detached: true, windowsHide: true, stdio: 'pipe',
+  });
+  return new Promise<void>((resolveLaunch, reject) => {
+    const timer = setTimeout(() => { child.stdin.end(); reject(Error('安装程序交接超时')); }, 120000);
+    const fail = (error: Error) => { clearTimeout(timer); reject(error); };
+    let output = '', detail = '';
+    child.stderr.on('data', data => { detail = (detail + data).slice(-800); });
+    child.once('error', fail);
+    child.stdin.on('error', fail);
+    child.once('close', () => fail(Error(detail.trim() || '安装程序未就绪')));
+    child.stdout.on('data', data => {
+      output = (output + data).slice(-128);
+      if (!output.includes('LUM_INSTALLER_READY\n') && !output.includes('LUM_INSTALLER_READY\r\n')) return;
+      child.stdout.removeAllListeners('data');
+      child.stdin.end('install\n', () => { clearTimeout(timer); child.unref(); resolveLaunch(); });
+    });
+  });
 }
 
 function serveWriting() {
@@ -145,25 +220,55 @@ async function closeApplication() {
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.hide();
   writingServer?.close();
   writingServer?.closeAllConnections();
-  if (service && service.exitCode === null) {
+  if (service?.pid && service.exitCode === null && service.signalCode === null) {
     const child = service;
     await new Promise<void>(resolveClosed => {
+      const deadline = setTimeout(resolveClosed, 15000);
       const timer = setTimeout(() => {
-        if (process.platform === 'win32' && child.pid && child.exitCode === null) {
+        if (process.platform === 'win32' && child.pid && child.exitCode === null && child.signalCode === null) {
           const cleanup = spawn('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
-          cleanup.once('error', () => { child.kill(); resolveClosed(); });
-          cleanup.once('exit', () => resolveClosed());
-        } else { child.kill(); resolveClosed(); }
+          cleanup.once('error', error => { log('Service cleanup failed: ' + error.message); child.kill(); });
+        } else if (child.exitCode === null && child.signalCode === null) child.kill();
       }, 4500);
-      child.once('exit', () => { clearTimeout(timer); resolveClosed(); });
+      child.once('exit', () => { clearTimeout(timer); clearTimeout(deadline); resolveClosed(); });
       child.stdin?.on('error', () => { /* Child may already be exiting. */ });
       child.stdin?.end('quit\n');
     });
+  }
+  if (installerToLaunch) {
+    if (service?.pid && service.exitCode === null && service.signalCode === null) {
+      await dialog.showMessageBox({ type: 'warning', title: '本次安装已取消',
+        message: '本地服务尚未退出。请稍后重新打开 Lum，再到「关于」中安装已下载的更新。' });
+      app.exit(1);
+      return;
+    }
+    try { await launchInstaller(installerToLaunch); }
+    catch (error) {
+      log('Installer launch failed: ' + String(error));
+      await dialog.showMessageBox({ type: 'error', title: '无法启动安装程序',
+        message: '将重新打开 Lum。已下载的安装包会保留，可在「关于」中重试。',
+        detail: error instanceof Error ? error.message : String(error), buttons: ['重新打开 Lum'] });
+      app.relaunch();
+    }
   }
   app.exit(0);
 }
 
 async function start() {
+  ipcMain.handle('lum:installerUpdate', async (event, action: unknown) => {
+    if (!trustedShell(event) || !mainWindow || !isShellUrl(event.senderFrame?.url || '')) throw Error('此窗口无法更新桌面客户端');
+    if (action === 'read') return installerUpdate.read();
+    if (installInProgress || installerToLaunch || quitting) throw Error('正在准备重启安装');
+    if (action === 'check') return installerUpdate.check();
+    if (action === 'download') return installerUpdate.download();
+    if (action !== 'install') throw Error('未知更新操作');
+    await requestInstallerRestart(mainWindow);
+    return installerUpdate.read();
+  });
+  ipcMain.on('lum:installerSaved', (event, id: unknown, error: unknown) => {
+    if (!trustedShell(event) || !pendingInstallSave || pendingInstallSave.id !== id) return;
+    pendingInstallSave.finish(error === null ? undefined : String(error || '项目保存失败').slice(0, 600));
+  });
   ipcMain.handle('lum:saveWritingPdf', (event, html: unknown, name: unknown) => {
     if (!trustedShell(event) || !mainWindow) throw Error('无法从此窗口导出 PDF');
     return saveWritingPdf(mainWindow, html, name);
@@ -199,6 +304,7 @@ async function start() {
   });
   mainWindow.webContents.on('did-fail-load', (_event, code, description, url) => log(`Page load failed ${code} ${description} ${url.split('?')[0]}`));
   mainWindow.webContents.on('render-process-gone', (_event, details) => {
+    pendingInstallSave?.finish('编辑窗口已停止，已取消安装');
     shellReady = false; quitRequested = false;
     log(`Renderer stopped ${details.reason} ${details.exitCode}`);
     if (!quitting && mainWindow && !mainWindow.isDestroyed()) void dialog.showMessageBox(mainWindow, { type: 'error', title: 'Lum 界面已停止', message: '界面意外停止，已保存的数据仍保留。请退出后重新打开 Lum。', buttons: ['退出 Lum'] }).then(() => { quitting = true; mainWindow?.close(); });
@@ -210,8 +316,15 @@ async function start() {
   mainWindow.on('restore', sendWindowState);
   mainWindow.webContents.on('console-message', (_event, level, message) => { if (level >= 3) log(`Page error: ${message.slice(0, 1600)}`); });
   mainWindow.webContents.on('did-finish-load', () => log(`Page loaded ${mainWindow?.webContents.getURL().split('?')[0]}`));
-  mainWindow.webContents.on('did-navigate', () => { shellReady = false; quitRequested = false; });
+  mainWindow.webContents.on('did-navigate', () => {
+    shellReady = false; quitRequested = false;
+    pendingInstallSave?.finish('编辑窗口已切换，已取消安装');
+  });
   mainWindow.webContents.on('will-prevent-unload', () => {
+    if (installerToLaunch) {
+      installerToLaunch = undefined;
+      mainWindow?.webContents.send('lum:releaseInstall');
+    }
     quitting = false;
     if (shellReady) { quitRequested = true; mainWindow?.webContents.send('lum:quitRequest', 'unsaved'); }
     else void dialog.showMessageBox(mainWindow!, { type: 'warning', title: '尚有内容未保存', message: '已保留当前窗口，请等待保存完成，或先导出备份后再退出。' });
@@ -227,6 +340,7 @@ async function start() {
   mainWindow.on('close', event => {
     if (quitting) return;
     event.preventDefault();
+    if (installInProgress) return;
     if (!ready) { void closeApplication(); return; }
     if (quitRequested) return;
     quitRequested = true;

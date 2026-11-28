@@ -5,6 +5,7 @@ import type { NodeToolInfo } from "@lum/tools-scaffold/runtime";
 import { invalidateNodeModels } from "@lum/nodes-scaffold/nodeAi";
 import { saveSettings, settings } from "@/stores/settings";
 import { useWorkspaceStore } from "@/stores/workspace";
+import { embeddedHostOrigin } from "@/lib/embeddedProject";
 
 type ControlCall = { type: "call"; callId: string; name: string; args: Record<string, unknown>; directory?: string };
 type WorkspaceControl = {
@@ -125,11 +126,16 @@ export function useMcpControl() {
           } else if (request.name === "openProject") {
             const directory = request.args.directory;
             if (typeof directory !== "string" || !directory.trim()) throw new Error("缺少工作目录");
-            await workspaceControl.value?.flushSave();
-            callSignal.throwIfAborted();
-            // ACT: 切换项目会取消旧画布调用；当前打开项目命令属于应用层。
-            calls.delete(request.callId);
-            await workspaceStore.openProject(directory, directory, callSignal);
+            if (embeddedHostOrigin()) {
+              const target = await workspaceStore.validateProjectDirectory(directory, callSignal);
+              if (target !== workspaceStore.embeddedProject?.directory) throw new Error("请在主界面的项目菜单中切换项目。");
+            } else {
+              await workspaceControl.value?.flushSave();
+              callSignal.throwIfAborted();
+              // ACT: 切换项目会取消旧画布调用；当前打开项目命令属于应用层。
+              calls.delete(request.callId);
+              await workspaceStore.openProject(directory, directory, callSignal);
+            }
             const openedDirectory = workspaceStore.project?.directory;
             calls.set(request.callId, controller);
             callSignal.throwIfAborted();

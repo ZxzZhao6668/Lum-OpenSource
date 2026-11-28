@@ -6,12 +6,54 @@
         <h3>Lum · 影纪</h3>
         <div class="brandMeta">
           <span v-if="currentVersion">v{{ currentVersion }}</span>
-          <el-tag v-if="clientBuild?.channel || snapshot?.channel" type="info" size="small" round>{{ clientBuild?.channel || snapshot?.channel }}</el-tag>
+          <el-tag v-if="!embeddedDesktop && (clientBuild?.channel || snapshot?.channel)" type="info" size="small" round>{{ clientBuild?.channel || snapshot?.channel }}</el-tag>
         </div>
       </div>
     </div>
 
-    <el-card v-if="isMobile || !isRemoteConnection" class="infoCard updateCard" shadow="never">
+    <el-card v-if="installerState" class="infoCard updateCard" shadow="never">
+      <div class="cardHeader">
+        <div class="cardLabel">
+          <icon-refresh :size="18" aria-hidden="true" />
+          <span>版本更新</span>
+        </div>
+        <div class="updateActions installerActions">
+          <el-button size="small" :type="installerState.status === 'idle' ? 'primary' : undefined" :loading="installerChecking" :disabled="installerBusy" @click="runInstallerUpdate('check')">
+            检查更新
+          </el-button>
+          <el-button v-if="installerState.status === 'available' || installerDownloading" size="small" type="primary" :loading="installerDownloading" :disabled="installerBusy" @click="runInstallerUpdate('download')">
+            下载安装包
+          </el-button>
+          <el-button v-if="installerState.status === 'ready'" size="small" type="primary" :loading="installerAction === 'install'" :disabled="installerBusy" @click="runInstallerUpdate('install')">
+            重启安装
+          </el-button>
+        </div>
+      </div>
+      <dl v-if="installerState.latestVersion" class="installerVersions">
+        <div><dt>当前版本</dt><dd>v{{ installerState.currentVersion }}</dd></div>
+        <div><dt>最新版本</dt><dd>v{{ installerState.latestVersion }}</dd></div>
+      </dl>
+      <p v-if="installerStatusText" class="installerStatus" role="status">{{ installerStatusText }}</p>
+      <div v-if="installerDownloading" class="installerProgress">
+        <p v-if="installerState.status === 'downloading'">
+          已下载 {{ formatBytes(installerState.received) }}<template v-if="installerState.total"> / {{ formatBytes(installerState.total) }}</template>
+        </p>
+        <el-progress
+          v-if="installerState.status === 'downloading' && installerState.total > 0"
+          :percentage="installerPercentage"
+          aria-label="安装包下载进度" />
+      </div>
+      <p v-if="installerError" class="installerError" role="alert">{{ installerError }}</p>
+      <details v-if="installerState.notes" class="installerNotes" open>
+        <summary>更新说明</summary>
+        <p tabindex="0">{{ installerState.notes }}</p>
+      </details>
+      <el-button class="installerReleaseLink" tag="a" size="small" plain :href="releasesUrl" target="_blank" rel="noopener noreferrer">
+        查看 GitHub 发布版本
+      </el-button>
+    </el-card>
+
+    <el-card v-else-if="embeddedDesktop || isMobile || !isRemoteConnection" class="infoCard updateCard" shadow="never">
       <div class="cardHeader">
         <div class="updateCopy">
           <div class="cardLabel">
@@ -20,7 +62,7 @@
           </div>
         </div>
         <div class="updateActions">
-          <el-button v-if="isMobile || !isLocalDesktop" tag="a" size="small" type="primary" plain :href="releasesUrl" target="_blank" rel="noopener noreferrer">
+          <el-button v-if="embeddedDesktop || isMobile || !isLocalDesktop" tag="a" size="small" type="primary" plain :href="releasesUrl" target="_blank" rel="noopener noreferrer">
             查看 GitHub 发布版本
           </el-button>
           <template v-else>
@@ -40,15 +82,15 @@
           </template>
         </div>
       </div>
-      <div v-if="isLocalDesktop" class="autoUpdateSetting">
+      <div v-if="!embeddedDesktop && isLocalDesktop" class="autoUpdateSetting">
         <span>自动更新</span>
         <el-switch :modelValue="desktopAutoUpdate" size="small" :loading="autoUpdateSaving" :disabled="!actualPlatform.isLocalDesktop" aria-label="自动更新" @change="(value) => saveAutoUpdate(value === true)" />
       </div>
-      <div v-if="!isMobile && snapshot?.hash" class="buildInfo">
+      <div v-if="!embeddedDesktop && !isMobile && snapshot?.hash" class="buildInfo">
         <span>构建标识</span>
         <code>{{ snapshot.hash }}</code>
       </div>
-      <div v-if="!isMobile && snapshot?.installFailure" class="installFailureNotice" role="alert">
+      <div v-if="!embeddedDesktop && !isMobile && snapshot?.installFailure" class="installFailureNotice" role="alert">
         <strong>上次更新未成功</strong>
         <p>{{ snapshot.installFailure.message }}</p>
         <p>请前往 GitHub 最新发布页，选择适合当前系统的完整安装包，关闭客户端后重新安装。</p>
@@ -209,13 +251,42 @@ import {
   runDesktopUpdate,
   startDesktopUpdate,
 } from "@/stores/desktopUpdate";
+import { useInstallerUpdate } from "./installerUpdate";
 
+const props = withDefaults(defineProps<{ visible?: boolean }>(), { visible: true });
 const privacy = defineAsyncComponent(() => import("./privacy.vue"));
 const repositoryUrl = import.meta.env.repositoryUrl!;
 const releasesUrl = `${repositoryUrl}/releases`;
 const clientBuild = ref<{ version: string; channel: string }>();
-const currentVersion = computed(() => actualPlatform.isDesktop && actualPlatform.isRemoteConnection
-  ? clientBuild.value?.version || "" : snapshot.value?.version || import.meta.env.appVersion);
+const {
+  embeddedDesktop,
+  snapshot: installerState,
+  activeAction: installerAction,
+  checking: installerChecking,
+  downloading: installerDownloading,
+  busy: installerBusy,
+  error: installerError,
+  run: runInstallerUpdate,
+} = useInstallerUpdate(() => props.visible);
+const currentVersion = computed(() => {
+  if (embeddedDesktop) return installerState.value?.currentVersion || "";
+  if (actualPlatform.isDesktop && actualPlatform.isRemoteConnection) return clientBuild.value?.version || "";
+  return snapshot.value?.version || import.meta.env.appVersion;
+});
+const installerPercentage = computed(() => {
+  const state = installerState.value;
+  return state?.total ? Math.min(100, Math.floor(state.received / state.total * 100)) : 0;
+});
+const installerStatusText = computed(() => {
+  if (installerAction.value === "install") return "正在准备重启安装…";
+  if (installerChecking.value) return "正在检查更新…";
+  if (installerDownloading.value) return installerPercentage.value === 100 ? "正在校验安装包…" : "正在下载安装包，可以继续创作。";
+  if (installerError.value) return "";
+  if (installerState.value?.status === "ready") return "安装包已通过校验，可以重启安装。";
+  if (installerState.value?.status === "available") return "有新版本可用。";
+  if (installerState.value?.status === "current") return "当前已是最新版本。";
+  return "";
+});
 const sourceSaving = ref(false);
 const autoUpdateSaving = ref(false);
 const checking = computed(() => desktopUpdateChecking.value);
@@ -250,7 +321,7 @@ const resultMessage = computed(() => {
 });
 
 onMounted(async () => {
-  if (!actualPlatform.isDesktop) return;
+  if (embeddedDesktop || !actualPlatform.isDesktop) return;
   try {
     if (actualPlatform.isRemoteConnection) {
       const { data } = await axios.get<{ data: { version: string; channel: string } }>("/api/desktop/update", { signal: controller.signal, timeout: 10000 });
@@ -430,7 +501,55 @@ async function runUpdate(nextAction: "read" | "check" | "download" | "apply") {
             width: 120px;
           }
         }
+
+        .installerActions {
+          flex-wrap: wrap;
+
+          :deep(.el-button + .el-button) {
+            margin-left: 0;
+          }
+        }
       }
+
+      .installerVersions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 24px;
+        margin: 14px 0 0;
+        font-size: 13px;
+
+        div { display: flex; flex-wrap: wrap; gap: 6px; }
+        dt { color: var(--el-text-color-secondary); }
+        dd { margin: 0; font-weight: 600; }
+      }
+
+      .installerStatus,
+      .installerProgress,
+      .installerNotes {
+        margin: 10px 0 0;
+        color: var(--el-text-color-regular);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .installerProgress p { margin: 0 0 6px; }
+      .installerNotes summary { cursor: pointer; font-weight: 600; }
+      .installerNotes p {
+        max-height: 164px;
+        margin: 4px 0 0;
+        overflow: auto;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
+      .installerError {
+        margin: 10px 0 0;
+        color: var(--el-color-danger);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .installerReleaseLink { margin: 12px 0 0; }
     }
 
     .buildInfo {

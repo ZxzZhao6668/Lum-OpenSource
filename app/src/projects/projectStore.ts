@@ -33,6 +33,15 @@ export async function listWritingProjectChoices(): Promise<Project[]> {
   await initializeProjects();
   return (await catalog.projects.orderBy('openedAt').reverse().toArray()).filter(project => !project.trashedAt);
 }
+export async function loadProjectCover(id: string): Promise<string | undefined> {
+  const data = new DataDB(projectDatabaseName(id));
+  try {
+    if (!await Dexie.exists(data.name)) return;
+    const index = (await data.docs.get('episode:ep_001'))?.payload as { chapters?: { episodeId?: string }[] } | undefined;
+    const cover = (await data.docs.get(`cover:${index?.chapters?.[0]?.episodeId ?? 'ep_001'}`))?.payload as { image?: string } | undefined;
+    return cover?.image;
+  } finally { data.close(); }
+}
 export async function listProjects(): Promise<ProjectSummary[]> {
   await initializeProjects();
   const result: ProjectSummary[] = [];
@@ -76,11 +85,23 @@ export async function createProject(name: string, kind: ProjectKind): Promise<Pr
     return project;
   } finally { data.close(); }
 }
-export async function openProject(id: string, view: 'writing' | 'production' = 'writing') {
-  const project = await getProject(id); if (!project || project.trashedAt) throw Error('请先从回收站恢复项目');
-  if (!await Dexie.exists(projectDatabaseName(id))) throw Error(`项目“${project.name}”的数据不可用，请保留备份后检查浏览器存储。`);
+export async function requireOpenableProject(id: string) {
+  const project = await getProject(id);
+  if (!project || project.trashedAt) throw Error('项目不存在或已移入回收站，请在首页检查。');
+  const data = new DataDB(projectDatabaseName(id));
+  try {
+    if (!await Dexie.exists(data.name)) throw Error(`项目“${project.name}”的数据不可用，请保留备份后检查浏览器存储。`);
+    await data.docs.get('project:meta');
+  } finally { data.close(); }
+  return project;
+}
+export async function openProject(id: string, view: 'writing' | 'production' | 'canvas' = 'writing') {
+  await requireOpenableProject(id);
   await catalog.projects.update(id, { openedAt:Date.now() });
-  location.assign(`/?project=${encodeURIComponent(id)}${view === 'production' ? '&view=production' : ''}`);
+  const query = new URLSearchParams({ project: id });
+  if (view !== 'writing') query.set('view', 'production');
+  if (view === 'canvas') query.set('panel', 'canvas');
+  location.assign(`/?${query}`);
 }
 export async function renameProject(id: string, name: string) {
   const title = name.trim(); if (!title || title.length > 120) throw Error('项目名称需为 1—120 字');

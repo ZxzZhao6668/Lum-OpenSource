@@ -1,5 +1,5 @@
 <template>
-  <main class="workspacePage" :inert="workspaceStore.projectLoadingVisible" :style="{ '--agentWidth': `${agentVisible ? agentWidth : 0}px` }">
+  <main class="workspacePage" :inert="workspaceStore.projectLoadingVisible || switchingProject" :aria-busy="switchingProject" :style="{ '--agentWidth': `${agentVisible ? agentWidth : 0}px` }">
     <canvasPanel
       :key="workspaceStore.project?.directory"
       v-model:selectedTool="selectedTool"
@@ -9,7 +9,7 @@
       :inert="activePanel !== 'canvas'"
       :aria-hidden="activePanel !== 'canvas'"
       :active="activePanel === 'canvas' || activePanel === 'virtualStage'"
-      :settingsVisible="settingsVisible" />
+      :settingsVisible="settingsVisible || switchingProject" />
     <virtualStage v-if="activePanel === 'virtualStage'" :key="workspaceStore.project?.directory" :list="getVirtualStages" :open="openVirtualStage" />
     <keep-alive :key="workspaceStore.project?.directory" :max="1">
       <documentPanel
@@ -26,7 +26,7 @@
         :fileAction="performFileAction"
         :saveNode="saveDocumentNode" />
     </keep-alive>
-    <workspaceMenu class="workspaceMenu" @openSettings="settingsVisible = true" />
+    <workspaceMenu class="workspaceMenu" :switchWorkspace="switchWorkspace" @openSettings="settingsVisible = true" />
     <div class="workspaceTools">
       <el-segmented :modelValue="activePanel" class="panelSwitcher" :options="panelOptions" size="small" aria-label="切换面板" @change="switchPanel">
         <template #default="{ item }">
@@ -119,7 +119,7 @@
         </el-tooltip>
       </div>
     </div>
-    <floatingAgent v-model="agentVisible" :inert="workspaceStore.projectLoadingVisible" @resize="agentWidth = $event" />
+    <floatingAgent v-model="agentVisible" :inert="workspaceStore.projectLoadingVisible || switchingProject" @resize="agentWidth = $event" />
     <settings v-model="settingsVisible" />
     <canvasGallery v-if="galleryVisible && canvasPanelRef" :key="workspaceStore.project?.directory" v-model="galleryVisible"
       :canvasReady="canvasPanelRef.canvasReady" :canvasId="canvasPanelRef.canvasId" :canImport="!!workspaceStore.project?.directory"
@@ -140,7 +140,8 @@ import { computed, defineAsyncComponent, nextTick, onMounted, onScopeDispose, pr
 import { onBeforeRouteLeave } from "vue-router";
 import axios from "axios";
 import http from "@/lib/http";
-import { embeddedProjectId } from "@/lib/embeddedProject";
+import { embeddedProjectId, prepareEmbeddedWorkspace } from "@/lib/embeddedProject";
+import useWorkspaceFiles from "@/lib/workspaceFiles";
 import { IconScript, IconVector, IconFileText, IconMovie, IconPointer, IconHandStop, IconPlus, IconSearch, IconHelp, IconShare, IconBook, IconBug, IconBrandWechat, IconBriefcase } from "@tabler/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 
@@ -172,6 +173,7 @@ onScopeDispose(() => {
   for (const eventName of sideButtonEvents) window.removeEventListener(eventName, preventSideButtonNavigation, true);
 });
 const workspaceStore = useWorkspaceStore();
+const switchingProject = ref(false);
 useProviderBalances();
 const panelOptions = [
   { label: "工作流", value: "canvas", icon: IconVector },
@@ -340,13 +342,22 @@ async function receiveProduction(event: MessageEvent) {
     } catch (error) { reply({ error: error instanceof Error ? error.message : String(error) }); }
     return;
   }
+  if (message.method === "projectCheck") {
+    try {
+      await prepareEmbeddedWorkspace(message.projectId);
+      reply({ result: { projectId: message.projectId } });
+    } catch (error) { reply({ error: `无法打开目标项目。${workspaceErrorMessage(error, "请检查目标项目后重试。")}` }); }
+    return;
+  }
   if (importingWriting) { reply({ error: "已有素材正在送入，请等待保存回执" }); return; }
   importingWriting = true;
   try {
     if (message.method === "panel") {
       if (message.panel === "leave") {
+        if (canvasPanelRef.value?.saveBusy) throw new Error("画布文件操作尚未完成，请稍后再试。");
         await canvasPanelRef.value?.closeEditors();
         await flushSave();
+        if (canvasPanelRef.value?.saveBusy) throw new Error("画布文件操作尚未完成，请稍后再试。");
       } else if (!["canvas", "virtualStage"].includes(message.panel) || !await switchPanel(message.panel)) throw new Error("片场或画布仍有未完成的修改，请保存或取消后再切换");
       reply({ result: { panel: activePanel.value } }); return;
     }
@@ -381,7 +392,10 @@ async function receiveProduction(event: MessageEvent) {
     if ((message.production?.batchId ?? undefined) !== target.batchId) throw new Error("分镜批次与目标画布不一致，未写入");
     productionTargets.delete(message.target);
     reply({ result: await panel.importWritingMaterials(message.nodes, message.production) });
-  } catch (error) { reply({ error: error instanceof Error ? error.message : String(error) }); }
+  } catch (error) {
+    const detail = workspaceErrorMessage(error, "请稍后重试。");
+    reply({ error: message.method === "panel" && message.panel === "leave" ? `无法保存当前项目。${detail}` : detail });
+  }
   finally { importingWriting = false; }
 }
 onMounted(() => window.addEventListener("message", receiveProduction));
@@ -426,6 +440,7 @@ registerWorkspaceControl({
   }),
   flushSave,
   async call(request, signal) {
+    if (switchingProject.value) throw new Error("项目正在切换，请稍后重试");
     const directory = workspaceStore.project?.directory;
     if (!directory) throw new Error("请先打开工作区");
     const callSignal = AbortSignal.any([signal, controlLifetime.signal]);
@@ -465,7 +480,43 @@ async function flushSave() {
   await canvasPanelRef.value?.flushSave();
 }
 
+function workspaceErrorMessage(error: unknown, fallback: string) {
+  if (axios.isAxiosError<{ message?: string }>(error)) {
+    if (error.code === "ERR_NETWORK") return "工作区服务连接中断，请检查连接后重试。";
+    if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") return "工作区服务请求超时，请稍后重试。";
+    return error.response?.data?.message || fallback;
+  }
+  return error instanceof Error ? error.message : fallback;
+}
+
+async function switchWorkspace(path: string, create: boolean) {
+  if (switchingProject.value) return;
+  switchingProject.value = true;
+  try {
+    const directory = await workspaceStore.validateProjectDirectory(path, controlLifetime.signal);
+    if (directory === workspaceStore.project?.directory) return;
+    const files = useWorkspaceFiles(directory);
+    const { empty } = await files.list("", controlLifetime.signal);
+    if (create && !empty) throw new Error("请选择空文件夹来新建项目，或使用“打开已有项目”。");
+    if (canvasPanelRef.value?.saveBusy || importingWriting) throw new Error("画布操作尚未完成，请稍后再切换项目。");
+    try {
+      await canvasPanelRef.value?.closeEditors();
+      await flushSave();
+    } catch (error) {
+      throw new Error(`无法保存当前项目。${workspaceErrorMessage(error, "请稍后重试。")}`);
+    }
+    if (create) await files.createInitialCanvas();
+    controlLifetime.signal.throwIfAborted();
+    activePanel.value = "canvas";
+    workspaceStore.activateProject(directory, path);
+    await nextTick();
+  } catch (error) {
+    if (!controlLifetime.signal.aborted) ElMessage.error(workspaceErrorMessage(error, "无法切换项目，请重试"));
+  } finally { switchingProject.value = false; }
+}
+
 onBeforeRouteLeave(async () => {
+  if (switchingProject.value) return false;
   if (canvasPanelRef.value?.saveBusy) {
     ElMessage.warning("画布操作尚未完成，请稍后退出");
     return false;
@@ -498,6 +549,7 @@ onBeforeRouteLeave(async () => {
 
 let panelTransition = Promise.resolve(true);
 function switchPanel(value: string | number | boolean) {
+  if (switchingProject.value) return Promise.resolve(false);
   panelTransition = panelTransition.then(() => performSwitchPanel(value));
   return panelTransition;
 }

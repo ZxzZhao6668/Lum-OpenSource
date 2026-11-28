@@ -2,6 +2,7 @@ import { createServer } from 'node:http';
 import { resolve } from 'node:path';
 import { timingSafeEqual } from 'node:crypto';
 import { createApp } from '../../vendor/lum/apps/server/src/app';
+import desktopPackage from '../package.json';
 
 async function start() {
 const resourceRoot = process.env.LUM_RESOURCE_ROOT;
@@ -13,7 +14,7 @@ if (!resourceRoot || !dataDirectory || !token || token.length < 32 || !Number.is
 }
 const expectedToken = Buffer.from(token);
 const app = await createApp({
-  webRoot: resolve(resourceRoot, 'web'), dataDirectory, appVersion: '1.0.11',
+  webRoot: resolve(resourceRoot, 'web'), dataDirectory, appVersion: desktopPackage.version,
   toolsRoot: resolve(resourceRoot, 'tools'), nodesRoot: resolve(resourceRoot, 'nodes'),
   extRoot: resolve(resourceRoot, 'ext'),
   skillsRoot: resolve(resourceRoot, 'skills'), pluginRevision: process.env.LUM_BUILD_REVISION,
@@ -25,7 +26,7 @@ const server = createServer((request, response) => {
     response.writeHead(403).end('Lum desktop session required'); return;
   }
   if (request.url === '/lumHealth') {
-    response.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }).end('{"app":"Lum","version":"1.0.11"}'); return;
+    response.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }).end(JSON.stringify({ app: 'Lum', version: desktopPackage.version })); return;
   }
   app(request, response);
 });

@@ -29,6 +29,8 @@ const run = (command, args, cwd, extraEnv = {}) => new Promise((resolveRun, reje
   child.once('exit', code => code === 0 ? resolveRun() : reject(new Error(`${command} exited ${code}`)));
 });
 for (const folder of ['out', 'assets', 'payload']) mkdirSync(join(desktop, folder), { recursive: true });
+const csc = join(process.env.SystemRoot || 'C:\\Windows', 'Microsoft.NET/Framework64/v4.0.30319/csc.exe');
+await run(csc, ['/nologo', '/target:winexe', '/codepage:65001', '/reference:System.Windows.Forms.dll', '/out:' + join(desktop, 'out/installUpdate.exe'), join(desktop, 'src/installUpdate.cs')], desktop);
 const physicalPayload = join(realpathSync(desktop), 'payload');
 if (realpathSync(payload).toLowerCase() !== physicalPayload.toLowerCase()) throw new Error(`Refusing to replace generated files through a redirected payload directory: ${payload}`);
 const replaceGeneratedPayload = (folder, source) => {
